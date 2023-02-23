@@ -7,6 +7,9 @@ pkgs.mkShell {
     rustfmt
     rust-analyzer
     clippy
+    ps
+    bash
+    which
   ];
 
   RUST_BACKTRACE = 1;
