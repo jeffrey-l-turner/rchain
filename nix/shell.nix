@@ -1,9 +1,13 @@
 with (import <nixpkgs> {});
 
 let 
+	pkgs = import (builtins.fetchTarball {
+        url = "https://github.com/NixOS/nixpkgs/archive/fcc8660d359d2c582b0b148739a72cec476cfef5.tar.gz";
+    }) {};
+		
 	jdk = pkgs.jdk11;
 	sbt = pkgs.sbt.override { jre = pkgs.jdk11; };
-	# jflex = pkgs.jflex
+	jflex = pkgs.jflex;
 
 in mkShell {
   buildInputs = with pkgs; [
@@ -18,7 +22,7 @@ in mkShell {
     which
 		haskellPackages.BNFC
 		git 
-		jflex-1.7.0
+		jflex
 		sbt 
 		jdk
   ];
