@@ -22,9 +22,9 @@ in mkShell {
     which
     haskellPackages.BNFC
     git 
-   jflex
-   sbt 
-   jdk
+    jflex
+    sbt 
+    jdk
   ];
 
 	shellHook = ''
