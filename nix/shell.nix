@@ -20,11 +20,11 @@ in mkShell {
     ps
     bash
     which
-		haskellPackages.BNFC
-		git 
-		jflex
-		sbt 
-		jdk
+    haskellPackages.BNFC
+    git 
+   jflex
+   sbt 
+   jdk
   ];
 
 	shellHook = ''
