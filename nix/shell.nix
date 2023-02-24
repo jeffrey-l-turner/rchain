@@ -12,6 +12,7 @@ in mkShell {
     rustfmt
     rust-analyzer
     clippy
+    git
     ps
     bash
     which
