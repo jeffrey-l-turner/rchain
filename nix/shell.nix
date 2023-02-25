@@ -7,6 +7,8 @@ let
 
 in mkShell {
   buildInputs = with pkgs; [
+    ammonite
+    coursier
     rustc
     cargo
     rustfmt
@@ -20,6 +22,9 @@ in mkShell {
     git 
     neovim
     jflex.jflex
+    scala
+    coursier
+    scalafmt
     sbt 
     jdk
     zsh
