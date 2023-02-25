@@ -18,9 +18,11 @@ in mkShell {
     which
     haskellPackages.BNFC
     git 
+    neovim
     jflex.jflex
     sbt 
     jdk
+    zsh
   ];
 
     shellHook = ''
