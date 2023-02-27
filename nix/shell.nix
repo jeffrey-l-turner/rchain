@@ -18,6 +18,7 @@ in mkShell {
     ps
     bash
     which
+    less
     haskellPackages.BNFC
     git 
     neovim
