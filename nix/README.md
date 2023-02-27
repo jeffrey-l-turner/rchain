@@ -108,7 +108,13 @@ clean
 git clean -fdx
 ```
 
-### Additional Information for WSL
+## Additional Notes
+
+### VS Code within nix-shell
+
+- add `{ allowUnfree = true; }` in your `~/.config/nixpkgs/config.nix`
+
+### Information for WSL and SSH
 
 - Check Git is installed: `git --version` if not then: `sudo apt-get install git`
 - Configure .gitconfig
