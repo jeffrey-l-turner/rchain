@@ -62,10 +62,7 @@ More info on Nix -> https://nixos.org/manual/nix/stable/introduction.html
 
 # Compile and create local executable
 # path: rchain/node/target/universal/stage/bin/rnode
-sbt stage
-
-# Compile Docker image
-sbt docker:publishLocal
+[nix-shell:~/src/rchain]$ sbt stage
 
 # Clean project (except bnfc generated Java code)
 [nix-shell:~/src/rchain]$ sbt clean

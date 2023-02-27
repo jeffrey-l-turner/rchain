@@ -29,7 +29,7 @@ in mkShell {
     sbt 
     jdk
     zsh
-    vscode
+    # vscode
   ];
 
     shellHook = ''
