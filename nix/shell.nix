@@ -25,6 +25,7 @@ in mkShell {
     coursier
     scalafmt
     sbt 
+    ssh-agents
     jdk
     zsh
     # vscode
@@ -33,6 +34,7 @@ in mkShell {
     shellHook = ''
       export SBT_OPTS="-Xmx4g -Xss2m -Dsbt.supershell=false"
       alias rnode="./node/target/universal/stage/bin/rnode"
+      export PATH="$PATH:/usr/bin"
   '';
 
   RUST_BACKTRACE = 1;
