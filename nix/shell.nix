@@ -32,6 +32,7 @@ in mkShell {
 
     shellHook = ''
       export SBT_OPTS="-Xmx4g -Xss2m -Dsbt.supershell=false"
+      alias rnode="./node/target/universal/stage/bin/rnode"
   '';
 
   RUST_BACKTRACE = 1;

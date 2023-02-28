@@ -53,7 +53,7 @@ More info on Nix -> https://nixos.org/manual/nix/stable/introduction.html
 
 ## RNode build (in nix-shell)
 
-Enter nix-shell: `nix-shell --pure nix/shell.nix # or add --run zsh for that shell`
+Enter nix-shell: `nix-shell --pure nix/shell.nix` or add `--run zsh` for that shell
 
 ```sh
 # Compile
@@ -70,6 +70,15 @@ Enter nix-shell: `nix-shell --pure nix/shell.nix # or add --run zsh for that she
 [nix-shell:~/src/rchain]$ sbt clean
 
 [nix-shell:~/src/rchain]$ sbt clearCaches
+
+# Clean, compile, and create local executable
+[nix-shell:~/src/rchain]$ sbt clean compile stage
+
+# Run node
+[nix-shell:~/src/rchain]$ rnode run
+
+# List rnode options
+[nix-shell:~/src/rchain]$ rnode
 ```
 
 
@@ -91,6 +100,8 @@ sbt:rchain> stage
 
 # Clean project (except bnfc generated Java code)
 sbt:rchain> clean
+
+sbt:rchain> clearCaches
 ```
 
 
@@ -111,6 +122,7 @@ Nix package versions: https://lazamar.co.uk/nix-versions/
 
 - Lists basic nix information: `nix-shell -p nix-info --run "nix-info -m"`
 - List specific package version: `readlink -f $( which <package_name> )`
+- Delete unused packages: `nix-collect-garbage`
 
 ### VS Code within nix-shell
 
