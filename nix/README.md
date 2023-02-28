@@ -53,7 +53,7 @@ More info on Nix -> https://nixos.org/manual/nix/stable/introduction.html
 
 ## RNode build (in nix-shell)
 
-Enter nix-shell: `nix-shell --pure nix/shell.nix`
+Enter nix-shell: `nix-shell --pure nix/shell.nix # or add --run zsh for that shell`
 
 ```sh
 # Compile
