@@ -3,12 +3,11 @@ with (import <nixpkgs> {});
 let
     jdk = pkgs.jdk11;
     sbt = pkgs.sbt.override { jre = pkgs.jdk11; };
-    jflex = import (fetchTarball https://github.com/NixOS/nixpkgs/archive/fcc8660d359d2c582b0b148739a72cec476cfef5.tar.gz) { }; 
+    jflex = import (fetchTarball https://github.com/NixOS/nixpkgs/archive/fcc8660d359d2c582b0b148739a72cec476cfef5.tar.gz) { };
 
 in mkShell {
   buildInputs = with pkgs; [
     ammonite
-    coursier
     rustc
     cargo
     rustfmt
@@ -16,12 +15,12 @@ in mkShell {
     clippy
     git
     ps
-    bash
     which
     less
     haskellPackages.BNFC
     git 
     neovim
+    locale
     jflex.jflex
     coursier
     scalafmt
