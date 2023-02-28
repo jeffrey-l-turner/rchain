@@ -53,7 +53,12 @@ More info on Nix -> https://nixos.org/manual/nix/stable/introduction.html
 
 ## RNode build (in nix-shell)
 
-Enter nix-shell: `nix-shell --pure nix/shell.nix` or add `--run zsh` for that shell
+Enter nix-shell and setup keys: 
+```
+nix-shell --pure nix/shell.nix` or add `--run zsh` for that shell
+# enter ssh-agent password or permanently add keys; this must be done each time since nix-shell is ephemeral
+ssh-add -K ~/.ssh/<key-name>
+```
 
 ```sh
 # Compile
