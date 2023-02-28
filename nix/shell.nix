@@ -23,7 +23,6 @@ in mkShell {
     git 
     neovim
     jflex.jflex
-    scala
     coursier
     scalafmt
     sbt 
@@ -34,7 +33,6 @@ in mkShell {
 
     shellHook = ''
       export SBT_OPTS="-Xmx4g -Xss2m -Dsbt.supershell=false"
-            export PATH="/usr/local/opt/openjdk/bin:$PATH"
   '';
 
   RUST_BACKTRACE = 1;

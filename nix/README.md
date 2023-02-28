@@ -53,6 +53,8 @@ More info on Nix -> https://nixos.org/manual/nix/stable/introduction.html
 
 ## RNode build (in nix-shell)
 
+Enter nix-shell: `nix-shell --pure nix/shell.nix`
+
 ```sh
 # Compile
 [nix-shell:~/src/rchain]$ sbt compile
@@ -66,6 +68,8 @@ More info on Nix -> https://nixos.org/manual/nix/stable/introduction.html
 
 # Clean project (except bnfc generated Java code)
 [nix-shell:~/src/rchain]$ sbt clean
+
+[nix-shell:~/src/rchain]$ sbt clearCaches
 ```
 
 
@@ -75,24 +79,18 @@ More info on Nix -> https://nixos.org/manual/nix/stable/introduction.html
 # Enter sbt interactive mode
 sbt
 
-# sbt entering interactive mode
-# sbt:rchain>
-
 # Compile
-compile
+sbt:rchain> compile
 
 # Compile with tests
-test:compile
+sbt:rchain> test:compile
 
 # Compile and create local executable
 # path: ./node/target/universal/stage/bin/rnode
-stage
-
-# Compile Docker image
-docker:publishLocal
+sbt:rchain> stage
 
 # Clean project (except bnfc generated Java code)
-clean
+sbt:rchain> clean
 ```
 
 
@@ -107,9 +105,16 @@ git clean -fdx
 
 ## Additional Notes
 
+Nix package versions: https://lazamar.co.uk/nix-versions/
+
+### Helpful nix commands
+
+- Lists basic nix information: `nix-shell -p nix-info --run "nix-info -m"`
+- List specific package version: `readlink -f $( which <package_name> )`
+
 ### VS Code within nix-shell
 
-- add `{ allowUnfree = true; }` in your `~/.config/nixpkgs/config.nix`
+- Add `vscode` to package list in `nix/shell.nix` and also add `{ allowUnfree = true; }` in your `~/.config/nixpkgs/config.nix`
 
 ### Information for WSL and SSH
 
