@@ -79,11 +79,17 @@ ssh-add -K ~/.ssh/<key-name>
 # Clean, compile, and create local executable
 [nix-shell:~/src/rchain]$ sbt clean compile stage
 
-# Run node
-[nix-shell:~/src/rchain]$ rnode run
-
 # List rnode options
 [nix-shell:~/src/rchain]$ rnode
+
+# Run stand-alone node
+[nix-shell:~/src/rchain]$ rnode run --standalone
+
+# Check node status
+[nix-shell:~/src/rchain]$ rnode status
+
+# Run .rho files (have running node in separate shell)
+[nix-shell:~/src/rchain]$ rnode eval <path_to_file> # (i.e. rholang/examples/hello_world_again.rho)
 ```
 
 
