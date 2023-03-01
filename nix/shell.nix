@@ -28,7 +28,6 @@ in mkShell {
     ssh-agents
     jdk
     zsh
-    # vscode
   ];
 
     shellHook = ''

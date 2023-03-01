@@ -90,7 +90,12 @@ ssh-add -K ~/.ssh/<key-name>
 
 # Run .rho files (have running node in separate shell)
 [nix-shell:~/src/rchain]$ rnode eval <path_to_file> # (i.e. rholang/examples/hello_world_again.rho)
+
+# Run .rho files (have ip address and port of node)
+[nix-shell:~/src/rchain]$ rnode --grpc-host <ip_address> --grpc-port <internal_port> eval <path_to_file> # (i.e. rholang/examples/hello_world_again.rho)
 ```
+
+Can also use JS implementation for eval -> https://github.com/spreston8/rnode-repl
 
 
 ### `sbt`  interactive mode
