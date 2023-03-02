@@ -1,9 +1,17 @@
-with ( import <nixpkgs> {} );
+with ( import <nixpkgs> {
+  config = {
+    packageOverrides = pkgs: {
+      sbt = pkgs.sbt.override { jre = pkgs.openjdk11; };
+      buildFHSUserEnv = pkgs.buildFHSUserEnv.override {
+        name = "akka-grpc";
+        targetPkgs = pkgs: [pkgs.sbt pkgs.glibc ];
+      };
+    };
+  };
+}); 
 
 let
     jdk = pkgs.jdk11;
-    sbt = pkgs.sbt.override { jre = pkgs.jdk11; };
-    buildFHSUserEnv = pkgs.buildFHSUserEnv.override {name = "akka-grpc"; targetPkgs = pkgs: [sbt pkgs.glibc ];};
     jflex = import (fetchTarball https://github.com/NixOS/nixpkgs/archive/fcc8660d359d2c582b0b148739a72cec476cfef5.tar.gz) { };
 
 in mkShell {
@@ -24,6 +32,7 @@ in mkShell {
     jflex.jflex
     coursier
     scalafmt
+    protobuf
     sbt 
     ssh-agents
     jdk
@@ -35,9 +44,10 @@ in mkShell {
       alias rnode="./node/target/universal/stage/bin/rnode"
       export PATH="$PATH:/usr/bin"
   '';
-
+  # (buildFHSUserEnv).env;
   RUST_BACKTRACE = 1;
 }
+
 
 #(pkgs.buildFHSUserEnv {
 #  name = "akka-grpc";
