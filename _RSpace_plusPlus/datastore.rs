@@ -61,11 +61,11 @@ impl FileDatabase {
 
     pub fn get(&mut self, key : String) -> Result<Option<&str>, Box<dyn Error>> {
         //let mut finalVal:Option<&str> = Some("xyz");
-        let finalVal:Option<&str> = Some("xyz");
+        let final_val:Option<&str> = Some("xyz");
         let mut wtxn = self.environment.write_txn()?;
         {
 
-            let ret = self.db.get::<String, String>(&wtxn, "hello")?;
+            //let ret = self.db.get::<String, String>(&wtxn, "hello")?;
 
             let get_result = self.db.get(&mut wtxn, &key)?;
             println!("get_result:\t{:?}", get_result);
@@ -88,7 +88,7 @@ impl FileDatabase {
 
             wtxn.commit()?;
         }
-        Ok(finalVal)
+        Ok(final_val)
 
         // match finalVal {
         //     Some() =>
