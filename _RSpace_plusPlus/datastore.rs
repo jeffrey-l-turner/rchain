@@ -13,6 +13,8 @@ pub struct FileDatabase {
     pub db: Database<Str, Str>,
 }
 
+fn duplicate<T>(x: T) -> T { x } 
+
 impl FileDatabase {
     pub fn new(name: String, age: u8) -> FileDatabase {
 
@@ -47,6 +49,8 @@ impl FileDatabase {
     }
 
     pub fn add(&mut self, key : String, val: String) -> Result<(), Box<dyn Error>> {
+
+
         println!("called `db.add()`");
         let mut wtxn = self.environment.write_txn()?;
         self.db.put(&mut wtxn, &key, &val);
@@ -56,14 +60,34 @@ impl FileDatabase {
     }
 
     pub fn get(&mut self, key : String) -> Result<Option<&str>, Box<dyn Error>> {
-        let mut finalVal:Option<&str> = Some("xyz");
+        //let mut finalVal:Option<&str> = Some("xyz");
+        let finalVal:Option<&str> = Some("xyz");
         let mut wtxn = self.environment.write_txn()?;
         {
+
+            let ret = self.db.get::<String, String>(&wtxn, "hello")?;
+
             let get_result = self.db.get(&mut wtxn, &key)?;
             println!("get_result:\t{:?}", get_result);
             //finalVal = get_result.clone();
+            // if get_result.is_none() {
+            //     finalVal = None
+            // } else {
+            //     finalVal = Some(get_result.unwrap());
+            // }
+
+            // let x = match get_result {
+            //     Ok(val) => Ok(val),
+            //     Err(e) => Err(e.into()),
+            // }
+
+            let result = match get_result {
+                Some(val) => val,//finalVal = Some(val),
+                None => "not found!",//finalVal = Some("not found!"),
+            };
+
+            wtxn.commit()?;
         }
-        wtxn.commit();
         Ok(finalVal)
 
         // match finalVal {
@@ -71,10 +95,7 @@ impl FileDatabase {
         //     None() =>
         // }
 
-        // match get_result {
-        //     Ok(val) => Ok(val),
-        //     Err(e) => Err(e.into()),
-        // }
+        
     }
 }
 

@@ -1,15 +1,16 @@
+use std::error::Error;
 use crate::datastore::FileDatabase;
 
 mod datastore;
-fn main() {
+fn main() -> Result<(),Box<dyn Error>> {
     println!("hello world!");
     //let mut d0datastore::makeNew();//(String::from("abc"),123);
 
     let mut db :FileDatabase = FileDatabase::new(String::from("test db"), 123);
 
-    db.add(String::from("abc"), String::from("123"));
-    db.add(String::from("def"), String::from("321"));
-    db.add(String::from("xyz"), String::from("333"));
+    db.add(String::from("abc"), String::from("123"))?;
+    db.add(String::from("def"), String::from("321"))?;
+    db.add(String::from("xyz"), String::from("333"))?;
 
     {
         let result1 = db.get(String::from("abc")).unwrap();
@@ -24,6 +25,7 @@ fn main() {
         println!("result3: {:?}", result3);
     }
     
+    Ok(())
 
     // let db = datastore::makeNew();
     // println!("{}", db.name);
