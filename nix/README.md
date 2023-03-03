@@ -51,6 +51,9 @@ hello: command not found
 
 More info on Nix -> https://nixos.org/manual/nix/stable/introduction.html
 
+## CI
+We have a CI server setup with NixOs using shell script to pull the release every hour. Check with Discord to find the current location.
+
 ## RNode build (in nix-shell)
 
 Enter nix-shell using zsh and setup keys: 
