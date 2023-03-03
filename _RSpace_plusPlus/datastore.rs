@@ -64,29 +64,30 @@ impl FileDatabase {
         let final_val:Option<&str> = Some("xyz");
         let mut wtxn = self.environment.write_txn()?;
 
-            //let ret = self.db.get::<String, String>(&wtxn, "hello")?;
+        //let ret = self.db.get::<String, String>(&wtxn, "hello")?;
 
-            let get_result = self.db.get(&mut wtxn, &key)?;
-            println!("get_result:\t{:?}", get_result);
-            //finalVal = get_result.clone();
-            // if get_result.is_none() {
-            //     finalVal = None
-            // } else {
-            //     finalVal = Some(get_result.unwrap());
-            // }
+        let get_result = self.db.get(&mut wtxn, &key)?;
+        println!("get_result:\t{:?}", get_result);
+        //finalVal = get_result.clone();
+        // if get_result.is_none() {
+        //     finalVal = None
+        // } else {
+        //     finalVal = Some(get_result.unwrap());
+        // }
 
-            // let x = match get_result {
-            //     Ok(val) => Ok(val),
-            //     Err(e) => Err(e.into()),
-            // }
+        // let x = match get_result {
+        //     Ok(val) => Ok(val),
+        //     Err(e) => Err(e.into()),
+        // }
 
-            let result = match get_result {
-                Some(val) => val,//finalVal = Some(val),
-                None => "not found!",//finalVal = Some("not found!"),
-            };
+        let result = match get_result {
+            Some(val) => val,//finalVal = Some(val),
+            None => "not found!",//finalVal = Some("not found!"),
+        };
 
-            wtxn.commit()?;
-        Ok(Some(result))
+        wtxn.commit()?;
+        let rslt = result as Option<&str>;
+        Ok(rslt)
 
         // match finalVal {
         //     Some() =>
