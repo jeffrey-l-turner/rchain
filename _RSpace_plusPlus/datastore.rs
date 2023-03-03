@@ -88,7 +88,7 @@ pub fn get(db:Database<Str, Str>, key : String) -> Result<String, Box<dyn Error>
     let res = db.get(&rtxn, &key)?;
     //let retVal = res.or_else("none");
 
-    Ok(String::from("abc"));
+    Ok(String::from("abc"))
 }
 
 pub fn makeDB() -> Result<Database<Str, Str>, Box<dyn Error>> {
