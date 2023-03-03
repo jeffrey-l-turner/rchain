@@ -63,7 +63,6 @@ impl FileDatabase {
         //let mut finalVal:Option<&str> = Some("xyz");
         let final_val:Option<&str> = Some("xyz");
         let mut wtxn = self.environment.write_txn()?;
-        {
 
             //let ret = self.db.get::<String, String>(&wtxn, "hello")?;
 
@@ -87,8 +86,7 @@ impl FileDatabase {
             };
 
             wtxn.commit()?;
-        }
-        Ok(final_val)
+        Ok(Some(result))
 
         // match finalVal {
         //     Some() =>
