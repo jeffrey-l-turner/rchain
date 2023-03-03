@@ -18,7 +18,6 @@ in mkShell {
     which
     less
     haskellPackages.BNFC
-    git 
     neovim
     locale
     jflex.jflex
@@ -28,6 +27,7 @@ in mkShell {
     ssh-agents
     jdk
     zsh
+    libiconv
   ];
 
     shellHook = ''
