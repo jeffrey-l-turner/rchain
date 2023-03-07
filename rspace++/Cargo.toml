@@ -10,4 +10,4 @@ heed = "0.11.0"
 
 [[bin]]
 name = "rspace_plus_plus"
-path = "main.rs"
+path = "src/lib.rs"
