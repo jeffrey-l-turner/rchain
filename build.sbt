@@ -463,6 +463,7 @@ lazy val rspacePlusPlus = (project in file("rspace++"))
   .settings(
     name := "rspace++",
     version := "0.1.0-SNAPSHOT",
+		mainClass := Some("BuildRustLibrary"),
     libraryDependencies ++= commonDependencies ++ kamonDependencies ++ Seq(
       "net.java.dev.jna" % "jna" % "5.7.0"
     )
