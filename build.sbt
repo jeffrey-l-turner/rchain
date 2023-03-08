@@ -548,18 +548,7 @@ lazy val rchain = (project in file("."))
 lazy val runCargoBuild = taskKey[Unit]("Builds Rust library for rspace++")
 runCargoBuild := {
   import scala.sys.process._
-
-  val log = new ProcessLogger {
-    override def out(s: => String): Unit = println(s)
-    override def err(s: => String): Unit = println(s)
-    override def buffer[T](f: => T): T   = f
-  }
-
-  println("\nRunning command: `cargo build --release` in rspace++ directory\n")
-  val result = Process("cd rspace++/ && cargo build --release").run(log)
-  if (result.exitValue() != 0) {
-    sys.error("Cargo build failed!")
-  }
+	Seq("./scripts/build_rspace++.sh")!
 }
 
 (compile in Compile) := ((compile in Compile) dependsOn runCargoBuild).value
