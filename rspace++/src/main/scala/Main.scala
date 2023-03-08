@@ -2,7 +2,7 @@ import com.sun.jna._
 
 object HelloWorld extends Library {
   // Load the Rust library. The name of the library file may differ depending on your platform.
-  System.setProperty("jna.library.path", "../target/release")
+  val _ = System.setProperty("jna.library.path", "../target/release")
 
   trait RustLib extends Library {
     def hello_world(): Unit
@@ -10,7 +10,7 @@ object HelloWorld extends Library {
 
   def main(args: Array[String]): Unit = {
     // Load the Rust library
-    val lib = Native.load("my_library", classOf[RustLib]).asInstanceOf[RustLib]
+    val lib = Native.load("rust_library", classOf[RustLib]).asInstanceOf[RustLib]
 
     // Call the hello_world function
     lib.hello_world()

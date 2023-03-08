@@ -458,6 +458,16 @@ lazy val blockStorage = (project in file("block-storage"))
   )
   .dependsOn(shared, models % "compile->compile;test->test")
 
+lazy val rspacePlusPlus = (project in file("rspace++"))
+  .settings(commonSettings: _*)
+  .settings(
+    name := "rspace++",
+    version := "0.1.0-SNAPSHOT",
+    libraryDependencies ++= commonDependencies ++ kamonDependencies ++ Seq(
+      "net.java.dev.jna" % "jna" % "5.7.0"
+    )
+  )
+
 lazy val rspace = (project in file("rspace"))
   .configs(IntegrationTest extend Test)
   .enablePlugins(SiteScaladocPlugin, GhpagesPlugin)
@@ -531,5 +541,25 @@ lazy val rchain = (project in file("."))
     rholangCLI,
     rspace,
     rspaceBench,
+    rspacePlusPlus,
     shared
   )
+
+lazy val runCargoBuild = taskKey[Unit]("Builds Rust library for rspace++")
+runCargoBuild := {
+  import scala.sys.process._
+
+  val log = new ProcessLogger {
+    override def out(s: => String): Unit = println(s)
+    override def err(s: => String): Unit = println(s)
+    override def buffer[T](f: => T): T   = f
+  }
+
+  println("\nRunning command: `cargo build --release` in rspace++ directory\n")
+  val result = Process("cd rspace++/ && cargo build --release").run(log)
+  if (result.exitValue() != 0) {
+    sys.error("Cargo build failed!")
+  }
+}
+
+(compile in Compile) := ((compile in Compile) dependsOn runCargoBuild).value
