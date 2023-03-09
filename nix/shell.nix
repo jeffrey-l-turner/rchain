@@ -28,6 +28,7 @@ in mkShell {
     jdk
     zsh
     libiconv
+    scala
   ];
 
     shellHook = ''
