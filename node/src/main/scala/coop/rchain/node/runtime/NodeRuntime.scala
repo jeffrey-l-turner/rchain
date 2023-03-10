@@ -253,11 +253,18 @@ class NodeRuntime[F[_]: Monixable: ConcurrentEffect: Parallel: Timer: ContextShi
       consumer: EventConsumer[F]
   ): F[Unit] = {
 
-    val info: F[Unit] =
+    val standaloneInfo: F[Unit] =
       if (nodeConf.standalone) Log[F].info(s"Starting stand-alone node.")
       else
         Log[F].info(
           s"Starting node that will bootstrap from ${nodeConf.protocolClient.bootstrap}"
+        )
+
+    val rspaceInfo: F[Unit] =
+      if (nodeConf.rspacePlusPlus) Log[F].info(s"Starting node using rspace++.")
+      else
+        Log[F].info(
+          s"Starting node using rspace."
         )
 
     val dynamicIpCheck: F[Unit] =
@@ -301,7 +308,8 @@ class NodeRuntime[F[_]: Monixable: ConcurrentEffect: Parallel: Timer: ContextShi
       } yield ()
 
     for {
-      _       <- info
+      _       <- standaloneInfo
+      _       <- rspaceInfo
       local   <- peerNodeAsk.ask
       address = local.toAddress
       host    = local.endpoint.host
