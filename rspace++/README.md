@@ -16,3 +16,4 @@
 
 - `sbt compile` will build Rust library in `rspace++/target/release/`. This is where JNA pulls library 
 
+- Integrating new rspace++ into rnode setup, I think, will happen in `node/src/main/scala/coop/rchain/node/runtime/Setup.scala`
