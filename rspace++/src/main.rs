@@ -6,6 +6,9 @@ use heed::{Database, EnvOpenOptions};
 use std::fs;
 use std::path::Path;
 
+mod KeyValueStore;
+// mod repl;
+
 fn main() -> Result<(), Box<dyn Error>> {
     fs::create_dir_all(Path::new("target").join("test_db.mdb"))?;
     let env = EnvOpenOptions::new().open(Path::new("target").join("test_db.mdb"))?;

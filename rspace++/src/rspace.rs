@@ -20,26 +20,4 @@
       - The implicit parameter Match provides a match implementation for matching against the patterns.
       - Argument store of type RSpaceStore[F], which represents the underlying store used to persist the data.
 
-    Scala implementation for method "create":
-
-    /**
-    * Creates [[RSpace]] from [[KeyValueStore]]'s,
-    */
-  def create[F[_]: Concurrent: Parallel: ContextShift: Span: Metrics: Log, C, P, A, K](
-      store: RSpaceStore[F]
-  )(
-      implicit
-      sc: Serialize[C],
-      sp: Serialize[P],
-      sa: Serialize[A],
-      sk: Serialize[K],
-      m: Match[F, P, A],
-      scheduler: ExecutionContext
-  ): F[RSpace[F, C, P, A, K]] =
-    for {
-      setup                  <- createHistoryRepo[F, C, P, A, K](store)
-      (historyReader, store) = setup
-      space                  <- RSpace(historyReader, store)
-    } yield space
-
 */
