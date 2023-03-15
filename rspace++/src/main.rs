@@ -1,5 +1,6 @@
 use std::error::Error;
 
+use std::io::{self, Write};
 use heed::types::*;
 use heed::{Database, EnvOpenOptions};
 use std::fs;
@@ -43,4 +44,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     assert_eq!(ret, Some(5));
 
     Ok(())
+}
+
+
+fn repl() {
+    loop {
+        print!("> ");
+        io::stdout().flush().unwrap();
+
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+
+        // TODO: parse and evaluate the input using the BNF grammar
+
+        println!("{}", input.trim());
+    }
 }
