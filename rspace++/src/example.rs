@@ -23,6 +23,12 @@ pub struct Entry {
     phone: String,
 }
 
+pub enum Pattern {
+    NameMatch { last: String },
+    CityMatch { city: String },
+    StateMatch { state: String },
+}
+
 fn print_entry(entry: &Entry) {
     let name_str = format!("{}, {}", entry.name.last, entry.name.first);
     let addr_str = format!(
@@ -42,7 +48,7 @@ phone:   {}
     );
 }
 
-fn main() {
+pub fn example_main() {
     let alice = Entry {
         name: Name {
             first: "Alice".to_string(),

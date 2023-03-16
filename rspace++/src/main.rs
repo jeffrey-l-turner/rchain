@@ -6,6 +6,8 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
 
+use crate::example::example_main;
+
 mod key_value_store;
 mod r#match;
 mod rspace;
@@ -49,6 +51,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let ret = db.get(&rtxn, "five")?;
     println!("Value for key \"five\": {:?}", ret);
     assert_eq!(ret, Some(5));
+
+    example_main();
 
     Ok(())
 }
