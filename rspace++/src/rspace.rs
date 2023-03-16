@@ -21,3 +21,27 @@
       - Argument store of type RSpaceStore[F], which represents the underlying store used to persist the data.
 
 */
+
+use crate::key_value_store::KeyValueStore;
+use crate::r#match::Match;
+use crate::serialize::Serialize;
+use std::error::Error;
+
+struct RSpaceStore<F: KeyValueStore<F>> {
+    history: F,
+    roots: F,
+    cold: F,
+}
+
+pub trait RSpace {
+    fn create<F, C, P, A, K>(
+        &self,
+        store: RSpaceStore<F>,
+        sc: impl Serialize<C>,
+        sp: impl Serialize<P>,
+        sa: impl Serialize<A>,
+        sk: impl Serialize<K>,
+        m: dyn Match<F, P, A>,
+        // scheduler: ExecutionContext,
+    ) -> Result<dyn RSpace, dyn Error>;
+}

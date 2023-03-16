@@ -1,12 +1,15 @@
 use std::error::Error;
 
-use std::io::{self, Write};
 use heed::types::*;
 use heed::{Database, EnvOpenOptions};
 use std::fs;
+use std::io::{self, Write};
 use std::path::Path;
 
-mod KeyValueStore;
+mod key_value_store;
+mod r#match;
+mod rspace;
+mod serialize;
 // mod repl;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -48,7 +51,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
 
 fn repl() {
     loop {
