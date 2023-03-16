@@ -1,6 +1,6 @@
 // use std::error::Error;
 
-struct Channel {
+pub struct Channel {
     name: String,
 }
 
@@ -16,7 +16,7 @@ struct Address {
     zip: String,
 }
 
-struct Entry {
+pub struct Entry {
     name: Name,
     address: Address,
     email: String,
@@ -31,7 +31,7 @@ fn print_entry(entry: &Entry) {
     );
 
     println!(
-        r#"|
+        r#"
 === ENTRY ===
 name:    {}
 address: {}
@@ -57,4 +57,6 @@ fn main() {
         email: "alicel@ringworld.net".to_string(),
         phone: "787-555-1212".to_string(),
     };
+
+    print_entry(&alice);
 }
