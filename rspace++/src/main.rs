@@ -10,6 +10,7 @@ mod key_value_store;
 mod r#match;
 mod rspace;
 mod serialize;
+mod example;
 // mod repl;
 
 fn main() -> Result<(), Box<dyn Error>> {
