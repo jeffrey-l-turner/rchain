@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::rspace::RSpace;
+use crate::rspace::{Option, RSpace};
 
 pub struct Channel {
     pub name: String,
@@ -41,7 +41,7 @@ pub struct CityMatch {
 pub struct Printer;
 
 impl Printer {
-    fn print_entry(entry: &Entry) -> () {
+    pub fn print_entry(&self, entry: &Entry) -> () {
         let name_str = format!("{}, {}", entry.name.last, entry.name.first);
         let addr_str = format!(
             "{}, {}, {}, {}",
@@ -59,6 +59,11 @@ phone:   {}
             name_str, addr_str, entry.email, entry.phone
         );
     }
+}
+
+fn run_k(k: Option) {
+    let r#struct = k.continuation;
+    r#struct.print_entry(&k.data);
 }
 
 pub fn example_main() {
@@ -83,11 +88,12 @@ pub fn example_main() {
         phone: "787-555-1212".to_string(),
     };
 
-    // print_entry(&alice);
-
     let rspace = RSpace::create().unwrap();
 
     let _cres = rspace.consume(&chan, printer);
 
-    // let pres = rspace.produce(alice, false);
+    let pres = rspace.produce(&chan, alice);
+
+    print!("Running continuation...\n");
+    run_k(pres.unwrap());
 }
