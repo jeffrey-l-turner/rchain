@@ -1,5 +1,7 @@
 // use std::error::Error;
 
+use serde::{Deserialize, Serialize};
+
 use crate::rspace::RSpace;
 
 pub struct Channel {
@@ -35,29 +37,36 @@ pub struct CityMatch {
     city: String,
 }
 
-fn print_entry(entry: &Entry) {
-    let name_str = format!("{}, {}", entry.name.last, entry.name.first);
-    let addr_str = format!(
-        "{}, {}, {}, {}",
-        entry.address.street, entry.address.city, entry.address.state, entry.address.zip
-    );
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Printer;
 
-    println!(
-        r#"
+impl Printer {
+    fn print_entry(entry: &Entry) -> () {
+        let name_str = format!("{}, {}", entry.name.last, entry.name.first);
+        let addr_str = format!(
+            "{}, {}, {}, {}",
+            entry.address.street, entry.address.city, entry.address.state, entry.address.zip
+        );
+
+        println!(
+            r#"
 === ENTRY ===
 name:    {}
 address: {}
 email:   {}
 phone:   {}
 "#,
-        name_str, addr_str, entry.email, entry.phone
-    );
+            name_str, addr_str, entry.email, entry.phone
+        );
+    }
 }
 
 pub fn example_main() {
     let chan = Channel {
         name: String::from("friends"),
     };
+
+    let printer = Printer;
 
     let alice = Entry {
         name: Name {
@@ -76,15 +85,9 @@ pub fn example_main() {
 
     // print_entry(&alice);
 
-    let rspace = RSpace::new(&chan).unwrap();
+    let rspace = RSpace::create().unwrap();
 
-    let cres = rspace.consume(
-        &CityMatch {
-            city: String::from("Crystal Lake"),
-        },
-        &print_entry(&alice),
-        false,
-    );
+    let _cres = rspace.consume(&chan, printer);
 
-    let pres = rspace.produce(alice, false);
+    // let pres = rspace.produce(alice, false);
 }

@@ -11,3 +11,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 heed = "0.11.0"
+serde = "1.0.156"
