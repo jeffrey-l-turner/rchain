@@ -1,59 +1,49 @@
 use std::error::Error;
-
-use heed::types::*;
-use heed::{Database, EnvOpenOptions};
-use std::fs;
 use std::io::{self, Write};
-use std::path::Path;
 
-use crate::example::example_main;
-use crate::rspace::RSpace;
+// use crate::rspace::{Option, RSpace};
+
+use example::{Address, Channel, Entry, Name, Printer};
+use rspace::{Option, RSpace};
 
 mod example;
-mod key_value_store;
-mod r#match;
 mod rspace;
-mod serialize;
-// mod repl;
+
+fn run_k(k: Option) {
+    let r#struct = k.continuation;
+    r#struct.print_entry(&k.data);
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
-    // fs::create_dir_all(Path::new("target").join("test_db.mdb"))?;
-    // let env = EnvOpenOptions::new().open(Path::new("target").join("test_db.mdb"))?;
+    let chan = Channel {
+        name: String::from("friends"),
+    };
 
-    // println!("\n");
-    // println!("Created new database: \"test_db\"");
-    // println!("\n");
+    let printer = Printer;
 
-    // // we will open the default unamed database
-    // let db: Database<Str, OwnedType<i32>> = env.create_database(None)?;
+    let alice = Entry {
+        name: Name {
+            first: "Alice".to_string(),
+            last: "Lincoln".to_string(),
+        },
+        address: Address {
+            street: "777 Ford St.".to_string(),
+            city: "Crystal Lake".to_string(),
+            state: "Idaho".to_string(),
+            zip: "223322".to_string(),
+        },
+        email: "alicel@ringworld.net".to_string(),
+        phone: "787-555-1212".to_string(),
+    };
 
-    // // opening a write transaction
-    // let mut wtxn = env.write_txn()?;
-    // db.put(&mut wtxn, "seven", &7)?;
-    // db.put(&mut wtxn, "zero", &0)?;
-    // db.put(&mut wtxn, "five", &5)?;
-    // db.put(&mut wtxn, "three", &3)?;
-    // wtxn.commit()?;
+    let rspace = RSpace::create().unwrap();
 
-    // println!("Added key: \"seven\" with value: 7");
-    // println!("Added key: \"zero\" with value: 0");
-    // println!("Added key: \"five\" with value: 5");
-    // println!("Added key: \"three\" with value: 3");
-    // println!("\n");
+    let _cres = rspace.consume(&chan, printer);
 
-    // // opening a read transaction
-    // // to check if those values are now available
-    // let rtxn = env.read_txn()?;
+    let pres = rspace.produce(&chan, alice);
 
-    // let ret = db.get(&rtxn, "zero")?;
-    // println!("Value for key \"zero\": {:?}", ret);
-    // assert_eq!(ret, Some(0));
-
-    // let ret = db.get(&rtxn, "five")?;
-    // println!("Value for key \"five\": {:?}", ret);
-    // assert_eq!(ret, Some(5));
-
-    example_main();
+    print!("Running continuation...\n");
+    run_k(pres.unwrap());
 
     Ok(())
 }

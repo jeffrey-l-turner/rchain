@@ -4,7 +4,7 @@ use std::error::Error;
 use std::fs;
 use std::path::Path;
 
-use crate::example::{Channel, CityMatch, Entry, Printer};
+use crate::example::{Channel, Entry, Printer};
 
 pub struct Option {
     pub continuation: Printer,
