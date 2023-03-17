@@ -1,7 +1,9 @@
 // use std::error::Error;
 
+use crate::rspace::RSpace;
+
 pub struct Channel {
-    name: String,
+    pub name: String,
 }
 
 struct Name {
@@ -23,10 +25,14 @@ pub struct Entry {
     phone: String,
 }
 
-pub enum Pattern {
-    NameMatch { last: String },
-    CityMatch { city: String },
-    StateMatch { state: String },
+// pub enum Pattern {
+//     NameMatch { last: String },
+//     CityMatch { city: String },
+//     StateMatch { state: String },
+// }
+
+pub struct CityMatch {
+    city: String,
 }
 
 fn print_entry(entry: &Entry) {
@@ -49,6 +55,10 @@ phone:   {}
 }
 
 pub fn example_main() {
+    let chan = Channel {
+        name: String::from("friends"),
+    };
+
     let alice = Entry {
         name: Name {
             first: "Alice".to_string(),
@@ -64,5 +74,17 @@ pub fn example_main() {
         phone: "787-555-1212".to_string(),
     };
 
-    print_entry(&alice);
+    // print_entry(&alice);
+
+    let rspace = RSpace::new(&chan).unwrap();
+
+    let cres = rspace.consume(
+        &CityMatch {
+            city: String::from("Crystal Lake"),
+        },
+        &print_entry(&alice),
+        false,
+    );
+
+    let pres = rspace.produce(alice, false);
 }
