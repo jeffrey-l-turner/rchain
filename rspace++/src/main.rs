@@ -19,15 +19,13 @@ fn main() -> Result<(), Box<dyn Error>> {
         name: String::from("friends"),
     };
 
-    let printer = Printer;
-
     let alice = Entry {
         name: Name {
             first: "Alice".to_string(),
             last: "Lincoln".to_string(),
         },
         address: Address {
-            street: "777 Ford St.".to_string(),
+            street: "777 Ford St".to_string(),
             city: "Crystal Lake".to_string(),
             state: "Idaho".to_string(),
             zip: "223322".to_string(),
@@ -36,14 +34,52 @@ fn main() -> Result<(), Box<dyn Error>> {
         phone: "787-555-1212".to_string(),
     };
 
+    let bob = Entry {
+        name: Name {
+            first: "Bob".to_string(),
+            last: "Lahblah".to_string(),
+        },
+        address: Address {
+            street: "1000 Main St".to_string(),
+            city: "Crystal Lake".to_string(),
+            state: "Idaho".to_string(),
+            zip: "223322".to_string(),
+        },
+        email: "blablah@tenex.net".to_string(),
+        phone: "232-555-1212".to_string(),
+    };
+
+    let carol = Entry {
+      name: Name {
+          first: "Carol".to_string(),
+          last: "Lahblah".to_string(),
+      },
+      address: Address {
+          street: "22 Goldwater Way".to_string(),
+          city: "Herbert".to_string(),
+          state: "Nevada".to_string(),
+          zip: "334433".to_string(),
+      },
+      email: "carol@blablah.org".to_string(),
+      phone: "232-555-1212".to_string(),
+  };
+
     let rspace = RSpace::create().unwrap();
 
-    let _cres = rspace.consume(&chan, printer);
+    let _cres1 = rspace.consume(
+        &chan,
+        example::CityMatch {
+            city: "Crystal Lake".to_string(),
+        },
+        Printer,
+    );
 
-    let pres = rspace.produce(&chan, alice);
+    let pres1 = rspace.produce(&chan, alice);
 
-    print!("Running continuation...\n");
-    run_k(pres.unwrap());
+    print!("Running continuation for alice...\n");
+    run_k(pres1.unwrap());
+
+    let pres2 = rspace.produce(&chan, carol);
 
     Ok(())
 }
