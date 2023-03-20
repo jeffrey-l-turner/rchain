@@ -76,7 +76,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let pres1 = rspace.produce(&chan, alice);
 
-    print!("Running continuation for alice...\n");
+    print!("Running continuation for Alice...\n");
     run_k(pres1.unwrap());
 
     let pres2 = rspace.produce(&chan, carol);

@@ -75,7 +75,7 @@ impl RSpace {
                 data: entry,
             })
         } else {
-            println!("\nNo matching data for {}\n", entry.name.first);
+            println!("\nNo matching data for {}...\n", entry.name.first);
             Err("error: did not find match".into())
         }
     }
