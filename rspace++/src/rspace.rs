@@ -70,6 +70,11 @@ impl RSpace {
                 "\nFound matching data: \"{}\" in channel: \"{}\"\n",
                 entry.name.first, channel.name
             );
+
+            let mut wtxn = self.env.write_txn()?;
+            let _ = self.db.delete(&mut wtxn, &channel.name);
+            wtxn.commit()?;
+
             Ok(Option {
                 continuation: k_data.function,
                 data: entry,
@@ -78,5 +83,35 @@ impl RSpace {
             println!("\nNo matching data for {}...\n", entry.name.first);
             Err("error: did not find match".into())
         }
+    }
+
+    pub fn print(&self) -> Result<(), Box<dyn Error>> {
+        let wtxn = self.env.write_txn()?;
+        let mut iter = self.db.iter(&wtxn)?;
+
+        println!();
+
+        if !self.db.is_empty(&wtxn)? {
+            let mut _iter = iter.next().transpose()?;
+            while _iter.is_some() {
+                println!("{:?}", _iter);
+                _iter = iter.next().transpose()?;
+            }
+        } else {
+            println!("Database is empty")
+        }
+
+        drop(iter);
+        wtxn.commit()?;
+
+        Ok(())
+    }
+
+    pub fn clear(&self) -> Result<(), Box<dyn Error>> {
+        let mut wtxn = self.env.write_txn()?;
+        let _ = self.db.clear(&mut wtxn)?;
+        wtxn.commit()?;
+
+        Ok(())
     }
 }

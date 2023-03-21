@@ -19,6 +19,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         name: String::from("friends"),
     };
 
+    let chan1 = Channel {
+        name: String::from("colleagues"),
+    };
+
     let alice = Entry {
         name: Name {
             first: "Alice".to_string(),
@@ -50,19 +54,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
 
     let carol = Entry {
-      name: Name {
-          first: "Carol".to_string(),
-          last: "Lahblah".to_string(),
-      },
-      address: Address {
-          street: "22 Goldwater Way".to_string(),
-          city: "Herbert".to_string(),
-          state: "Nevada".to_string(),
-          zip: "334433".to_string(),
-      },
-      email: "carol@blablah.org".to_string(),
-      phone: "232-555-1212".to_string(),
-  };
+        name: Name {
+            first: "Carol".to_string(),
+            last: "Lahblah".to_string(),
+        },
+        address: Address {
+            street: "22 Goldwater Way".to_string(),
+            city: "Herbert".to_string(),
+            state: "Nevada".to_string(),
+            zip: "334433".to_string(),
+        },
+        email: "carol@blablah.org".to_string(),
+        phone: "232-555-1212".to_string(),
+    };
 
     let rspace = RSpace::create().unwrap();
 
@@ -74,12 +78,24 @@ fn main() -> Result<(), Box<dyn Error>> {
         Printer,
     );
 
-    let pres1 = rspace.produce(&chan, alice);
+    let _cres2 = rspace.consume(
+        &chan,
+        example::CityMatch {
+            city: "Herbert".to_string(),
+        },
+        Printer,
+    );
 
-    print!("Running continuation for Alice...\n");
-    run_k(pres1.unwrap());
+    let _ = rspace.print();
 
-    let pres2 = rspace.produce(&chan, carol);
+    // let pres1 = rspace.produce(&chan, alice);
+
+    // print!("Running continuation for Alice...\n");
+    // run_k(pres1.unwrap());
+
+    // let pres2 = rspace.produce(&chan, carol);
+
+    let _ = rspace.clear();
 
     Ok(())
 }
