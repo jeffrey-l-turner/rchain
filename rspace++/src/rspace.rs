@@ -9,7 +9,7 @@ use std::path::Path;
 
 use crate::example::{Channel, CityMatch, Entry, Printer};
 
-pub struct Option {
+pub struct OptionResult {
     pub continuation: Printer,
     pub data: Entry,
 }
@@ -36,8 +36,6 @@ impl RSpace {
         // open the default unamed database
         let db = env.create_database(None)?;
 
-        println!("\nCreated new database: \"rspace\" in \"target\" directory\n");
-
         Ok(RSpace { env, db })
     }
 
@@ -58,18 +56,16 @@ impl RSpace {
         let _ = self.db.put(&mut wtxn, &key, &k_data);
         wtxn.commit()?;
 
-        println!("Installed continuation in channel: \"{}\" with function: \"print_entry\" and matching pattern: \"CityMatch\"", channel.name);
-
         Ok(())
     }
 
-    pub fn produce(&self, channel: &Channel, entry: Entry) -> Result<Option, Box<dyn Error>> {
+    pub fn produce(&self, channel: &Channel, entry: Entry) -> Option<OptionResult> {
         let mut continuation = Printer;
         let mut matched = false;
 
-        let rtxn = self.env.read_txn()?;
-        let mut iter = self.db.iter(&rtxn)?;
-        let mut iter_decode = iter.next().transpose()?;
+        let rtxn = self.env.read_txn().unwrap();
+        let mut iter = self.db.iter(&rtxn).unwrap();
+        let mut iter_decode = iter.next().transpose().unwrap();
 
         while iter_decode.is_some() {
             let option = iter_decode.unwrap();
@@ -77,32 +73,27 @@ impl RSpace {
             let pattern = k_data.pattern;
 
             if pattern.city_match(&entry) {
-                println!(
-                    "\nFound matching data: \"{}\" in channel: \"{}\"\n",
-                    entry.name.first, channel.name
-                );
-
-                let mut wtxn = self.env.write_txn()?;
+                let mut wtxn = self.env.write_txn().unwrap();
                 let _ = self.db.delete(&mut wtxn, option.0);
-                wtxn.commit()?;
+                wtxn.commit().unwrap();
 
                 continuation = k_data.function;
                 matched = true;
                 break;
             }
-            iter_decode = iter.next().transpose()?;
+            iter_decode = iter.next().transpose().unwrap();
         }
         drop(iter);
-        rtxn.commit()?;
+        rtxn.commit().unwrap();
 
         if matched {
-            Ok(Option {
+            Some(OptionResult {
                 continuation,
                 data: entry,
             })
         } else {
-            println!("\nNo matching data for {}...\n", entry.name.first);
-            Err("error: did not find match".into())
+            println!("\nNo matching data for {}...", entry.name.first);
+            None
         }
     }
 

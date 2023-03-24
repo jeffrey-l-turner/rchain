@@ -4,12 +4,12 @@ use std::io::{self, Write};
 // use crate::rspace::{Option, RSpace};
 
 use example::{Address, Channel, Entry, Name, Printer};
-use rspace::{Option, RSpace};
+use rspace::{OptionResult, RSpace};
 
 mod example;
 mod rspace;
 
-fn run_k(k: Option) {
+fn run_k(k: OptionResult) {
     print!("Running continuation for {}...\n", k.data.name.first);
 
     let r#struct = k.continuation;
@@ -17,11 +17,11 @@ fn run_k(k: Option) {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let chan = Channel {
+    let chan1 = Channel {
         name: String::from("friends"),
     };
 
-    let chan1 = Channel {
+    let chan2 = Channel {
         name: String::from("colleagues"),
     };
 
@@ -73,7 +73,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let rspace = RSpace::create().unwrap();
 
     let _cres1 = rspace.consume(
-        &chan,
+        &chan1,
         example::CityMatch {
             city: "Crystal Lake".to_string(),
         },
@@ -82,9 +82,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let _ = rspace.print();
 
-    let pres1 = rspace.produce(&chan, alice);
+    let pres1 = rspace.produce(&chan1, carol);
 
-    run_k(pres1.unwrap());
+    if pres1.is_some() {
+        run_k(pres1.unwrap());
+    }
 
     let _ = rspace.print();
 
