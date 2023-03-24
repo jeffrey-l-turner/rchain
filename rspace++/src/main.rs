@@ -10,7 +10,7 @@ mod example;
 mod rspace;
 
 fn run_k(k: OptionResult) {
-    print!("Running continuation for {}...\n", k.data.name.first);
+    println!("\nRunning continuation for {}...", k.data.name.first);
 
     let r#struct = k.continuation;
     r#struct.print_entry(&k.data);

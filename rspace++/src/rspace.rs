@@ -101,9 +101,8 @@ impl RSpace {
         let wtxn = self.env.write_txn()?;
         let mut iter = self.db.iter(&wtxn)?;
 
-        println!();
-
         if !self.db.is_empty(&wtxn)? {
+            println!("\nCurrent store state:");
             let mut _iter = iter.next().transpose()?;
             while _iter.is_some() {
                 println!("{:?}", _iter);
