@@ -1,8 +1,10 @@
 use heed::{types::*, Env};
 use heed::{Database, EnvOpenOptions};
 use serde::{Deserialize, Serialize};
+use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
 use std::fs;
+use std::hash::{Hash, Hasher};
 use std::path::Path;
 
 use crate::example::{Channel, CityMatch, Entry, Printer};
@@ -12,7 +14,7 @@ pub struct Option {
     pub data: Entry,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Hash)]
 pub struct KData {
     pattern: CityMatch,
     function: Printer,
@@ -49,7 +51,11 @@ impl RSpace {
 
         // opening a write transaction
         let mut wtxn = self.env.write_txn()?;
-        let _ = self.db.put(&mut wtxn, &channel.name, &k_data);
+
+        let kdata_hash = self.calculate_hash(&k_data);
+        let key = format!("{}-{}", &channel.name, &kdata_hash);
+
+        let _ = self.db.put(&mut wtxn, &key, &k_data);
         wtxn.commit()?;
 
         println!("Installed continuation in channel: \"{}\" with function: \"print_entry\" and matching pattern: \"CityMatch\"", channel.name);
@@ -58,25 +64,40 @@ impl RSpace {
     }
 
     pub fn produce(&self, channel: &Channel, entry: Entry) -> Result<Option, Box<dyn Error>> {
-        // opening a read transaction
+        let mut continuation = Printer;
+        let mut matched = false;
+
         let rtxn = self.env.read_txn()?;
-        let ret = self.db.get(&rtxn, &channel.name)?;
+        let mut iter = self.db.iter(&rtxn)?;
+        let mut iter_decode = iter.next().transpose()?;
 
-        let k_data = ret.unwrap();
-        let pattern = k_data.pattern;
+        while iter_decode.is_some() {
+            let option = iter_decode.unwrap();
+            let k_data = option.1;
+            let pattern = k_data.pattern;
 
-        if pattern.city_match(&entry) {
-            println!(
-                "\nFound matching data: \"{}\" in channel: \"{}\"\n",
-                entry.name.first, channel.name
-            );
+            if pattern.city_match(&entry) {
+                println!(
+                    "\nFound matching data: \"{}\" in channel: \"{}\"\n",
+                    entry.name.first, channel.name
+                );
 
-            let mut wtxn = self.env.write_txn()?;
-            let _ = self.db.delete(&mut wtxn, &channel.name);
-            wtxn.commit()?;
+                let mut wtxn = self.env.write_txn()?;
+                let _ = self.db.delete(&mut wtxn, option.0);
+                wtxn.commit()?;
 
+                continuation = k_data.function;
+                matched = true;
+                break;
+            }
+            iter_decode = iter.next().transpose()?;
+        }
+        drop(iter);
+        rtxn.commit()?;
+
+        if matched {
             Ok(Option {
-                continuation: k_data.function,
+                continuation,
                 data: entry,
             })
         } else {
@@ -113,5 +134,11 @@ impl RSpace {
         wtxn.commit()?;
 
         Ok(())
+    }
+
+    fn calculate_hash<T: Hash>(&self, t: &T) -> u64 {
+        let mut s = DefaultHasher::new();
+        t.hash(&mut s);
+        s.finish()
     }
 }

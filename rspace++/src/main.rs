@@ -10,6 +10,8 @@ mod example;
 mod rspace;
 
 fn run_k(k: Option) {
+    print!("Running continuation for {}...\n", k.data.name.first);
+
     let r#struct = k.continuation;
     r#struct.print_entry(&k.data);
 }
@@ -78,22 +80,13 @@ fn main() -> Result<(), Box<dyn Error>> {
         Printer,
     );
 
-    let _cres2 = rspace.consume(
-        &chan,
-        example::CityMatch {
-            city: "Herbert".to_string(),
-        },
-        Printer,
-    );
-
     let _ = rspace.print();
 
-    // let pres1 = rspace.produce(&chan, alice);
+    let pres1 = rspace.produce(&chan, alice);
 
-    // print!("Running continuation for Alice...\n");
-    // run_k(pres1.unwrap());
+    run_k(pres1.unwrap());
 
-    // let pres2 = rspace.produce(&chan, carol);
+    let _ = rspace.print();
 
     let _ = rspace.clear();
 

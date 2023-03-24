@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::hash::Hash;
 
 pub struct Channel {
     pub name: String,
@@ -23,7 +24,7 @@ pub struct Entry {
     pub phone: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Hash)]
 pub struct Printer;
 
 impl Printer {
@@ -47,7 +48,7 @@ phone:   {}
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Hash)]
 pub struct NameMatch;
 
 impl NameMatch {
@@ -56,7 +57,7 @@ impl NameMatch {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Hash)]
 pub struct CityMatch {
     pub city: String,
 }
@@ -67,7 +68,7 @@ impl CityMatch {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Hash)]
 pub struct StateMatch;
 
 impl StateMatch {
