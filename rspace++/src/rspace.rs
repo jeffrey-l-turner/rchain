@@ -69,23 +69,23 @@ impl RSpace {
 
         let rtxn = self.env.read_txn().unwrap();
         let mut iter = self.db.iter(&rtxn).unwrap();
-        let mut iter_decode = iter.next().transpose().unwrap();
+        let mut iter_option = iter.next().transpose().unwrap();
 
-        while iter_decode.is_some() {
-            let option = iter_decode.unwrap();
-            let k_data = option.1;
+        while iter_option.is_some() {
+            let iter_data = iter_option.unwrap();
+            let k_data = iter_data.1;
             let pattern = k_data.pattern;
 
             if pattern.city_match(&entry) {
                 let mut wtxn = self.env.write_txn().unwrap();
-                let _ = self.db.delete(&mut wtxn, option.0);
+                let _ = self.db.delete(&mut wtxn, iter_data.0);
                 wtxn.commit().unwrap();
 
                 continuation = k_data.function;
                 matched = true;
                 break;
             }
-            iter_decode = iter.next().transpose().unwrap();
+            iter_option = iter.next().transpose().unwrap();
         }
         drop(iter);
         rtxn.commit().unwrap();
@@ -114,8 +114,9 @@ impl RSpace {
             println!("\nCurrent store state:");
             let mut iter_option = iter.next().transpose()?;
             while iter_option.is_some() {
+                let k_data_bytes = &iter_option.as_ref().unwrap().1;
                 let k_data: KData<P, F> =
-                    bincode::deserialize::<KData<P, F>>(&iter_option.as_ref().unwrap().1).unwrap();
+                    bincode::deserialize::<KData<P, F>>(&k_data_bytes).unwrap();
                 println!(
                     "KEY: {:?} VALUE: {:?}",
                     iter_option.as_ref().unwrap().0,
