@@ -10,5 +10,6 @@ name = "rust_library"
 crate-type = ["cdylib"]
 
 [dependencies]
+bincode = "1.0"
 heed = "0.11.0"
 serde = "1.0.156"

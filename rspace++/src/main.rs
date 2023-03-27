@@ -3,7 +3,7 @@ use std::io::{self, Write};
 
 // use crate::rspace::{Option, RSpace};
 
-use example::{Address, Channel, Entry, Name, Printer};
+use example::{Address, Channel, CityMatch, Entry, Name, Printer};
 use rspace::{OptionResult, RSpace};
 
 mod example;
@@ -80,15 +80,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         Printer,
     );
 
-    let _ = rspace.print();
+    let _ = rspace.print::<CityMatch, Printer>();
 
     let pres1 = rspace.produce(&chan1, carol);
 
-    if pres1.is_some() {
-        run_k(pres1.unwrap());
-    }
+    // if pres1.is_some() {
+    //     run_k(pres1.unwrap());
+    // }
 
-    let _ = rspace.print();
+    // let _ = rspace.print();
 
     let _ = rspace.clear();
 

@@ -7,17 +7,17 @@ use std::fs;
 use std::hash::{Hash, Hasher};
 use std::path::Path;
 
-use crate::example::{Channel, CityMatch, Entry, Printer};
+use crate::example::{Channel, Entry, Printer};
 
 pub struct OptionResult {
     pub continuation: Printer,
     pub data: Entry,
 }
 
-#[derive(Debug, Serialize, Deserialize, Hash)]
-pub struct KData {
-    pattern: CityMatch,
-    function: Printer,
+#[derive(Debug, Serialize, Deserialize, Hash, Clone, Copy)]
+pub struct KData<P, F> {
+    pattern: P,
+    function: F,
 }
 
 /*
@@ -25,7 +25,7 @@ See RSpace.scala and Tuplespace.scala in rspace/
 */
 pub struct RSpace {
     env: Env,
-    db: Database<Str, SerdeBincode<KData>>,
+    db: Database<Str, SerdeBincode<Vec<u8>>>,
 }
 
 impl RSpace {
@@ -39,13 +39,17 @@ impl RSpace {
         Ok(RSpace { env, db })
     }
 
-    pub fn consume(
+    pub fn consume<
+        P: std::hash::Hash + serde::Serialize + 'static,
+        F: std::hash::Hash + serde::Serialize + 'static,
+    >(
         &self,
         channel: &Channel,
-        pattern: CityMatch,
-        function: Printer,
+        pattern: P,
+        function: F,
     ) -> Result<(), Box<dyn Error>> {
         let k_data = KData { pattern, function };
+        let k_data_bytes = bincode::serialize(&k_data).unwrap();
 
         // opening a write transaction
         let mut wtxn = self.env.write_txn()?;
@@ -53,7 +57,7 @@ impl RSpace {
         let kdata_hash = self.calculate_hash(&k_data);
         let key = format!("{}-{}", &channel.name, &kdata_hash);
 
-        let _ = self.db.put(&mut wtxn, &key, &k_data);
+        let _ = self.db.put(&mut wtxn, &key, &k_data_bytes);
         wtxn.commit()?;
 
         Ok(())
@@ -97,23 +101,34 @@ impl RSpace {
         }
     }
 
-    pub fn print(&self) -> Result<(), Box<dyn Error>> {
-        let wtxn = self.env.write_txn()?;
-        let mut iter = self.db.iter(&wtxn)?;
+    pub fn print<
+        P: for<'a> serde::Deserialize<'a> + std::fmt::Debug,
+        F: for<'a> serde::Deserialize<'a> + std::fmt::Debug,
+    >(
+        &self,
+    ) -> Result<(), Box<dyn Error>> {
+        let rtxn = self.env.write_txn()?;
+        let mut iter = self.db.iter(&rtxn)?;
 
-        if !self.db.is_empty(&wtxn)? {
+        if !self.db.is_empty(&rtxn)? {
             println!("\nCurrent store state:");
-            let mut _iter = iter.next().transpose()?;
-            while _iter.is_some() {
-                println!("{:?}", _iter);
-                _iter = iter.next().transpose()?;
+            let mut iter_option = iter.next().transpose()?;
+            while iter_option.is_some() {
+                let k_data: KData<P, F> =
+                    bincode::deserialize::<KData<P, F>>(&iter_option.as_ref().unwrap().1).unwrap();
+                println!(
+                    "KEY: {:?} VALUE: {:?}",
+                    iter_option.as_ref().unwrap().0,
+                    k_data
+                );
+                iter_option = iter.next().transpose()?;
             }
         } else {
             println!("Database is empty")
         }
 
         drop(iter);
-        wtxn.commit()?;
+        rtxn.commit()?;
 
         Ok(())
     }

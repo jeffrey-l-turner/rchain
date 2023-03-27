@@ -185,6 +185,7 @@ dependencies = [
 name = "rspace_plus_plus"
 version = "0.1.0"
 dependencies = [
+ "bincode",
  "heed",
  "serde",
 ]
