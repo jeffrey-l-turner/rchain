@@ -9,12 +9,12 @@ use rspace::{OptionResult, RSpace};
 mod example;
 mod rspace;
 
-fn run_k(k: OptionResult) {
-    println!("\nRunning continuation for {}...", k.data.name.first);
+// fn run_k(k: OptionResult<K) {
+//     println!("\nRunning continuation for {}...", k.data.name.first);
 
-    let r#struct = k.continuation;
-    r#struct.print_entry(&k.data);
-}
+//     let r#struct = k.continuation;
+//     r#struct.print_entry(&k.data);
+// }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let chan1 = Channel {
@@ -70,19 +70,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         phone: "232-555-1212".to_string(),
     };
 
+    fn city_match(entry: &Entry) -> bool {
+        entry.address.city == "Crystal Lake"
+    }
+
     let rspace = RSpace::create().unwrap();
 
-    let _cres1 = rspace.consume(
-        &chan1,
-        example::CityMatch {
-            city: "Crystal Lake".to_string(),
-        },
-        Printer,
-    );
+    let _cres1 = rspace.consume(&chan1, city_match, Printer);
 
     let _ = rspace.print::<CityMatch, Printer>();
 
-    let pres1 = rspace.produce(&chan1, carol);
+    // let pres1 = rspace.produce(&chan1, carol);
 
     // if pres1.is_some() {
     //     run_k(pres1.unwrap());
