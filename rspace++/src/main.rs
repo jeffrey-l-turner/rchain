@@ -80,7 +80,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let _ = rspace.print::<CityMatch, Printer>();
 
-    // let pres1 = rspace.produce(&chan1, carol);
+    let pres1 = rspace.produce::<Entry, Printer>(&chan1, carol);
 
     // if pres1.is_some() {
     //     run_k(pres1.unwrap());

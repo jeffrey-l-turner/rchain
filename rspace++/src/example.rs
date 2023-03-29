@@ -5,11 +5,13 @@ pub struct Channel {
     pub name: String,
 }
 
+#[derive(Clone)]
 pub struct Name {
     pub first: String,
     pub last: String,
 }
 
+#[derive(Clone)]
 pub struct Address {
     pub street: String,
     pub city: String,
@@ -17,6 +19,7 @@ pub struct Address {
     pub zip: String,
 }
 
+#[derive(Clone)]
 pub struct Entry {
     pub name: Name,
     pub address: Address,

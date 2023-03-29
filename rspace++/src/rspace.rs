@@ -105,49 +105,49 @@ impl RSpace {
         Ok(())
     }
 
-    // pub fn produce<T, F: for<'a> serde::Deserialize<'a>>(
-    //     &self,
-    //     channel: &Channel,
-    //     entry: Entry,
-    // ) -> Option<OptionResult<F>> {
-    //     let mut continuation;
-    //     let mut matched = false;
+    pub fn produce<T, F: for<'a> serde::Deserialize<'a>>(
+        &self,
+        channel: &Channel,
+        entry: Entry,
+    ) -> Option<OptionResult<F>> {
+        let mut continuation;
+        let mut matched = false;
 
-    //     let rtxn = self.env.read_txn().unwrap();
-    //     let mut iter = self.db.iter(&rtxn).unwrap();
-    //     let mut iter_option = iter.next().transpose().unwrap();
+        let rtxn = self.env.read_txn().unwrap();
+        let mut iter = self.db.iter(&rtxn).unwrap();
+        let mut iter_option = iter.next().transpose().unwrap();
 
-    //     while iter_option.is_some() {
-    //         let iter_data = iter_option.unwrap();
-    //         let k_data_bytes = iter_data.1;
-    //         let k_data: KData<Pattern<T>, F> =
-    //             bincode::deserialize::<KData<Pattern<T>, F>>(&k_data_bytes).unwrap();
-    //         let pattern = k_data.pattern;
+        while iter_option.is_some() {
+            let iter_data = iter_option.unwrap();
+            let k_data_bytes = iter_data.1;
+            let k_data: KData<Pattern<Entry>, F> =
+                bincode::deserialize::<KData<Pattern<Entry>, F>>(&k_data_bytes).unwrap();
+            let pattern = k_data.pattern;
 
-    //         if pattern.city_match(&entry) {
-    //             let mut wtxn = self.env.write_txn().unwrap();
-    //             let _ = self.db.delete(&mut wtxn, iter_data.0);
-    //             wtxn.commit().unwrap();
+            if pattern(entry.clone()) {
+                let mut wtxn = self.env.write_txn().unwrap();
+                let _ = self.db.delete(&mut wtxn, iter_data.0);
+                wtxn.commit().unwrap();
 
-    //             continuation = k_data.function;
-    //             matched = true;
-    //             break;
-    //         }
-    //         iter_option = iter.next().transpose().unwrap();
-    //     }
-    //     drop(iter);
-    //     rtxn.commit().unwrap();
+                continuation = k_data.function;
+                matched = true;
+                break;
+            }
+            iter_option = iter.next().transpose().unwrap();
+        }
+        drop(iter);
+        rtxn.commit().unwrap();
 
-    //     if matched {
-    //         Some(OptionResult {
-    //             continuation,
-    //             data: entry,
-    //         })
-    //     } else {
-    //         println!("\nNo matching data for {}...", entry.name.first);
-    //         None
-    //     }
-    // }
+        if matched {
+            Some(OptionResult {
+                continuation,
+                data: entry,
+            })
+        } else {
+            println!("\nNo matching data for {}...", entry.clone().name.first);
+            None
+        }
+    }
 
     pub fn print<T, F: for<'a> serde::Deserialize<'a> + std::fmt::Debug>(
         &self,
