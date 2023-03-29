@@ -74,13 +74,20 @@ fn main() -> Result<(), Box<dyn Error>> {
         entry.address.city == "Crystal Lake"
     }
 
+    fn city_match2(entry: &Entry) -> bool {
+        entry.address.city == "Herbert"
+    }
+
     let rspace = RSpace::create().unwrap();
 
     let _cres1 = rspace.consume(&chan1, city_match, Printer);
+    let _cres2 = rspace.consume(&chan1, city_match2, Printer);
 
     let _ = rspace.print::<CityMatch, Printer>();
 
-    let pres1 = rspace.produce::<Entry, Printer>(&chan1, carol);
+    let pres1 = rspace.produce::<Entry, Printer>(&chan1, alice);
+
+    let _ = rspace.print::<CityMatch, Printer>();
 
     // if pres1.is_some() {
     //     run_k(pres1.unwrap());

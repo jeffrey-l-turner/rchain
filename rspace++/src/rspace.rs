@@ -110,9 +110,6 @@ impl RSpace {
         channel: &Channel,
         entry: Entry,
     ) -> Option<OptionResult<F>> {
-        let mut continuation;
-        let mut matched = false;
-
         let rtxn = self.env.read_txn().unwrap();
         let mut iter = self.db.iter(&rtxn).unwrap();
         let mut iter_option = iter.next().transpose().unwrap();
@@ -129,8 +126,11 @@ impl RSpace {
                 let _ = self.db.delete(&mut wtxn, iter_data.0);
                 wtxn.commit().unwrap();
 
-                continuation = k_data.function;
-                matched = true;
+                Some(OptionResult {
+                    continuation: k_data.function,
+                    data: entry,
+                });
+
                 break;
             }
             iter_option = iter.next().transpose().unwrap();
@@ -138,15 +138,7 @@ impl RSpace {
         drop(iter);
         rtxn.commit().unwrap();
 
-        if matched {
-            Some(OptionResult {
-                continuation,
-                data: entry,
-            })
-        } else {
-            println!("\nNo matching data for {}...", entry.clone().name.first);
-            None
-        }
+        None
     }
 
     pub fn print<T, F: for<'a> serde::Deserialize<'a> + std::fmt::Debug>(
