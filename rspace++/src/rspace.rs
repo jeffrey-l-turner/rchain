@@ -76,7 +76,11 @@ pub struct RSpace<D, K> {
 }
 
 impl<
-        D: Clone + std::fmt::Debug + for<'a> serde::Deserialize<'a>,
+        D: Clone
+            + std::hash::Hash
+            + std::fmt::Debug
+            + serde::Serialize
+            + for<'a> serde::Deserialize<'a>,
         K: std::hash::Hash
             + std::fmt::Debug
             + serde::Serialize
@@ -114,7 +118,7 @@ impl<
         let mut wtxn = self.env.write_txn()?;
 
         let kdata_hash = self.calculate_hash(&k_data);
-        let key = format!("{}-{}", &channel.name, &kdata_hash);
+        let key = format!("channel-{}-continuation-{}", &channel.name, &kdata_hash);
 
         let _ = self.db.put(&mut wtxn, &key, &k_data_bytes);
         wtxn.commit()?;
@@ -124,11 +128,13 @@ impl<
 
     pub fn produce(&self, channel: &Channel, entry: D) -> Option<OptionResult<D, K>> {
         let rtxn = self.env.read_txn().unwrap();
-        let mut iter = self.db.iter(&rtxn).unwrap();
-        let mut iter_option = iter.next().transpose().unwrap();
 
-        while iter_option.is_some() {
-            let iter_data = iter_option.unwrap();
+        let continuation_prefix = format!("channel-{}-continuation", channel.name);
+        let mut iter_continuation = self.db.prefix_iter(&rtxn, &continuation_prefix).unwrap();
+        let mut iter_continuation_option = iter_continuation.next().transpose().unwrap();
+
+        while iter_continuation_option.is_some() {
+            let iter_data = iter_continuation_option.unwrap();
             let k_data_bytes = iter_data.1;
             let k_data: KData<Pattern<D>, K> =
                 bincode::deserialize::<KData<Pattern<D>, K>>(&k_data_bytes).unwrap();
@@ -144,34 +150,60 @@ impl<
                     data: entry.clone(),
                 });
             }
-            iter_option = iter.next().transpose().unwrap();
+            iter_continuation_option = iter_continuation.next().transpose().unwrap();
         }
-        drop(iter);
+        drop(iter_continuation);
         rtxn.commit().unwrap();
 
-        println!("\nNo matching data for {:?}...", entry.clone());
+        println!("\nNo matching data for {:?}", entry.clone());
+
+        let mut wtxn = self.env.write_txn().unwrap();
+
+        let data_hash = self.calculate_hash(&entry);
+        let key = format!("channel-{}-data-{}", &channel.name, &data_hash);
+        let data_bytes = bincode::serialize(&entry).unwrap();
+
+        let _ = self.db.put(&mut wtxn, &key, &data_bytes);
+        wtxn.commit().unwrap();
+
         None
     }
 
-    pub fn print(&self) -> Result<(), Box<dyn Error>> {
+    pub fn print_channel(&self, channel: &Channel) -> Result<(), Box<dyn Error>> {
         let rtxn = self.env.write_txn()?;
-        let mut iter = self.db.iter(&rtxn)?;
+
+        let continuation_prefix = format!("channel-{}-continuation", channel.name);
+        let mut iter_continuation = self.db.prefix_iter(&rtxn, &continuation_prefix)?;
+
+        let data_prefix = format!("channel-{}-data", channel.name);
+        let mut iter_data = self.db.prefix_iter(&rtxn, &data_prefix)?;
 
         if !self.db.is_empty(&rtxn)? {
-            println!("\nCurrent store state:");
-            let mut iter_option = iter.next().transpose()?;
-            while iter_option.is_some() {
-                let k_data_bytes = &iter_option.as_ref().unwrap().1;
-                let key = iter_option.as_ref().unwrap().0;
+            println!("\nCurrent channel state for \"{}\":", channel.name);
+
+            let mut iter_continuation_option = iter_continuation.next().transpose()?;
+            while iter_continuation_option.is_some() {
+                let k_data_bytes = &iter_continuation_option.as_ref().unwrap().1;
+                let key = iter_continuation_option.as_ref().unwrap().0;
                 let k_data = bincode::deserialize::<KData<Pattern<D>, K>>(&k_data_bytes).unwrap();
                 println!("KEY: {:?} VALUE: {:?}", key, k_data);
-                iter_option = iter.next().transpose()?;
+                iter_continuation_option = iter_continuation.next().transpose()?;
+            }
+
+            let mut iter_data_option = iter_data.next().transpose()?;
+            while iter_data_option.is_some() {
+                let data_bytes = &iter_data_option.as_ref().unwrap().1;
+                let key = iter_data_option.as_ref().unwrap().0;
+                let data = bincode::deserialize::<D>(&data_bytes).unwrap();
+                println!("KEY: {:?} VALUE: {:?}", key, data);
+                iter_data_option = iter_data.next().transpose()?;
             }
         } else {
             println!("\nDatabase is empty")
         }
 
-        drop(iter);
+        drop(iter_continuation);
+        drop(iter_data);
         rtxn.commit()?;
 
         Ok(())

@@ -81,25 +81,25 @@ fn main() -> Result<(), Box<dyn Error>> {
     let rspace: RSpace<Entry, Printer> = RSpace::create().unwrap();
 
     let _cres1 = rspace.consume(&chan1, city_match, Printer);
-    let _cres2 = rspace.consume(&chan1, name_match, Printer);
+    // let _cres2 = rspace.consume(&chan1, name_match, Printer);
 
-    let _ = rspace.print();
+    let _ = rspace.print_channel(&chan1);
 
-    let pres1 = rspace.produce(&chan1, alice);
+    // let pres1 = rspace.produce(&chan1, alice);
 
-    if pres1.is_some() {
-        run_k(pres1.unwrap());
-    }
+    // if pres1.is_some() {
+    //     run_k(pres1.unwrap());
+    // }
 
-    let _ = rspace.print();
+    // let _ = rspace.print_channel(&chan1);
 
     let pres2 = rspace.produce(&chan1, carol);
 
-    if pres2.is_some() {
-        run_k(pres2.unwrap());
-    }
+    // if pres2.is_some() {
+    //     run_k(pres2.unwrap());
+    // }
 
-    let _ = rspace.print();
+    let _ = rspace.print_channel(&chan1);
 
     let _ = rspace.clear();
 
