@@ -5,13 +5,13 @@ pub struct Channel {
     pub name: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Deserialize)]
 pub struct Name {
     pub first: String,
     pub last: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Deserialize)]
 pub struct Address {
     pub street: String,
     pub city: String,
@@ -19,7 +19,7 @@ pub struct Address {
     pub zip: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Deserialize)]
 pub struct Entry {
     pub name: Name,
     pub address: Address,

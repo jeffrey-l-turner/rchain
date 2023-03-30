@@ -6,21 +6,22 @@ use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
 use std::fs;
 use std::hash::{Hash, Hasher};
+use std::marker::PhantomData;
 use std::path::Path;
 
-use crate::example::{Channel, Entry};
+use crate::example::Channel;
 
-pub struct OptionResult<F> {
-    pub continuation: F,
-    pub data: Entry,
+pub struct OptionResult<D, K> {
+    pub continuation: K,
+    pub data: D,
 }
 
-type Pattern<T> = fn(T) -> bool;
+type Pattern<D> = fn(D) -> bool;
 
 #[derive(Debug, Hash, Clone, Copy)]
-pub struct KData<Pattern, F> {
+pub struct KData<Pattern, K> {
     pattern: Pattern,
-    function: F,
+    continuation: K,
 }
 
 impl<T, F> Serialize for KData<Pattern<T>, F>
@@ -35,7 +36,7 @@ where
         // Serialize the pattern field as a string representation of the function pointer.
         let pattern_string = format!("{:p}", self.pattern);
         state.serialize_field("pattern", &pattern_string)?;
-        state.serialize_field("function", &self.function)?;
+        state.serialize_field("continuation", &self.continuation)?;
         state.end()
     }
 }
@@ -51,7 +52,7 @@ where
         #[derive(Deserialize)]
         struct KDataHelper<F> {
             pattern: String,
-            function: F,
+            continuation: F,
         }
 
         let helper = KDataHelper::<F>::deserialize(deserializer)?;
@@ -60,7 +61,7 @@ where
 
         Ok(KData {
             pattern: unsafe { std::mem::transmute(pattern_ptr) },
-            function: helper.function,
+            continuation: helper.continuation,
         })
     }
 }
@@ -68,29 +69,45 @@ where
 /*
 See RSpace.scala and Tuplespace.scala in rspace/
 */
-pub struct RSpace {
+pub struct RSpace<D, K> {
     env: Env,
     db: Database<Str, SerdeBincode<Vec<u8>>>,
+    phantom: PhantomData<(D, K)>,
 }
 
-impl RSpace {
-    pub fn create() -> Result<RSpace, Box<dyn Error>> {
+impl<
+        D: Clone + for<'a> serde::Deserialize<'a>,
+        K: std::hash::Hash
+            + std::fmt::Debug
+            + serde::Serialize
+            + for<'a> serde::Deserialize<'a>
+            + 'static,
+    > RSpace<D, K>
+{
+    pub fn create() -> Result<RSpace<D, K>, Box<dyn Error>> {
         fs::create_dir_all(Path::new("target").join("rspace"))?;
         let env = EnvOpenOptions::new().open(Path::new("target").join("rspace"))?;
 
         // open the default unamed database
         let db = env.create_database(None)?;
 
-        Ok(RSpace { env, db })
+        Ok(RSpace {
+            env,
+            db,
+            phantom: PhantomData,
+        })
     }
 
-    pub fn consume<T, F: std::hash::Hash + serde::Serialize + 'static>(
+    pub fn consume(
         &self,
         channel: &Channel,
-        pattern: Pattern<T>,
-        function: F,
+        pattern: Pattern<D>,
+        continuation: K,
     ) -> Result<(), Box<dyn Error>> {
-        let k_data = KData { pattern, function };
+        let k_data = KData {
+            pattern,
+            continuation,
+        };
         let k_data_bytes = bincode::serialize(&k_data).unwrap();
 
         // opening a write transaction
@@ -105,11 +122,7 @@ impl RSpace {
         Ok(())
     }
 
-    pub fn produce<T, F: for<'a> serde::Deserialize<'a>>(
-        &self,
-        channel: &Channel,
-        entry: Entry,
-    ) -> Option<OptionResult<F>> {
+    pub fn produce(&self, channel: &Channel, entry: D) -> Option<OptionResult<D, K>> {
         let rtxn = self.env.read_txn().unwrap();
         let mut iter = self.db.iter(&rtxn).unwrap();
         let mut iter_option = iter.next().transpose().unwrap();
@@ -117,8 +130,8 @@ impl RSpace {
         while iter_option.is_some() {
             let iter_data = iter_option.unwrap();
             let k_data_bytes = iter_data.1;
-            let k_data: KData<Pattern<Entry>, F> =
-                bincode::deserialize::<KData<Pattern<Entry>, F>>(&k_data_bytes).unwrap();
+            let k_data: KData<Pattern<D>, K> =
+                bincode::deserialize::<KData<Pattern<D>, K>>(&k_data_bytes).unwrap();
             let pattern = k_data.pattern;
 
             if pattern(entry.clone()) {
@@ -127,7 +140,7 @@ impl RSpace {
                 wtxn.commit().unwrap();
 
                 Some(OptionResult {
-                    continuation: k_data.function,
+                    continuation: k_data.continuation,
                     data: entry,
                 });
 
@@ -141,9 +154,7 @@ impl RSpace {
         None
     }
 
-    pub fn print<T, F: for<'a> serde::Deserialize<'a> + std::fmt::Debug>(
-        &self,
-    ) -> Result<(), Box<dyn Error>> {
+    pub fn print(&self) -> Result<(), Box<dyn Error>> {
         let rtxn = self.env.write_txn()?;
         let mut iter = self.db.iter(&rtxn)?;
 
@@ -152,17 +163,13 @@ impl RSpace {
             let mut iter_option = iter.next().transpose()?;
             while iter_option.is_some() {
                 let k_data_bytes = &iter_option.as_ref().unwrap().1;
-                let k_data: KData<Pattern<T>, F> =
-                    bincode::deserialize::<KData<Pattern<T>, F>>(&k_data_bytes).unwrap();
-                println!(
-                    "KEY: {:?} VALUE: {:?}",
-                    iter_option.as_ref().unwrap().0,
-                    k_data
-                );
+                let key = iter_option.as_ref().unwrap().0;
+                let k_data = bincode::deserialize::<KData<Pattern<D>, K>>(&k_data_bytes).unwrap();
+                println!("KEY: {:?} VALUE: {:?}", key, k_data);
                 iter_option = iter.next().transpose()?;
             }
         } else {
-            println!("Database is empty")
+            println!("\nDatabase is empty")
         }
 
         drop(iter);

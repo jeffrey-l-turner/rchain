@@ -70,30 +70,32 @@ fn main() -> Result<(), Box<dyn Error>> {
         phone: "232-555-1212".to_string(),
     };
 
-    fn city_match(entry: &Entry) -> bool {
+    fn city_match(entry: Entry) -> bool {
         entry.address.city == "Crystal Lake"
     }
 
-    fn city_match2(entry: &Entry) -> bool {
-        entry.address.city == "Herbert"
+    fn name_match(entry: Entry) -> bool {
+        entry.name.last == "Lahblah"
     }
 
-    let rspace = RSpace::create().unwrap();
+    let rspace: RSpace<Entry, Printer> = RSpace::create().unwrap();
 
     let _cres1 = rspace.consume(&chan1, city_match, Printer);
-    let _cres2 = rspace.consume(&chan1, city_match2, Printer);
+    let _cres2 = rspace.consume(&chan1, name_match, Printer);
 
-    let _ = rspace.print::<CityMatch, Printer>();
+    let _ = rspace.print();
 
-    let pres1 = rspace.produce::<Entry, Printer>(&chan1, alice);
+    let pres1 = rspace.produce(&chan1, alice);
 
-    let _ = rspace.print::<CityMatch, Printer>();
+    let _ = rspace.print();
+
+    let pres2 = rspace.produce(&chan1, carol);
+
+    let _ = rspace.print();
 
     // if pres1.is_some() {
     //     run_k(pres1.unwrap());
     // }
-
-    // let _ = rspace.print();
 
     let _ = rspace.clear();
 
