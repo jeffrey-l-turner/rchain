@@ -76,7 +76,7 @@ pub struct RSpace<D, K> {
 }
 
 impl<
-        D: Clone + for<'a> serde::Deserialize<'a>,
+        D: Clone + std::fmt::Debug + for<'a> serde::Deserialize<'a>,
         K: std::hash::Hash
             + std::fmt::Debug
             + serde::Serialize
@@ -139,18 +139,17 @@ impl<
                 let _ = self.db.delete(&mut wtxn, iter_data.0);
                 wtxn.commit().unwrap();
 
-                Some(OptionResult {
+                return Some(OptionResult {
                     continuation: k_data.continuation,
-                    data: entry,
+                    data: entry.clone(),
                 });
-
-                break;
             }
             iter_option = iter.next().transpose().unwrap();
         }
         drop(iter);
         rtxn.commit().unwrap();
 
+        println!("\nNo matching data for {:?}...", entry.clone());
         None
     }
 

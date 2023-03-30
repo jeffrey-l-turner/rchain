@@ -3,18 +3,18 @@ use std::io::{self, Write};
 
 // use crate::rspace::{Option, RSpace};
 
-use example::{Address, Channel, CityMatch, Entry, Name, Printer};
+use example::{Address, Channel, Entry, Name, Printer};
 use rspace::{OptionResult, RSpace};
 
 mod example;
 mod rspace;
 
-// fn run_k(k: OptionResult<K) {
-//     println!("\nRunning continuation for {}...", k.data.name.first);
+fn run_k(k: OptionResult<Entry, Printer>) {
+    println!("\nRunning continuation for {}...", k.data.name.first);
 
-//     let r#struct = k.continuation;
-//     r#struct.print_entry(&k.data);
-// }
+    let r#struct = k.continuation;
+    r#struct.print_entry(&k.data);
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     let chan1 = Channel {
@@ -87,15 +87,19 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let pres1 = rspace.produce(&chan1, alice);
 
+    if pres1.is_some() {
+        run_k(pres1.unwrap());
+    }
+
     let _ = rspace.print();
 
     let pres2 = rspace.produce(&chan1, carol);
 
-    let _ = rspace.print();
+    if pres2.is_some() {
+        run_k(pres2.unwrap());
+    }
 
-    // if pres1.is_some() {
-    //     run_k(pres1.unwrap());
-    // }
+    let _ = rspace.print();
 
     let _ = rspace.clear();
 
