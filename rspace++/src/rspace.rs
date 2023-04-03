@@ -107,23 +107,49 @@ impl<
         channel: &Channel,
         pattern: Pattern<D>,
         continuation: K,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Option<OptionResult<D, K>> {
+        let rtxn = self.env.read_txn().unwrap();
+
+        let data_prefix = format!("channel-{}-data", channel.name);
+        let mut iter_data = self.db.prefix_iter(&rtxn, &data_prefix).unwrap();
+        let mut iter_data_option = iter_data.next().transpose().unwrap();
+
+        while iter_data_option.is_some() {
+            let iter_data_unwrap = iter_data_option.unwrap();
+            let data_bytes = iter_data_unwrap.1;
+            let data: D = bincode::deserialize::<D>(&data_bytes).unwrap();
+
+            if pattern(data.clone()) {
+                let mut wtxn = self.env.write_txn().unwrap();
+                let _ = self.db.delete(&mut wtxn, iter_data_unwrap.0);
+                wtxn.commit().unwrap();
+
+                return Some(OptionResult { continuation, data });
+            }
+            iter_data_option = iter_data.next().transpose().unwrap();
+        }
+        drop(iter_data);
+        rtxn.commit().unwrap();
+
         let k_data = KData {
             pattern,
             continuation,
         };
+
+        println!("\nNo matching data for {:?}", k_data);
+
         let k_data_bytes = bincode::serialize(&k_data).unwrap();
 
         // opening a write transaction
-        let mut wtxn = self.env.write_txn()?;
+        let mut wtxn = self.env.write_txn().unwrap();
 
         let kdata_hash = self.calculate_hash(&k_data);
         let key = format!("channel-{}-continuation-{}", &channel.name, &kdata_hash);
 
         let _ = self.db.put(&mut wtxn, &key, &k_data_bytes);
-        wtxn.commit()?;
+        wtxn.commit().unwrap();
 
-        Ok(())
+        None
     }
 
     pub fn produce(&self, channel: &Channel, entry: D) -> Option<OptionResult<D, K>> {
@@ -155,7 +181,7 @@ impl<
         drop(iter_continuation);
         rtxn.commit().unwrap();
 
-        println!("\nNo matching data for {:?}", entry.clone());
+        println!("\nNo matching continuation for {:?}", entry.clone());
 
         let mut wtxn = self.env.write_txn().unwrap();
 

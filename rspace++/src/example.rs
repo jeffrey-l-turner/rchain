@@ -50,32 +50,3 @@ phone:   {}
         );
     }
 }
-
-#[derive(Debug, Serialize, Deserialize, Hash)]
-pub struct NameMatch;
-
-impl NameMatch {
-    pub fn name_match(entry: Entry, last: String) -> bool {
-        entry.name.last == last
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Hash)]
-pub struct CityMatch {
-    pub city: String,
-}
-
-impl CityMatch {
-    pub fn city_match(&self, entry: &Entry) -> bool {
-        entry.address.city == self.city
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Hash)]
-pub struct StateMatch;
-
-impl StateMatch {
-    pub fn state_match(entry: Entry, state: String) -> bool {
-        entry.address.state == state
-    }
-}
