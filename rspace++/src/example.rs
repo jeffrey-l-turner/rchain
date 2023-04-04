@@ -1,10 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::hash::Hash;
 
-pub struct Channel {
-    pub name: String,
-}
-
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct Name {
     pub first: String,

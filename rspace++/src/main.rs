@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::io::{self, Write};
 
-use example::{Address, Channel, Entry, Name, Printer};
+use example::{Address, Entry, Name, Printer};
 use rspace::{OptionResult, RSpace};
 
 mod example;
@@ -15,13 +15,9 @@ fn run_k(k: OptionResult<Entry, Printer>) {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let chan1 = Channel {
-        name: String::from("friends"),
-    };
+    let chan1 = "friends";
 
-    let chan2 = Channel {
-        name: String::from("colleagues"),
-    };
+    let chan2 = "colleagues";
 
     let alice = Entry {
         name: Name {
@@ -68,6 +64,36 @@ fn main() -> Result<(), Box<dyn Error>> {
         phone: "232-555-1212".to_string(),
     };
 
+    let dan = Entry {
+        name: Name {
+            first: "Dan".to_string(),
+            last: "Walters".to_string(),
+        },
+        address: Address {
+            street: "40 Shady Lane".to_string(),
+            city: "Crystal Lake".to_string(),
+            state: "Idaho".to_string(),
+            zip: "223322".to_string(),
+        },
+        email: "deejwalters@sdf.lonestar.org".to_string(),
+        phone: "444-555-1212".to_string(),
+    };
+
+    let erin = Entry {
+        name: Name {
+            first: "Erin".to_string(),
+            last: "Rush".to_string(),
+        },
+        address: Address {
+            street: "23 Market St.".to_string(),
+            city: "Peony".to_string(),
+            state: "Idaho".to_string(),
+            zip: "224422".to_string(),
+        },
+        email: "erush@lasttraintogoa.net".to_string(),
+        phone: "333-555-1212".to_string(),
+    };
+
     fn city_match(entry: Entry) -> bool {
         entry.address.city == "Crystal Lake"
     }
@@ -78,26 +104,28 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let rspace: RSpace<Entry, Printer> = RSpace::create().unwrap();
 
-    let cres1 = rspace.consume(&chan1, city_match, Printer);
-    let pres1 = rspace.produce(&chan1, carol);
+    // let cres1 = rspace.consume(&chan1, city_match, Printer);
+    let pres1 = rspace.produce(&chan2, dan);
+    let pres2 = rspace.produce(&chan1, erin);
 
     let _ = rspace.print_channel(&chan1);
+    let _ = rspace.print_channel(&chan2);
 
-    let cres2 = rspace.consume(&chan1, name_match, Printer);
+    // let cres2 = rspace.consume(&chan1, name_match, Printer);
 
-    if cres2.is_some() {
-        run_k(cres2.unwrap());
-    }
+    // if cres2.is_some() {
+    //     run_k(cres2.unwrap());
+    // }
 
-    let _ = rspace.print_channel(&chan1);
+    // let _ = rspace.print_channel(&chan1);
 
-    let pres2 = rspace.produce(&chan1, alice);
+    // let pres2 = rspace.produce(&chan1, alice);
 
-    if pres2.is_some() {
-        run_k(pres2.unwrap());
-    }
+    // if pres2.is_some() {
+    //     run_k(pres2.unwrap());
+    // }
 
-    let _ = rspace.print_channel(&chan1);
+    // let _ = rspace.print_channel(&chan1);
 
     let _ = rspace.clear();
 

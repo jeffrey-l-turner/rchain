@@ -9,8 +9,6 @@ use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::path::Path;
 
-use crate::example::Channel;
-
 pub struct OptionResult<D, K> {
     pub continuation: K,
     pub data: D,
@@ -104,13 +102,13 @@ impl<
 
     pub fn consume(
         &self,
-        channel: &Channel,
+        channel: &str,
         pattern: Pattern<D>,
         continuation: K,
     ) -> Option<OptionResult<D, K>> {
         let rtxn = self.env.read_txn().unwrap();
 
-        let data_prefix = format!("channel-{}-data", channel.name);
+        let data_prefix = format!("channel-{}-data", channel);
         let mut iter_data = self.db.prefix_iter(&rtxn, &data_prefix).unwrap();
         let mut iter_data_option = iter_data.next().transpose().unwrap();
 
@@ -144,7 +142,7 @@ impl<
         let mut wtxn = self.env.write_txn().unwrap();
 
         let kdata_hash = self.calculate_hash(&k_data);
-        let key = format!("channel-{}-continuation-{}", &channel.name, &kdata_hash);
+        let key = format!("channel-{}-continuation-{}", &channel, &kdata_hash);
 
         let _ = self.db.put(&mut wtxn, &key, &k_data_bytes);
         wtxn.commit().unwrap();
@@ -152,10 +150,10 @@ impl<
         None
     }
 
-    pub fn produce(&self, channel: &Channel, entry: D) -> Option<OptionResult<D, K>> {
+    pub fn produce(&self, channel: &str, entry: D) -> Option<OptionResult<D, K>> {
         let rtxn = self.env.read_txn().unwrap();
 
-        let continuation_prefix = format!("channel-{}-continuation", channel.name);
+        let continuation_prefix = format!("channel-{}-continuation", channel);
         let mut iter_continuation = self.db.prefix_iter(&rtxn, &continuation_prefix).unwrap();
         let mut iter_continuation_option = iter_continuation.next().transpose().unwrap();
 
@@ -186,7 +184,7 @@ impl<
         let mut wtxn = self.env.write_txn().unwrap();
 
         let data_hash = self.calculate_hash(&entry);
-        let key = format!("channel-{}-data-{}", &channel.name, &data_hash);
+        let key = format!("channel-{}-data-{}", &channel, &data_hash);
         let data_bytes = bincode::serialize(&entry).unwrap();
 
         let _ = self.db.put(&mut wtxn, &key, &data_bytes);
@@ -195,17 +193,17 @@ impl<
         None
     }
 
-    pub fn print_channel(&self, channel: &Channel) -> Result<(), Box<dyn Error>> {
+    pub fn print_channel(&self, channel: &str) -> Result<(), Box<dyn Error>> {
         let rtxn = self.env.write_txn()?;
 
-        let continuation_prefix = format!("channel-{}-continuation", channel.name);
+        let continuation_prefix = format!("channel-{}-continuation", channel);
         let mut iter_continuation = self.db.prefix_iter(&rtxn, &continuation_prefix)?;
 
-        let data_prefix = format!("channel-{}-data", channel.name);
+        let data_prefix = format!("channel-{}-data", channel);
         let mut iter_data = self.db.prefix_iter(&rtxn, &data_prefix)?;
 
         if !self.db.is_empty(&rtxn)? {
-            println!("\nCurrent channel state for \"{}\":", channel.name);
+            println!("\nCurrent channel state for \"{}\":", channel);
 
             let mut iter_continuation_option = iter_continuation.next().transpose()?;
             while iter_continuation_option.is_some() {
