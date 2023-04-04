@@ -79,7 +79,8 @@ impl<
             + std::fmt::Debug
             + serde::Serialize
             + for<'a> serde::Deserialize<'a>,
-        K: std::hash::Hash
+        K: Clone
+            + std::hash::Hash
             + std::fmt::Debug
             + serde::Serialize
             + for<'a> serde::Deserialize<'a>
@@ -102,52 +103,69 @@ impl<
 
     pub fn consume(
         &self,
-        channel: &str,
-        pattern: Pattern<D>,
+        channels: Vec<&str>,
+        patterns: Vec<Pattern<D>>,
         continuation: K,
-    ) -> Option<OptionResult<D, K>> {
-        let rtxn = self.env.read_txn().unwrap();
+    ) -> Option<Vec<OptionResult<D, K>>> {
+        if channels.len() == patterns.len() {
+            let mut results: Vec<OptionResult<D, K>> = vec![];
+            let rtxn = self.env.read_txn().unwrap();
 
-        let data_prefix = format!("channel-{}-data", channel);
-        let mut iter_data = self.db.prefix_iter(&rtxn, &data_prefix).unwrap();
-        let mut iter_data_option = iter_data.next().transpose().unwrap();
+            for i in 0..channels.len() {
+                let data_prefix = format!("channel-{}-data", channels[i]);
+                let mut iter_data = self.db.prefix_iter(&rtxn, &data_prefix).unwrap();
+                let mut iter_data_option = iter_data.next().transpose().unwrap();
 
-        while iter_data_option.is_some() {
-            let iter_data_unwrap = iter_data_option.unwrap();
-            let data_bytes = iter_data_unwrap.1;
-            let data: D = bincode::deserialize::<D>(&data_bytes).unwrap();
+                while iter_data_option.is_some() {
+                    let iter_data_unwrap = iter_data_option.unwrap();
+                    let data_bytes = iter_data_unwrap.1;
+                    let data: D = bincode::deserialize::<D>(&data_bytes).unwrap();
 
-            if pattern(data.clone()) {
-                let mut wtxn = self.env.write_txn().unwrap();
-                let _ = self.db.delete(&mut wtxn, iter_data_unwrap.0);
-                wtxn.commit().unwrap();
+                    if patterns[i](data.clone()) {
+                        let mut wtxn = self.env.write_txn().unwrap();
+                        let _ = self.db.delete(&mut wtxn, iter_data_unwrap.0);
+                        wtxn.commit().unwrap();
 
-                return Some(OptionResult { continuation, data });
+                        results.push(OptionResult {
+                            continuation: continuation.clone(),
+                            data,
+                        });
+                    }
+                    iter_data_option = iter_data.next().transpose().unwrap();
+                }
+                drop(iter_data);
             }
-            iter_data_option = iter_data.next().transpose().unwrap();
+            rtxn.commit().unwrap();
+
+            if results.len() > 0 {
+                return Some(results);
+            } else {
+                for i in 0..channels.len() {
+                    let k_data = KData {
+                        pattern: patterns[i],
+                        continuation: continuation.clone(),
+                    };
+
+                    println!("\nNo matching data for {:?}", k_data);
+
+                    let k_data_bytes = bincode::serialize(&k_data).unwrap();
+
+                    // opening a write transaction
+                    let mut wtxn = self.env.write_txn().unwrap();
+
+                    let kdata_hash = self.calculate_hash(&k_data);
+                    let key = format!("channel-{}-continuation-{}", &channels[i], &kdata_hash);
+
+                    let _ = self.db.put(&mut wtxn, &key, &k_data_bytes);
+                    wtxn.commit().unwrap();
+                }
+
+                None
+            }
+        } else {
+            println!("channel and pattern vectors are not equal length!");
+            None
         }
-        drop(iter_data);
-        rtxn.commit().unwrap();
-
-        let k_data = KData {
-            pattern,
-            continuation,
-        };
-
-        println!("\nNo matching data for {:?}", k_data);
-
-        let k_data_bytes = bincode::serialize(&k_data).unwrap();
-
-        // opening a write transaction
-        let mut wtxn = self.env.write_txn().unwrap();
-
-        let kdata_hash = self.calculate_hash(&k_data);
-        let key = format!("channel-{}-continuation-{}", &channel, &kdata_hash);
-
-        let _ = self.db.put(&mut wtxn, &key, &k_data_bytes);
-        wtxn.commit().unwrap();
-
-        None
     }
 
     pub fn produce(&self, channel: &str, entry: D) -> Option<OptionResult<D, K>> {

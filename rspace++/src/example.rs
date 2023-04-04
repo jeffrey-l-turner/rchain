@@ -23,7 +23,7 @@ pub struct Entry {
     pub phone: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Hash)]
+#[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct Printer;
 
 impl Printer {

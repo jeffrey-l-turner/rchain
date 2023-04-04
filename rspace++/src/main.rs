@@ -102,11 +102,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         entry.name.last == "Lahblah"
     }
 
+    fn state_match(entry: Entry) -> bool {
+        entry.address.state == "Idaho"
+    }
+
     let rspace: RSpace<Entry, Printer> = RSpace::create().unwrap();
 
     // let cres1 = rspace.consume(&chan1, city_match, Printer);
     let pres1 = rspace.produce(&chan2, dan);
     let pres2 = rspace.produce(&chan1, erin);
+
+    let cres5 = rspace.consume(vec![chan1, chan2], vec![state_match, state_match], Printer);
 
     let _ = rspace.print_channel(&chan1);
     let _ = rspace.print_channel(&chan2);
