@@ -7,11 +7,13 @@ use rspace::{OptionResult, RSpace};
 mod example;
 mod rspace;
 
-fn run_k(k: OptionResult<Entry, Printer>) {
-    println!("\nRunning continuation for {}...", k.data.name.first);
+fn run_k(ks: Vec<OptionResult<Entry, Printer>>) {
+    for k in ks {
+        println!("\nRunning continuation for {}...", k.data.name.first);
 
-    let r#struct = k.continuation;
-    r#struct.print_entry(&k.data);
+        let r#struct = k.continuation;
+        r#struct.print_entry(&k.data);
+    }
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -119,9 +121,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // let cres2 = rspace.consume(&chan1, name_match, Printer);
 
-    // if cres2.is_some() {
-    //     run_k(cres2.unwrap());
-    // }
+    if cres5.is_some() {
+        run_k(cres5.unwrap());
+    }
 
     // let _ = rspace.print_channel(&chan1);
 
