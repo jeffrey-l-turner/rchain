@@ -5,11 +5,14 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
-name = "rust_library"
-crate-type = ["cdylib"]
+# [lib]
+# name = "rust_library"
+# crate-type = ["cdylib"]
 
 [dependencies]
 bincode = "1.0"
 heed = "0.11.0"
 serde = "1.0.156"
+
+[dev-dependencies]
+test-env-helpers = "0.2.2"

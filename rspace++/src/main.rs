@@ -1,5 +1,4 @@
 use std::error::Error;
-use std::io::{self, Write};
 
 use example::{Address, Entry, Name, Printer};
 use rspace::{OptionResult, RSpace};
@@ -17,10 +16,6 @@ fn run_k(ks: Vec<OptionResult<Entry, Printer>>) {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let chan1 = "friends";
-
-    let chan2 = "colleagues";
-
     let alice = Entry {
         name: Name {
             first: "Alice".to_string(),
@@ -51,21 +46,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         phone: "232-555-1212".to_string(),
     };
 
-    let carol = Entry {
-        name: Name {
-            first: "Carol".to_string(),
-            last: "Lahblah".to_string(),
-        },
-        address: Address {
-            street: "22 Goldwater Way".to_string(),
-            city: "Herbert".to_string(),
-            state: "Nevada".to_string(),
-            zip: "334433".to_string(),
-        },
-        email: "carol@blablah.org".to_string(),
-        phone: "232-555-1212".to_string(),
-    };
-
     let dan = Entry {
         name: Name {
             first: "Dan".to_string(),
@@ -79,21 +59,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         },
         email: "deejwalters@sdf.lonestar.org".to_string(),
         phone: "444-555-1212".to_string(),
-    };
-
-    let erin = Entry {
-        name: Name {
-            first: "Erin".to_string(),
-            last: "Rush".to_string(),
-        },
-        address: Address {
-            street: "23 Market St.".to_string(),
-            city: "Peony".to_string(),
-            state: "Idaho".to_string(),
-            zip: "224422".to_string(),
-        },
-        email: "erush@lasttraintogoa.net".to_string(),
-        phone: "333-555-1212".to_string(),
     };
 
     fn city_match(entry: Entry) -> bool {
@@ -110,46 +75,55 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let rspace: RSpace<Entry, Printer> = RSpace::create().unwrap();
 
-    // let cres1 = rspace.consume(&chan1, city_match, Printer);
-    let pres1 = rspace.produce(&chan2, dan);
-    let pres2 = rspace.produce(&chan1, erin);
+    println!("\n**** Example 1 ****");
+    let _cres1 = rspace.consume(vec!["friends"], vec![city_match], Printer, false);
+    let _ = rspace.print_channel("friends");
+    let pres1 = rspace.produce("friends", alice.clone(), false);
+    if pres1.is_some() {
+        run_k(vec![pres1.unwrap()]);
+    }
+    let _ = rspace.print_channel("friends");
 
-    let cres5 = rspace.consume(vec![chan1, chan2], vec![state_match, state_match], Printer);
+    println!("\n**** Example 2 ****");
+    let _pres2 = rspace.produce("friends", bob, false);
+    let _ = rspace.print_channel("friends");
+    let cres2 = rspace.consume(vec!["friends"], vec![name_match], Printer, false);
+    if cres2.is_some() {
+        run_k(cres2.unwrap());
+    }
+    let _ = rspace.print_channel("friends");
 
-    let _ = rspace.print_channel(&chan1);
-    let _ = rspace.print_channel(&chan2);
-
-    // let cres2 = rspace.consume(&chan1, name_match, Printer);
-
-    if cres5.is_some() {
-        run_k(cres5.unwrap());
+    println!("\n**** Example 3 ****");
+    let _pres3 = rspace.produce("colleagues", dan, false);
+    let _pres4 = rspace.produce("friends", alice.clone(), false);
+    let _ = rspace.print_channel("friends");
+    let cres3 = rspace.consume(
+        vec!["friends", "colleagues"],
+        vec![state_match, state_match],
+        Printer,
+        true,
+    );
+    if cres3.is_some() {
+        run_k(cres3.unwrap());
+        let _ = rspace.print_channel("friends");
     }
 
-    // let _ = rspace.print_channel(&chan1);
-
-    // let pres2 = rspace.produce(&chan1, alice);
-
-    // if pres2.is_some() {
-    //     run_k(pres2.unwrap());
-    // }
-
-    // let _ = rspace.print_channel(&chan1);
-
     let _ = rspace.clear();
+    assert!(rspace.is_empty());
 
     Ok(())
 }
 
-fn repl() {
-    loop {
-        print!("> ");
-        io::stdout().flush().unwrap();
+// fn repl() {
+//     loop {
+//         print!("> ");
+//         io::stdout().flush().unwrap();
 
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
+//         let mut input = String::new();
+//         io::stdin().read_line(&mut input).unwrap();
 
-        // TODO: parse and evaluate the input using the BNF grammar
+//         // TODO: parse and evaluate the input using the BNF grammar
 
-        println!("{}", input.trim());
-    }
-}
+//         println!("{}", input.trim());
+//     }
+// }

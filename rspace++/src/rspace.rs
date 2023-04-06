@@ -106,6 +106,7 @@ impl<
         channels: Vec<&str>,
         patterns: Vec<Pattern<D>>,
         continuation: K,
+        persist: bool,
     ) -> Option<Vec<OptionResult<D, K>>> {
         if channels.len() == patterns.len() {
             let mut results: Vec<OptionResult<D, K>> = vec![];
@@ -130,6 +131,7 @@ impl<
                             continuation: continuation.clone(),
                             data,
                         });
+                        break;
                     }
                     iter_data_option = iter_data.next().transpose().unwrap();
                 }
@@ -168,7 +170,7 @@ impl<
         }
     }
 
-    pub fn produce(&self, channel: &str, entry: D) -> Option<OptionResult<D, K>> {
+    pub fn produce(&self, channel: &str, entry: D, persist: bool) -> Option<OptionResult<D, K>> {
         let rtxn = self.env.read_txn().unwrap();
 
         let continuation_prefix = format!("channel-{}-continuation", channel);
@@ -212,7 +214,7 @@ impl<
     }
 
     pub fn print_channel(&self, channel: &str) -> Result<(), Box<dyn Error>> {
-        let rtxn = self.env.write_txn()?;
+        let rtxn = self.env.read_txn()?;
 
         let continuation_prefix = format!("channel-{}-continuation", channel);
         let mut iter_continuation = self.db.prefix_iter(&rtxn, &continuation_prefix)?;
@@ -249,6 +251,11 @@ impl<
         rtxn.commit()?;
 
         Ok(())
+    }
+
+    pub fn is_empty(&self) -> bool {
+        let rtxn = self.env.read_txn().unwrap();
+        return self.db.is_empty(&rtxn).unwrap();
     }
 
     pub fn clear(&self) -> Result<(), Box<dyn Error>> {

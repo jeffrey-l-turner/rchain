@@ -188,6 +188,7 @@ dependencies = [
  "bincode",
  "heed",
  "serde",
+ "test-env-helpers",
 ]
 
 [[package]]
@@ -245,6 +246,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3dbc01390fc626ce8d1cffe3376ded2b72a11bb70e1c75f404a210e4daa4def2"
 dependencies = [
  "crossbeam-queue",
+]
+
+[[package]]
+name = "test-env-helpers"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c6ab8f4822c904dadef9dd99f228f58a10d1b2c6ece06b108257e72fea72b1c6"
+dependencies = [
+ "quote",
+ "syn",
 ]
 
 [[package]]
