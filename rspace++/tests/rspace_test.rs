@@ -170,4 +170,20 @@ mod tests {
 
         let _ = rspace.clear();
     }
+
+    #[test]
+    fn test_persist_multiple_matches() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let _pres1 = rspace.produce("friends", setup.alice, false);
+        let _pres2 = rspace.produce("friends", setup.bob, false);
+
+        let cres = rspace.consume(vec!["friends"], vec![city_match], Printer, true);
+
+        assert_eq!(cres.unwrap().len(), 1);
+        assert!(!rspace.is_empty());
+
+        let _ = rspace.clear();
+    }
 }

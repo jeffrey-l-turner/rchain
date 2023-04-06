@@ -1,8 +1,8 @@
-## Rust + Scala
+## Notes: Rust + Scala
 
 - Using `jna`
 
-## Notes
+## Scala
 
 - Run `sbt rspacePlusPlus/run` to run `Main.scala` file in `rspace++/src/main/scala`
 - `scalac <path_to_file>` to compile scala package. Ex: `scalac rspace++/src/main/scala/package.scala` - creates `rspacePlusPlus` directory at root
@@ -19,6 +19,6 @@
 ## Rust
 
 - Run sample code: `cargo run` within `rspace++` directory
-- Run tests: `$ cargo test -- --test-threads=1` with `rspace++` directory. Not to be run in parallel
+- Run tests: `cargo test -- --test-threads=1` with `rspace++` directory. Not to be run in parallel
 
 - `rustc <path_to_file>` to compile single rust file
