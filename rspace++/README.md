@@ -16,6 +16,8 @@
 
 - Integrating new rspace++ into rnode setup, I think, will happen in `node/src/main/scala/coop/rchain/node/runtime/Setup.scala`
 
+- `scalafmt <file_path>` to format `.scala` file
+
 ## Rust
 
 - Run sample code: `cargo run` within `rspace++` directory
