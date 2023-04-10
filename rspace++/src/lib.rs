@@ -5,3 +5,5 @@
 
 pub mod example;
 pub mod rspace;
+pub mod memseq;
+pub mod shared;
