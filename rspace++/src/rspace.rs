@@ -1,12 +1,12 @@
-use heed::{types::*};
-use heed::{EnvOpenOptions, Database, Env};
+use crate::shared::*;
+use heed::types::*;
+use heed::{Database, Env, EnvOpenOptions};
 use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
 use std::fs;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::path::Path;
-use crate::shared::*;
 
 /*
 See RSpace.scala and Tuplespace.scala in rspace/
@@ -90,6 +90,7 @@ impl<
                     let k_data = KData {
                         pattern: patterns[i],
                         continuation: continuation.clone(),
+                        persist,
                     };
 
                     println!("\nNo matching data for {:?}", k_data);
@@ -129,9 +130,11 @@ impl<
             let pattern = k_data.pattern;
 
             if pattern(entry.clone()) {
-                let mut wtxn = self.env.write_txn().unwrap();
-                let _ = self.db.delete(&mut wtxn, iter_data.0);
-                wtxn.commit().unwrap();
+                if !k_data.persist {
+                    let mut wtxn = self.env.write_txn().unwrap();
+                    let _ = self.db.delete(&mut wtxn, iter_data.0);
+                    wtxn.commit().unwrap();
+                }
 
                 return Some(OptionResult {
                     continuation: k_data.continuation,

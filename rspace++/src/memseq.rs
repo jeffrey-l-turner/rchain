@@ -1,8 +1,8 @@
 use std::collections::hash_map::DefaultHasher;
+use std::collections::HashMap;
 use std::error::Error;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
-use std::collections::HashMap;
 
 use crate::shared::*;
 
@@ -23,9 +23,8 @@ impl<
             + serde::Serialize
             + for<'a> serde::Deserialize<'a>
             + 'static,
-    > MemSeqDB<D, K> 
+    > MemSeqDB<D, K>
 {
-    
     pub fn create() -> Result<MemSeqDB<D, K>, Box<dyn Error>> {
         let db = HashMap::new();
 
@@ -35,16 +34,26 @@ impl<
         })
     }
 
-    pub fn consume(&mut self, channels: Vec<&str>,patterns: Vec<Pattern<D>>,continuation: K,persist: bool,) -> Option<Vec<OptionResult<D, K>>> {
+    pub fn consume(
+        &mut self,
+        channels: Vec<&str>,
+        patterns: Vec<Pattern<D>>,
+        continuation: K,
+        persist: bool,
+    ) -> Option<Vec<OptionResult<D, K>>> {
         if channels.len() == patterns.len() {
             let mut results: Vec<OptionResult<D, K>> = vec![];
-            let mut valid_keys : Vec<String> = Vec::new();
+            let mut valid_keys: Vec<String> = Vec::new();
 
             for i in 0..channels.len() {
                 let data_prefix = format!("channel-{}-data", channels[i]);
 
                 //find the keys in the hashmap that start with the data_prefix
-                for key in self.db.keys().take_while(|key| key.starts_with(&data_prefix)) {
+                for key in self
+                    .db
+                    .keys()
+                    .take_while(|key| key.starts_with(&data_prefix))
+                {
                     valid_keys.push(key.clone());
                 }
 
@@ -59,14 +68,14 @@ impl<
 
                             if patterns[i](data.clone()) {
                                 self.db.remove(&key);
-        
+
                                 results.push(OptionResult {
                                     continuation: continuation.clone(),
                                     data,
                                 });
                                 break;
                             }
-                        },
+                        }
                         None => println!("Key not found"),
                     }
                 }
@@ -79,6 +88,7 @@ impl<
                     let k_data = KData {
                         pattern: patterns[i],
                         continuation: continuation.clone(),
+                        persist,
                     };
 
                     println!("\nNo matching data for {:?}", k_data);
@@ -100,12 +110,21 @@ impl<
         }
     }
 
-    pub fn produce(&mut self, channel: &str, entry: D, persist: bool) -> Option<OptionResult<D, K>> {
+    pub fn produce(
+        &mut self,
+        channel: &str,
+        entry: D,
+        persist: bool,
+    ) -> Option<OptionResult<D, K>> {
         let continuation_prefix = format!("channel-{}-continuation", channel);
-        let mut valid_keys : Vec<String> = Vec::new();
+        let mut valid_keys: Vec<String> = Vec::new();
 
         //find the keys in the hashmap that start with the continuation_prefix
-        for key in self.db.keys().take_while(|key| key.starts_with(&continuation_prefix)) {
+        for key in self
+            .db
+            .keys()
+            .take_while(|key| key.starts_with(&continuation_prefix))
+        {
             valid_keys.push(key.clone());
         }
 
@@ -113,24 +132,25 @@ impl<
 
         // Loop over the keys in the hashmap that start with the continuation_prefix
         for key in cloned_keys {
-            
             println!("produce Key: {}", key);
             match self.db.get(&key) {
                 Some(value) => {
                     let k_data_bytes = value;
                     let k_data: KData<Pattern<D>, K> =
-                    bincode::deserialize::<KData<Pattern<D>, K>>(k_data_bytes).unwrap();
+                        bincode::deserialize::<KData<Pattern<D>, K>>(k_data_bytes).unwrap();
                     let pattern = k_data.pattern;
 
                     if pattern(entry.clone()) {
-                        self.db.remove(&key);
-        
+                        if !k_data.persist {
+                            self.db.remove(&key);
+                        }
+
                         return Some(OptionResult {
                             continuation: k_data.continuation,
                             data: entry.clone(),
                         });
                     }
-                },
+                }
                 None => println!("Key not found"),
             }
         }
@@ -147,43 +167,46 @@ impl<
     }
 
     pub fn print_channel(&self, channel: &str) -> Result<(), Box<dyn Error>> {
-
         let continuation_prefix = format!("channel-{}-continuation", channel);
         let data_prefix = format!("channel-{}-data", channel);
 
         if !self.db.is_empty() {
             println!("\nCurrent channel state for \"{}\":", channel);
 
-            for key in self.db.keys().take_while(|key| key.starts_with(&continuation_prefix)) {
+            for key in self
+                .db
+                .keys()
+                .take_while(|key| key.starts_with(&continuation_prefix))
+            {
                 println!("continuation Key: {}", key);
                 match self.db.get(key) {
                     Some(value) => {
                         let k_data_bytes = value;
                         let k_data: KData<Pattern<D>, K> =
-                        bincode::deserialize::<KData<Pattern<D>, K>>(k_data_bytes).unwrap();
+                            bincode::deserialize::<KData<Pattern<D>, K>>(k_data_bytes).unwrap();
                         println!("KEY: {:?} VALUE: {:?}", key, k_data);
-                    },
+                    }
                     None => println!("Key not found"),
                 }
             }
-    
-            for key in self.db.keys().take_while(|key| key.starts_with(&data_prefix)) {
+
+            for key in self
+                .db
+                .keys()
+                .take_while(|key| key.starts_with(&data_prefix))
+            {
                 println!("data Key: {}", key);
                 match self.db.get(key) {
                     Some(value) => {
                         let data: D = bincode::deserialize::<D>(value).unwrap();
                         println!("KEY: {:?} VALUE: {:?}", key, data);
-                    },
+                    }
                     None => println!("Key not found"),
                 }
             }
-            
         } else {
             println!("\nDatabase is empty")
         }
-
-        
-
 
         Ok(())
     }
