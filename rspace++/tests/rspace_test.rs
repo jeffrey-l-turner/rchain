@@ -172,18 +172,99 @@ mod tests {
     }
 
     #[test]
-    fn test_persist_multiple_matches() {
+    fn test_consume_persist() {
         let setup = Setup::new();
         let rspace = setup.rspace;
 
-        let _pres1 = rspace.produce("friends", setup.alice, false);
+        let cres = rspace.consume(vec!["friends"], vec![city_match], Printer, true);
+
+        assert!(cres.is_none());
+        assert!(!rspace.is_empty());
+
+        let pres = rspace.produce("friends", setup.alice.clone(), false);
+
+        assert!(pres.is_some());
+        assert!(!rspace.is_empty());
+
+        let _ = rspace.clear();
+    }
+
+    #[test]
+    fn test_consume_persist_multiple_matches() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let _pres1 = rspace.produce("friends", setup.alice.clone(), false);
         let _pres2 = rspace.produce("friends", setup.bob, false);
+        let cres1 = rspace.consume(vec!["friends"], vec![city_match], Printer, true);
+
+        assert_eq!(cres1.unwrap().len(), 1);
+        assert!(!rspace.is_empty());
+
+        let cres2 = rspace.consume(vec!["friends"], vec![city_match], Printer, true);
+
+        assert_eq!(cres2.unwrap().len(), 1);
+        assert!(rspace.is_empty());
+
+        let cres3 = rspace.consume(vec!["friends"], vec![city_match], Printer, true);
+
+        assert!(cres3.is_none());
+        assert!(!rspace.is_empty());
+
+        let pres3 = rspace.produce("friends", setup.alice.clone(), false);
+
+        assert!(pres3.is_some());
+        assert!(!rspace.is_empty());
+
+        let _ = rspace.clear();
+    }
+
+    #[test]
+    fn test_produce_persist() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let pres = rspace.produce("friends", setup.alice.clone(), false);
+
+        assert!(pres.is_none());
+        assert!(!rspace.is_empty());
 
         let cres = rspace.consume(vec!["friends"], vec![city_match], Printer, true);
 
+        assert!(cres.is_some());
         assert_eq!(cres.unwrap().len(), 1);
         assert!(!rspace.is_empty());
 
         let _ = rspace.clear();
     }
+
+    // #[test]
+    // fn test_produce_persist_multiple_matches() {
+    //     let setup = Setup::new();
+    //     let rspace = setup.rspace;
+
+    //     let _pres1 = rspace.produce("friends", setup.alice.clone(), false);
+    //     let _pres2 = rspace.produce("friends", setup.bob, false);
+    //     let cres1 = rspace.consume(vec!["friends"], vec![city_match], Printer, true);
+
+    //     assert_eq!(cres1.unwrap().len(), 1);
+    //     assert!(!rspace.is_empty());
+
+    //     let cres2 = rspace.consume(vec!["friends"], vec![city_match], Printer, true);
+
+    //     assert_eq!(cres2.unwrap().len(), 1);
+    //     assert!(rspace.is_empty());
+
+    //     let cres3 = rspace.consume(vec!["friends"], vec![city_match], Printer, true);
+
+    //     assert!(cres3.is_none());
+    //     assert!(!rspace.is_empty());
+
+    //     let pres3 = rspace.produce("friends", setup.alice.clone(), false);
+
+    //     assert!(pres3.is_some());
+    //     assert!(!rspace.is_empty());
+
+    //     let _ = rspace.clear();
+    // }
 }

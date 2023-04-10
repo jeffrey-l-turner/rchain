@@ -20,6 +20,7 @@ type Pattern<D> = fn(D) -> bool;
 pub struct KData<Pattern, K> {
     pattern: Pattern,
     continuation: K,
+    persist: bool,
 }
 
 impl<T, F> Serialize for KData<Pattern<T>, F>
@@ -30,11 +31,12 @@ where
     where
         S: Serializer,
     {
-        let mut state = serializer.serialize_struct("KData", 2)?;
+        let mut state = serializer.serialize_struct("KData", 3)?;
         // Serialize the pattern field as a string representation of the function pointer.
         let pattern_string = format!("{:p}", self.pattern);
         state.serialize_field("pattern", &pattern_string)?;
         state.serialize_field("continuation", &self.continuation)?;
+        state.serialize_field("persist", &self.persist)?;
         state.end()
     }
 }
@@ -51,15 +53,18 @@ where
         struct KDataHelper<F> {
             pattern: String,
             continuation: F,
+            persist: bool,
         }
 
         let helper = KDataHelper::<F>::deserialize(deserializer)?;
         let pattern_ptr = usize::from_str_radix(&helper.pattern[2..], 16)
             .map_err(|err| serde::de::Error::custom(format!("Invalid pattern: {}", err)))?;
+        let persist = helper.persist;
 
         Ok(KData {
             pattern: unsafe { std::mem::transmute(pattern_ptr) },
             continuation: helper.continuation,
+            persist,
         })
     }
 }
@@ -146,6 +151,7 @@ impl<
                     let k_data = KData {
                         pattern: patterns[i],
                         continuation: continuation.clone(),
+                        persist,
                     };
 
                     println!("\nNo matching data for {:?}", k_data);
@@ -185,9 +191,11 @@ impl<
             let pattern = k_data.pattern;
 
             if pattern(entry.clone()) {
-                let mut wtxn = self.env.write_txn().unwrap();
-                let _ = self.db.delete(&mut wtxn, iter_data.0);
-                wtxn.commit().unwrap();
+                if !k_data.persist {
+                    let mut wtxn = self.env.write_txn().unwrap();
+                    let _ = self.db.delete(&mut wtxn, iter_data.0);
+                    wtxn.commit().unwrap();
+                }
 
                 return Some(OptionResult {
                     continuation: k_data.continuation,
