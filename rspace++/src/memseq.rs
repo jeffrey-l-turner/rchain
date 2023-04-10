@@ -64,14 +64,17 @@ impl<
                     println!("consume Key: {}", key);
                     match self.db.get(&key) {
                         Some(value) => {
-                            let data: D = bincode::deserialize::<D>(value).unwrap();
+                            let produce_data: ProduceData<D> =
+                                bincode::deserialize::<ProduceData<D>>(value).unwrap();
 
-                            if patterns[i](data.clone()) {
-                                self.db.remove(&key);
+                            if patterns[i](produce_data.data.clone()) {
+                                if produce_data.persist {
+                                    self.db.remove(&key);
+                                }
 
                                 results.push(OptionResult {
                                     continuation: continuation.clone(),
-                                    data,
+                                    data: produce_data.data,
                                 });
                                 break;
                             }
@@ -155,11 +158,16 @@ impl<
             }
         }
 
-        println!("\nNo matching continuation for {:?}", entry.clone());
+        let produce_data = ProduceData {
+            data: entry.clone(),
+            persist,
+        };
 
-        let data_hash = self.calculate_hash(&entry);
+        println!("\nNo matching continuation for {:?}", produce_data);
+
+        let data_hash = self.calculate_hash(&produce_data);
         let key = format!("channel-{}-data-{}", &channel, &data_hash);
-        let data_bytes = bincode::serialize(&entry).unwrap();
+        let data_bytes = bincode::serialize(&produce_data).unwrap();
 
         let _ = self.db.insert(key, data_bytes);
 

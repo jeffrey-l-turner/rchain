@@ -64,16 +64,19 @@ impl<
                 while iter_data_option.is_some() {
                     let iter_data_unwrap = iter_data_option.unwrap();
                     let data_bytes = iter_data_unwrap.1;
-                    let data: D = bincode::deserialize::<D>(&data_bytes).unwrap();
+                    let produce_data: ProduceData<D> =
+                        bincode::deserialize::<ProduceData<D>>(&data_bytes).unwrap();
 
-                    if patterns[i](data.clone()) {
-                        let mut wtxn = self.env.write_txn().unwrap();
-                        let _ = self.db.delete(&mut wtxn, iter_data_unwrap.0);
-                        wtxn.commit().unwrap();
+                    if patterns[i](produce_data.data.clone()) {
+                        if !produce_data.persist {
+                            let mut wtxn = self.env.write_txn().unwrap();
+                            let _ = self.db.delete(&mut wtxn, iter_data_unwrap.0);
+                            wtxn.commit().unwrap();
+                        }
 
                         results.push(OptionResult {
                             continuation: continuation.clone(),
-                            data,
+                            data: produce_data.data,
                         });
                         break;
                     }
@@ -146,13 +149,18 @@ impl<
         drop(iter_continuation);
         rtxn.commit().unwrap();
 
-        println!("\nNo matching continuation for {:?}", entry.clone());
+        let produce_data = ProduceData {
+            data: entry.clone(),
+            persist,
+        };
+
+        println!("\nNo matching continuation for {:?}", produce_data);
 
         let mut wtxn = self.env.write_txn().unwrap();
 
-        let data_hash = self.calculate_hash(&entry);
+        let data_hash = self.calculate_hash(&produce_data);
         let key = format!("channel-{}-data-{}", &channel, &data_hash);
-        let data_bytes = bincode::serialize(&entry).unwrap();
+        let data_bytes = bincode::serialize(&produce_data).unwrap();
 
         let _ = self.db.put(&mut wtxn, &key, &data_bytes);
         wtxn.commit().unwrap();
