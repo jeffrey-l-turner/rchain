@@ -1,10 +1,10 @@
 #[cfg(test)]
 mod tests {
+    use rspace_plus_plus::diskseq::DiskSeqDB;
     use rspace_plus_plus::example::{Address, Entry, Name, Printer};
-    use rspace_plus_plus::rspace::RSpace;
 
     struct Setup {
-        rspace: RSpace<Entry, Printer>,
+        diskseq: DiskSeqDB<Entry, Printer>,
         alice: Entry,
         bob: Entry,
         carol: Entry,
@@ -15,7 +15,7 @@ mod tests {
     impl Setup {
         fn new() -> Self {
             Self {
-                rspace: RSpace::create().unwrap(),
+                diskseq: DiskSeqDB::create().unwrap(),
                 alice: Entry {
                     name: Name {
                         first: "Alice".to_string(),
@@ -105,57 +105,57 @@ mod tests {
     #[test]
     fn test_produce_match() {
         let setup = Setup::new();
-        let rspace = setup.rspace;
+        let diskseq = setup.diskseq;
 
-        let cres = rspace.consume(vec!["friends"], vec![city_match], Printer, false);
-        let pres = rspace.produce("friends", setup.alice, false);
+        let cres = diskseq.consume(vec!["friends"], vec![city_match], Printer, false);
+        let pres = diskseq.produce("friends", setup.alice, false);
 
         assert!(cres.is_none());
         assert!(pres.is_some());
-        assert!(rspace.is_empty());
+        assert!(diskseq.is_empty());
 
-        let _ = rspace.clear();
+        let _ = diskseq.clear();
     }
 
     #[test]
     fn test_produce_no_match() {
         let setup = Setup::new();
-        let rspace = setup.rspace;
+        let diskseq = setup.diskseq;
 
-        let cres = rspace.consume(vec!["friends"], vec![city_match], Printer, false);
-        let pres = rspace.produce("friends", setup.carol, false);
+        let cres = diskseq.consume(vec!["friends"], vec![city_match], Printer, false);
+        let pres = diskseq.produce("friends", setup.carol, false);
 
         assert!(cres.is_none());
         assert!(pres.is_none());
-        assert!(!rspace.is_empty());
+        assert!(!diskseq.is_empty());
 
-        let _ = rspace.clear();
+        let _ = diskseq.clear();
     }
 
     #[test]
     fn test_consume_match() {
         let setup = Setup::new();
-        let rspace = setup.rspace;
+        let diskseq = setup.diskseq;
 
-        let pres = rspace.produce("friends", setup.bob, false);
-        let cres = rspace.consume(vec!["friends"], vec![name_match], Printer, false);
+        let pres = diskseq.produce("friends", setup.bob, false);
+        let cres = diskseq.consume(vec!["friends"], vec![name_match], Printer, false);
 
         assert!(pres.is_none());
         assert!(cres.is_some());
-        assert!(rspace.is_empty());
+        assert!(diskseq.is_empty());
 
-        let _ = rspace.clear();
+        let _ = diskseq.clear();
     }
 
     #[test]
     fn test_multiple_channels_consume_match() {
         let setup = Setup::new();
-        let rspace = setup.rspace;
+        let diskseq = setup.diskseq;
 
-        let pres1 = rspace.produce("colleagues", setup.dan, false);
-        let pres2 = rspace.produce("friends", setup.erin, false);
+        let pres1 = diskseq.produce("colleagues", setup.dan, false);
+        let pres2 = diskseq.produce("friends", setup.erin, false);
 
-        let cres = rspace.consume(
+        let cres = diskseq.consume(
             vec!["friends", "colleagues"],
             vec![state_match, state_match],
             Printer,
@@ -166,99 +166,99 @@ mod tests {
         assert!(pres2.is_none());
         assert!(cres.is_some());
         assert_eq!(cres.unwrap().len(), 2);
-        assert!(rspace.is_empty());
+        assert!(diskseq.is_empty());
 
-        let _ = rspace.clear();
+        let _ = diskseq.clear();
     }
 
     #[test]
     fn test_consume_persist() {
         let setup = Setup::new();
-        let rspace = setup.rspace;
+        let diskseq = setup.diskseq;
 
-        let cres = rspace.consume(vec!["friends"], vec![city_match], Printer, true);
+        let cres = diskseq.consume(vec!["friends"], vec![city_match], Printer, true);
 
         assert!(cres.is_none());
-        assert!(!rspace.is_empty());
+        assert!(!diskseq.is_empty());
 
-        let pres = rspace.produce("friends", setup.alice.clone(), false);
+        let pres = diskseq.produce("friends", setup.alice.clone(), false);
 
         assert!(pres.is_some());
-        assert!(!rspace.is_empty());
+        assert!(!diskseq.is_empty());
 
-        let _ = rspace.clear();
+        let _ = diskseq.clear();
     }
 
     #[test]
     fn test_consume_persist_existing_matches() {
         let setup = Setup::new();
-        let rspace = setup.rspace;
+        let diskseq = setup.diskseq;
 
-        let _pres1 = rspace.produce("friends", setup.alice.clone(), false);
-        let _pres2 = rspace.produce("friends", setup.bob, false);
-        let cres1 = rspace.consume(vec!["friends"], vec![city_match], Printer, true);
+        let _pres1 = diskseq.produce("friends", setup.alice.clone(), false);
+        let _pres2 = diskseq.produce("friends", setup.bob, false);
+        let cres1 = diskseq.consume(vec!["friends"], vec![city_match], Printer, true);
 
         assert_eq!(cres1.unwrap().len(), 1);
-        assert!(!rspace.is_empty());
+        assert!(!diskseq.is_empty());
 
-        let cres2 = rspace.consume(vec!["friends"], vec![city_match], Printer, true);
+        let cres2 = diskseq.consume(vec!["friends"], vec![city_match], Printer, true);
 
         assert_eq!(cres2.unwrap().len(), 1);
-        assert!(rspace.is_empty());
+        assert!(diskseq.is_empty());
 
-        let cres3 = rspace.consume(vec!["friends"], vec![city_match], Printer, true);
+        let cres3 = diskseq.consume(vec!["friends"], vec![city_match], Printer, true);
 
         assert!(cres3.is_none());
-        assert!(!rspace.is_empty());
+        assert!(!diskseq.is_empty());
 
-        let pres3 = rspace.produce("friends", setup.alice.clone(), false);
+        let pres3 = diskseq.produce("friends", setup.alice.clone(), false);
 
         assert!(pres3.is_some());
-        assert!(!rspace.is_empty());
+        assert!(!diskseq.is_empty());
 
-        let _ = rspace.clear();
+        let _ = diskseq.clear();
     }
 
     #[test]
     fn test_produce_persist() {
         let setup = Setup::new();
-        let rspace = setup.rspace;
+        let diskseq = setup.diskseq;
 
-        let pres = rspace.produce("friends", setup.alice, true);
+        let pres = diskseq.produce("friends", setup.alice, true);
 
         assert!(pres.is_none());
-        assert!(!rspace.is_empty());
+        assert!(!diskseq.is_empty());
 
-        let cres = rspace.consume(vec!["friends"], vec![city_match], Printer, false);
+        let cres = diskseq.consume(vec!["friends"], vec![city_match], Printer, false);
 
         assert!(cres.is_some());
         assert_eq!(cres.unwrap().len(), 1);
-        assert!(!rspace.is_empty());
+        assert!(!diskseq.is_empty());
 
-        let _ = rspace.clear();
+        let _ = diskseq.clear();
     }
 
     #[test]
     fn test_produce_persist_existing_matches() {
         let setup = Setup::new();
-        let rspace = setup.rspace;
+        let diskseq = setup.diskseq;
 
-        let cres1 = rspace.consume(vec!["friends"], vec![city_match], Printer, false);
+        let cres1 = diskseq.consume(vec!["friends"], vec![city_match], Printer, false);
 
         assert!(cres1.is_none());
-        assert!(!rspace.is_empty());
+        assert!(!diskseq.is_empty());
 
-        let pres1 = rspace.produce("friends", setup.alice.clone(), true);
+        let pres1 = diskseq.produce("friends", setup.alice.clone(), true);
 
         assert!(pres1.is_some());
-        assert!((rspace.is_empty()));
+        assert!((diskseq.is_empty()));
 
-        let pres2 = rspace.produce("friends", setup.alice.clone(), true);
-        let _cres2 = rspace.consume(vec!["friends"], vec![city_match], Printer, false);
+        let pres2 = diskseq.produce("friends", setup.alice.clone(), true);
+        let _cres2 = diskseq.consume(vec!["friends"], vec![city_match], Printer, false);
 
         assert!(pres2.is_none());
-        assert!(!rspace.is_empty());
+        assert!(!diskseq.is_empty());
 
-        let _ = rspace.clear();
+        let _ = diskseq.clear();
     }
 }

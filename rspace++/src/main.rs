@@ -1,15 +1,14 @@
 use std::error::Error;
 
-use example::{Address, Entry, Name, Printer};
-use rspace::RSpace;
+use crate::diskseq::DiskSeqDB;
 use crate::memseq::MemSeqDB;
-use crate::shared::{OptionResult,MyTrait};
+use crate::shared::{MyTrait, OptionResult};
+use example::{Address, Entry, Name, Printer};
 
+mod diskseq;
 mod example;
-mod rspace;
 mod memseq;
 mod shared;
-
 
 fn run_k(ks: Vec<OptionResult<Entry, Printer>>) {
     for k in ks {
@@ -21,11 +20,6 @@ fn run_k(ks: Vec<OptionResult<Entry, Printer>>) {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-
-    
-
-
-
     let mut memseq: MemSeqDB<Entry, Printer> = MemSeqDB::create().unwrap();
     // let mut rspace: RSpace<Entry, Printer> = RSpace::create().unwrap();
 
@@ -137,7 +131,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 // }
 
 fn domemseq(somedb: &mut MemSeqDB<Entry, Printer>) {
-
     let alice = Entry {
         name: Name {
             first: "Alice".to_string(),
@@ -234,7 +227,6 @@ fn domemseq(somedb: &mut MemSeqDB<Entry, Printer>) {
 
     //somedb.my_method();
 }
-
 
 // fn repl() {
 //     loop {

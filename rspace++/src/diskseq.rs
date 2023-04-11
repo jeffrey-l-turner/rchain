@@ -11,7 +11,7 @@ use std::path::Path;
 /*
 See RSpace.scala and Tuplespace.scala in rspace/
 */
-pub struct RSpace<D, K> {
+pub struct DiskSeqDB<D, K> {
     env: Env,
     db: Database<Str, SerdeBincode<Vec<u8>>>,
     phantom: PhantomData<(D, K)>,
@@ -29,16 +29,16 @@ impl<
             + serde::Serialize
             + for<'a> serde::Deserialize<'a>
             + 'static,
-    > RSpace<D, K>
+    > DiskSeqDB<D, K>
 {
-    pub fn create() -> Result<RSpace<D, K>, Box<dyn Error>> {
-        fs::create_dir_all(Path::new("target").join("rspace"))?;
-        let env = EnvOpenOptions::new().open(Path::new("target").join("rspace"))?;
+    pub fn create() -> Result<DiskSeqDB<D, K>, Box<dyn Error>> {
+        fs::create_dir_all(Path::new("target").join("DiskSeqDB"))?;
+        let env = EnvOpenOptions::new().open(Path::new("target").join("DiskSeqDB"))?;
 
         // open the default unamed database
         let db = env.create_database(None)?;
 
-        Ok(RSpace {
+        Ok(DiskSeqDB {
             env,
             db,
             phantom: PhantomData,
