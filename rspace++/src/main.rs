@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 
     let mut memseq: MemSeqDB<Entry, Printer> = MemSeqDB::create().unwrap();
-    let mut rspace: RSpace<Entry, Printer> = RSpace::create().unwrap();
+    // let mut rspace: RSpace<Entry, Printer> = RSpace::create().unwrap();
 
     domemseq(&mut memseq);
 
