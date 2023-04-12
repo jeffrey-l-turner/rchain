@@ -24,3 +24,5 @@
 - Run tests: `cargo test -- --test-threads=1` with `rspace++` directory. Not to be run in parallel
 
 - `rustc <path_to_file>` to compile single rust file
+
+- `cargo test --test my_test_file -- --test-threads=1` tests all the functions in a single file

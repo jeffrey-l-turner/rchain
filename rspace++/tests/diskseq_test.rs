@@ -103,7 +103,7 @@ mod tests {
     }
 
     #[test]
-    fn test_produce_match() {
+    fn diskseq_test_produce_match() {
         let setup = Setup::new();
         let diskseq = setup.diskseq;
 
@@ -118,7 +118,7 @@ mod tests {
     }
 
     #[test]
-    fn test_produce_no_match() {
+    fn diskseq_test_produce_no_match() {
         let setup = Setup::new();
         let diskseq = setup.diskseq;
 
@@ -133,7 +133,7 @@ mod tests {
     }
 
     #[test]
-    fn test_consume_match() {
+    fn diskseq_test_consume_match() {
         let setup = Setup::new();
         let diskseq = setup.diskseq;
 
@@ -148,7 +148,7 @@ mod tests {
     }
 
     #[test]
-    fn test_multiple_channels_consume_match() {
+    fn diskseq_test_multiple_channels_consume_match() {
         let setup = Setup::new();
         let diskseq = setup.diskseq;
 
@@ -172,7 +172,7 @@ mod tests {
     }
 
     #[test]
-    fn test_consume_persist() {
+    fn diskseq_test_consume_persist() {
         let setup = Setup::new();
         let diskseq = setup.diskseq;
 
@@ -190,7 +190,7 @@ mod tests {
     }
 
     #[test]
-    fn test_consume_persist_existing_matches() {
+    fn diskseq_test_consume_persist_existing_matches() {
         let setup = Setup::new();
         let diskseq = setup.diskseq;
 
@@ -220,7 +220,7 @@ mod tests {
     }
 
     #[test]
-    fn test_produce_persist() {
+    fn diskseq_test_produce_persist() {
         let setup = Setup::new();
         let diskseq = setup.diskseq;
 
@@ -239,7 +239,7 @@ mod tests {
     }
 
     #[test]
-    fn test_produce_persist_existing_matches() {
+    fn diskseq_test_produce_persist_existing_matches() {
         let setup = Setup::new();
         let diskseq = setup.diskseq;
 

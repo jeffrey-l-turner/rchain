@@ -103,94 +103,7 @@ mod tests {
     }
 
     #[test]
-    fn test_produce_match() {
-        let setup = Setup::new();
-        let mut memseq = setup.memseq;
-
-        let cres = memseq.consume(vec!["friends"], vec![city_match], Printer, false);
-        let pres = memseq.produce("friends", setup.alice, false);
-
-        assert!(cres.is_none());
-        assert!(pres.is_some());
-        assert!(memseq.is_empty());
-
-        let _ = memseq.clear();
-    }
-
-    #[test]
-    fn test_produce_no_match() {
-        let setup = Setup::new();
-        let mut memseq = setup.memseq;
-
-        let cres = memseq.consume(vec!["friends"], vec![city_match], Printer, false);
-        let pres = memseq.produce("friends", setup.carol, false);
-
-        assert!(cres.is_none());
-        assert!(pres.is_none());
-        assert!(!memseq.is_empty());
-
-        let _ = memseq.clear();
-    }
-
-    #[test]
-    fn test_consume_match() {
-        let setup = Setup::new();
-        let mut memseq = setup.memseq;
-
-        let pres = memseq.produce("friends", setup.bob, false);
-        let cres = memseq.consume(vec!["friends"], vec![name_match], Printer, false);
-
-        assert!(pres.is_none());
-        assert!(cres.is_some());
-        assert!(memseq.is_empty());
-
-        let _ = memseq.clear();
-    }
-
-    #[test]
-    fn test_multiple_channels_consume_match() {
-        let setup = Setup::new();
-        let mut memseq = setup.memseq;
-
-        let pres1 = memseq.produce("colleagues", setup.dan, false);
-        let pres2 = memseq.produce("friends", setup.erin, false);
-
-        let cres = memseq.consume(
-            vec!["friends", "colleagues"],
-            vec![state_match, state_match],
-            Printer,
-            false,
-        );
-
-        assert!(pres1.is_none());
-        assert!(pres2.is_none());
-        assert!(cres.is_some());
-        assert_eq!(cres.unwrap().len(), 2);
-        assert!(memseq.is_empty());
-
-        let _ = memseq.clear();
-    }
-
-    #[test]
-    fn test_consume_persist() {
-        let setup = Setup::new();
-        let mut memseq = setup.memseq;
-
-        let cres = memseq.consume(vec!["friends"], vec![city_match], Printer, true);
-
-        assert!(cres.is_none());
-        assert!(!memseq.is_empty());
-
-        let pres = memseq.produce("friends", setup.alice.clone(), false);
-
-        assert!(pres.is_some());
-        assert!(!memseq.is_empty());
-
-        let _ = memseq.clear();
-    }
-
-    #[test]
-    fn test_consume_persist_existing_matches() {
+    fn memseq_test_consume_persist_existing_matches() {
         let setup = Setup::new();
         let mut memseq = setup.memseq;
 
@@ -219,8 +132,96 @@ mod tests {
         let _ = memseq.clear();
     }
 
+
     #[test]
-    fn test_produce_persist() {
+    fn memseq_test_multiple_channels_consume_match() {
+        let setup = Setup::new();
+        let mut memseq = setup.memseq;
+
+        let pres1 = memseq.produce("colleagues", setup.dan, false);
+        let pres2 = memseq.produce("friends", setup.erin, false);
+
+        let cres = memseq.consume(
+            vec!["friends", "colleagues"],
+            vec![state_match, state_match],
+            Printer,
+            false,
+        );
+
+        assert!(pres1.is_none());
+        assert!(pres2.is_none());
+        assert!(cres.is_some());
+        assert_eq!(cres.unwrap().len(), 2);
+        assert!(memseq.is_empty());
+
+        let _ = memseq.clear();
+    }
+
+    #[test]
+    fn memseq_test_consume_match() {
+        let setup = Setup::new();
+        let mut memseq = setup.memseq;
+
+        let pres = memseq.produce("friends", setup.bob, false);
+        let cres = memseq.consume(vec!["friends"], vec![name_match], Printer, false);
+
+        assert!(pres.is_none());
+        assert!(cres.is_some());
+        assert!(memseq.is_empty());
+
+        let _ = memseq.clear();
+    }
+
+    #[test]
+    fn memseq_test_produce_match() {
+        let setup = Setup::new();
+        let mut memseq = setup.memseq;
+
+        let cres = memseq.consume(vec!["friends"], vec![city_match], Printer, false);
+        let pres = memseq.produce("friends", setup.alice, false);
+
+        assert!(cres.is_none());
+        assert!(pres.is_some());
+        assert!(memseq.is_empty());
+
+        let _ = memseq.clear();
+    }
+
+    #[test]
+    fn memseq_test_produce_no_match() {
+        let setup = Setup::new();
+        let mut memseq = setup.memseq;
+
+        let cres = memseq.consume(vec!["friends"], vec![city_match], Printer, false);
+        let pres = memseq.produce("friends", setup.carol, false);
+
+        assert!(cres.is_none());
+        assert!(pres.is_none());
+        assert!(!memseq.is_empty());
+
+        let _ = memseq.clear();
+    }
+
+    #[test]
+    fn memseq_test_consume_persist() {
+        let setup = Setup::new();
+        let mut memseq = setup.memseq;
+
+        let cres = memseq.consume(vec!["friends"], vec![city_match], Printer, true);
+
+        assert!(cres.is_none());
+        assert!(!memseq.is_empty());
+
+        let pres = memseq.produce("friends", setup.alice.clone(), false);
+
+        assert!(pres.is_some());
+        assert!(!memseq.is_empty());
+
+        let _ = memseq.clear();
+    }
+
+    #[test]
+    fn memseq_test_produce_persist() {
         let setup = Setup::new();
         let mut memseq = setup.memseq;
 
@@ -239,7 +240,7 @@ mod tests {
     }
 
     #[test]
-    fn test_produce_persist_existing_matches() {
+    fn memseq_test_produce_persist_existing_matches() {
         let setup = Setup::new();
         let mut memseq = setup.memseq;
 

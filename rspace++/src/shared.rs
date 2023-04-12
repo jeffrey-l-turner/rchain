@@ -3,6 +3,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::error::Error;
 use std::hash::Hash;
 
+#[derive(Debug, Hash, Clone, Copy)]
 pub struct OptionResult<D, K> {
     pub continuation: K,
     pub data: D,

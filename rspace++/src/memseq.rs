@@ -11,6 +11,12 @@ pub struct MemSeqDB<D, K> {
     phantom: PhantomData<(D, K)>,
 }
 
+#[derive(Debug)]
+struct KeyDataTracker {
+    iVal: usize,
+    key: String,
+}
+
 impl<
         D: Clone
             + std::hash::Hash
@@ -42,49 +48,47 @@ impl<
         persist: bool,
     ) -> Option<Vec<OptionResult<D, K>>> {
         if channels.len() == patterns.len() {
+            println!("memseq consume called");
             let mut results: Vec<OptionResult<D, K>> = vec![];
-            let mut valid_keys: Vec<String> = Vec::new();
 
             for i in 0..channels.len() {
                 let data_prefix = format!("channel-{}-data", channels[i]);
 
                 //find the keys in the hashmap that start with the data_prefix
-                for key in self
-                    .db
-                    .keys()
-                    .take_while(|key| key.starts_with(&data_prefix))
-                {
-                    valid_keys.push(key.clone());
-                }
+                for (k,v) in &self.db {
+                    if k.starts_with(&data_prefix) {
 
-                let cloned_keys = valid_keys.clone();
-
-                // Loop over the keys in the hashmap that start with the data_prefix
-                for key in cloned_keys {
-                    println!("consume Key: {}", key);
-                    match self.db.get(&key) {
-                        Some(value) => {
-                            let produce_data: ProduceData<D> =
-                                bincode::deserialize::<ProduceData<D>>(value).unwrap();
-
-                            if patterns[i](produce_data.data.clone()) {
-                                if produce_data.persist {
-                                    self.db.remove(&key);
+                        match self.db.get(k) {
+                            Some(value) => {
+                                let produce_data: ProduceData<D> =
+                                    bincode::deserialize::<ProduceData<D>>(&value).unwrap();
+                                if patterns[i](produce_data.data.clone()) {
+                                    if !produce_data.persist {
+                                        self.db.remove(&k.clone());
+                                    }
+    
+                                    results.push(OptionResult {
+                                        continuation: continuation.clone(),
+                                        data: produce_data.data,
+                                    });
+                                    break;
+                                } else {
+                                    //println!("consume NO PATTERN MATCH");
                                 }
-
-                                results.push(OptionResult {
-                                    continuation: continuation.clone(),
-                                    data: produce_data.data,
-                                });
-                                break;
                             }
+                            None => println!("Key not found"),
                         }
-                        None => println!("Key not found"),
                     }
                 }
             }
 
+            
+
             if results.len() > 0 {
+                println!("returning results with length {}", results.len());
+                // for res in results.clone() {
+                //     println!("returning results with data {:?}", res.data);
+                // }
                 return Some(results);
             } else {
                 for i in 0..channels.len() {
@@ -119,22 +123,21 @@ impl<
         entry: D,
         persist: bool,
     ) -> Option<OptionResult<D, K>> {
+
+        println!("produce called in memseq");
+
         let continuation_prefix = format!("channel-{}-continuation", channel);
         let mut valid_keys: Vec<String> = Vec::new();
 
         //find the keys in the hashmap that start with the continuation_prefix
-        for key in self
-            .db
-            .keys()
-            .take_while(|key| key.starts_with(&continuation_prefix))
-        {
-            valid_keys.push(key.clone());
+        for (k,v) in &self.db {
+            if k.starts_with(&continuation_prefix) {
+                valid_keys.push(k.to_string());
+            }
         }
 
-        let cloned_keys = valid_keys.clone();
-
         // Loop over the keys in the hashmap that start with the continuation_prefix
-        for key in cloned_keys {
+        for key in valid_keys {
             println!("produce Key: {}", key);
             match self.db.get(&key) {
                 Some(value) => {
@@ -152,6 +155,8 @@ impl<
                             continuation: k_data.continuation,
                             data: entry.clone(),
                         });
+                    } else {
+                        //println!("produce NO PATTERN MATCH");
                     }
                 }
                 None => println!("Key not found"),
