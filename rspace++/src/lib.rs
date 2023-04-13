@@ -7,3 +7,4 @@ pub mod example;
 pub mod diskseq;
 pub mod memseq;
 pub mod shared;
+pub mod memconc;
