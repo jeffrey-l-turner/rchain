@@ -105,7 +105,7 @@ mod tests {
     #[test]
     fn memseq_test_consume_persist_existing_matches() {
         let setup = Setup::new();
-        let mut memseq = setup.memseq;
+        let memseq = setup.memseq;
 
         let _pres1 = memseq.produce("friends", setup.alice.clone(), false);
         let _pres2 = memseq.produce("friends", setup.bob, false);
@@ -132,11 +132,10 @@ mod tests {
         let _ = memseq.clear();
     }
 
-
     #[test]
     fn memseq_test_multiple_channels_consume_match() {
         let setup = Setup::new();
-        let mut memseq = setup.memseq;
+        let memseq = setup.memseq;
 
         let pres1 = memseq.produce("colleagues", setup.dan, false);
         let pres2 = memseq.produce("friends", setup.erin, false);
@@ -160,7 +159,7 @@ mod tests {
     #[test]
     fn memseq_test_consume_match() {
         let setup = Setup::new();
-        let mut memseq = setup.memseq;
+        let memseq = setup.memseq;
 
         let pres = memseq.produce("friends", setup.bob, false);
         let cres = memseq.consume(vec!["friends"], vec![name_match], Printer, false);
@@ -175,7 +174,7 @@ mod tests {
     #[test]
     fn memseq_test_produce_match() {
         let setup = Setup::new();
-        let mut memseq = setup.memseq;
+        let memseq = setup.memseq;
 
         let cres = memseq.consume(vec!["friends"], vec![city_match], Printer, false);
         let pres = memseq.produce("friends", setup.alice, false);
@@ -190,7 +189,7 @@ mod tests {
     #[test]
     fn memseq_test_produce_no_match() {
         let setup = Setup::new();
-        let mut memseq = setup.memseq;
+        let memseq = setup.memseq;
 
         let cres = memseq.consume(vec!["friends"], vec![city_match], Printer, false);
         let pres = memseq.produce("friends", setup.carol, false);
@@ -205,7 +204,7 @@ mod tests {
     #[test]
     fn memseq_test_consume_persist() {
         let setup = Setup::new();
-        let mut memseq = setup.memseq;
+        let memseq = setup.memseq;
 
         let cres = memseq.consume(vec!["friends"], vec![city_match], Printer, true);
 
@@ -223,7 +222,7 @@ mod tests {
     #[test]
     fn memseq_test_produce_persist() {
         let setup = Setup::new();
-        let mut memseq = setup.memseq;
+        let memseq = setup.memseq;
 
         let pres = memseq.produce("friends", setup.alice, true);
 
@@ -242,7 +241,7 @@ mod tests {
     #[test]
     fn memseq_test_produce_persist_existing_matches() {
         let setup = Setup::new();
-        let mut memseq = setup.memseq;
+        let memseq = setup.memseq;
 
         let cres1 = memseq.consume(vec!["friends"], vec![city_match], Printer, false);
 

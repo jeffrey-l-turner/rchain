@@ -91,9 +91,14 @@ fn state_match(entry: Entry) -> bool {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    // do_mem_seq();
-    // do_disk_seq();
+    println!("\n*********** IN-MEMORY SEQUENTIAL ***********");
+    do_mem_seq();
+
+    println!("\n*********** IN-MEMORY CONCURRENT ***********");
     do_mem_conc();
+
+    println!("\n*********** ON-DISK SEQUENTIAL ***********");
+    do_disk_seq();
 
     Ok(())
 }
@@ -141,7 +146,7 @@ fn do_disk_seq() {
 
 fn do_mem_seq() {
     let setup = Setup::new();
-    let mut memseq: MemSeqDB<Entry, Printer> = MemSeqDB::create().unwrap();
+    let memseq: MemSeqDB<Entry, Printer> = MemSeqDB::create().unwrap();
 
     // call methods/functions on T
     println!("\n**** Example 1 ****");
