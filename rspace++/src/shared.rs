@@ -10,19 +10,20 @@ pub struct OptionResult<D, K> {
 }
 
 pub trait MyTrait<D, K> {
-    fn my_method(&self);
+    fn my_method(&mut self);
+    
     fn consume(
-        &mut self,
+        &self,
         channels: Vec<&str>,
         patterns: Vec<Pattern<D>>,
         continuation: K,
         persist: bool,
     ) -> Option<Vec<OptionResult<D, K>>>;
-    fn produce(&mut self, channel: &str, entry: D, persist: bool) -> Option<OptionResult<D, K>>;
+    fn produce(&self, channel: &str, entry: D, persist: bool) -> Option<OptionResult<D, K>>;
     fn print_channel(&self, channel: &str) -> Result<(), Box<dyn Error>>;
     fn is_empty(&self) -> bool;
-    fn clear(&mut self) -> Result<(), Box<dyn Error>>;
-    fn calculate_hash<T: Hash>(&self, t: &T) -> u64;
+    fn clear(&self) -> Result<(), Box<dyn Error>>;
+    // fn calculate_hash<T: Hash>(&self, t: &T) -> u64;
 }
 
 pub type Pattern<D> = fn(D) -> bool;

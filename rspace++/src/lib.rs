@@ -8,3 +8,4 @@ pub mod diskseq;
 pub mod memseq;
 pub mod shared;
 pub mod memconc;
+pub mod rspace;

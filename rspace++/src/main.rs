@@ -100,12 +100,23 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("\n*********** ON-DISK SEQUENTIAL ***********");
     do_disk_seq();
 
+    // let mut diskseq: DiskSeqDB<Entry, Printer> = DiskSeqDB::create().unwrap();
+    // let mut memseq: MemSeqDB<Entry, Printer> = MemSeqDB::create().unwrap();
+    // let mut memconc: MemConcDB<Entry, Printer> = MemConcDB::create().unwrap();
+
+    // let _ = diskseq.clear();
+
+
+    // my_function(&mut diskseq);
+    // my_function(&mut memseq);
+    // my_function(&mut memconc);
+
     Ok(())
 }
 
 fn do_disk_seq() {
     let setup = Setup::new();
-    let diskseq: DiskSeqDB<Entry, Printer> = DiskSeqDB::create().unwrap();
+    let mut diskseq: DiskSeqDB<Entry, Printer> = DiskSeqDB::create().unwrap();
 
     println!("\n**** Example 1 ****");
     let _cres1 = diskseq.consume(vec!["friends"], vec![city_match], Printer, false);
@@ -138,15 +149,16 @@ fn do_disk_seq() {
     if cres3.is_some() {
         run_k(cres3.unwrap());
     }
-    let _ = diskseq.print_channel("friends");
+    //let _ = diskseq.print_channel("friends");
 
-    let _ = diskseq.clear();
-    assert!(diskseq.is_empty());
+    // let _ = diskseq.clear();
+    // assert!(diskseq.is_empty());
+    my_function(&mut diskseq);
 }
 
 fn do_mem_seq() {
     let setup = Setup::new();
-    let memseq: MemSeqDB<Entry, Printer> = MemSeqDB::create().unwrap();
+    let mut memseq: MemSeqDB<Entry, Printer> = MemSeqDB::create().unwrap();
 
     // call methods/functions on T
     println!("\n**** Example 1 ****");
@@ -180,15 +192,16 @@ fn do_mem_seq() {
     if cres3.is_some() {
         run_k(cres3.unwrap());
     }
-    let _ = memseq.print_channel("friends");
+    //let _ = memseq.print_channel("friends");
 
-    let _ = memseq.clear();
-    assert!(memseq.is_empty());
+    // let _ = memseq.clear();
+    // assert!(memseq.is_empty());
+    my_function(&mut memseq);
 }
 
 fn do_mem_conc() {
     let setup = Setup::new();
-    let memconc: MemConcDB<Entry, Printer> = MemConcDB::create().unwrap();
+    let mut memconc: MemConcDB<Entry, Printer> = MemConcDB::create().unwrap();
 
     println!("\n**** Example 1 ****");
     let _cres1 = memconc.consume(vec!["friends"], vec![city_match], Printer, false);
@@ -221,8 +234,57 @@ fn do_mem_conc() {
     if cres3.is_some() {
         run_k(cres3.unwrap());
     }
-    let _ = memconc.print_channel("friends");
+    //let _ = memconc.print_channel("friends");
 
-    let _ = memconc.clear();
-    assert!(memconc.is_empty());
+    // let _ = memconc.clear();
+    // assert!(memconc.is_empty());
+    my_function(&mut memconc);
+}
+
+// fn do_some_db<D, K, T>(somedb: &mut T) where T: MyTrait<D, K> {
+//     let setup = Setup::new();
+
+//     // call methods/functions on T
+//     println!("\n**** Example 1 ****");
+//     let _cres1 = somedb.consume(vec!["friends"], vec![city_match], Printer, false);
+//     let _ = somedb.print_channel("friends");
+//     let pres1 = somedb.produce("friends", setup.alice.clone(), false);
+//     if pres1.is_some() {
+//         run_k(vec![pres1.unwrap()]);
+//     }
+//     let _ = somedb.print_channel("friends");
+
+//     println!("\n**** Example 2 ****");
+//     let _pres2 = somedb.produce("friends", setup.bob, false);
+//     let _ = somedb.print_channel("friends");
+//     let cres2 = somedb.consume(vec!["friends"], vec![name_match], Printer, false);
+//     if cres2.is_some() {
+//         run_k(cres2.unwrap());
+//     }
+//     let _ = somedb.print_channel("friends");
+
+//     println!("\n**** Example 3 ****");
+//     let _pres3 = somedb.produce("colleagues", setup.dan, false);
+//     let _pres4 = somedb.produce("friends", setup.alice.clone(), false);
+//     let _ = somedb.print_channel("friends");
+//     let cres3 = somedb.consume(
+//         vec!["friends", "colleagues"],
+//         vec![state_match, state_match],
+//         Printer,
+//         true,
+//     );
+//     if cres3.is_some() {
+//         run_k(cres3.unwrap());
+//     }
+//     let _ = somedb.print_channel("friends");
+
+//     let _ = somedb.clear();
+//     assert!(somedb.is_empty());
+// }
+
+fn my_function<D, K, T>(data: &mut T) where T: MyTrait<D, K> {
+    data.my_method();
+    let _ = data.print_channel("friends");
+    let _ = data.clear();
+    assert!(data.is_empty());
 }
