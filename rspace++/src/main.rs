@@ -1,11 +1,13 @@
 use std::error::Error;
 
+use crate::diskconc::DiskConcDB;
 use crate::diskseq::DiskSeqDB;
 use crate::memconc::MemConcDB;
 use crate::memseq::MemSeqDB;
 use crate::shared::{MyTrait, OptionResult};
 use example::{Address, Entry, Name, Printer};
 
+mod diskconc;
 mod diskseq;
 mod example;
 mod memconc;
@@ -100,12 +102,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("\n*********** ON-DISK SEQUENTIAL ***********");
     do_disk_seq();
 
+    println!("\n*********** ON-DISK CONCURRENT ***********");
+    do_disk_conc();
+
     // let mut diskseq: DiskSeqDB<Entry, Printer> = DiskSeqDB::create().unwrap();
     // let mut memseq: MemSeqDB<Entry, Printer> = MemSeqDB::create().unwrap();
     // let mut memconc: MemConcDB<Entry, Printer> = MemConcDB::create().unwrap();
 
     // let _ = diskseq.clear();
-
 
     // my_function(&mut diskseq);
     // my_function(&mut memseq);
@@ -149,11 +153,53 @@ fn do_disk_seq() {
     if cres3.is_some() {
         run_k(cres3.unwrap());
     }
-    //let _ = diskseq.print_channel("friends");
+    let _ = diskseq.print_channel("friends");
 
-    // let _ = diskseq.clear();
-    // assert!(diskseq.is_empty());
-    my_function(&mut diskseq);
+    let _ = diskseq.clear();
+    assert!(diskseq.is_empty());
+    // my_function(&mut diskseq);
+}
+
+fn do_disk_conc() {
+    let setup = Setup::new();
+    let mut diskconc: DiskConcDB<Entry, Printer> = DiskConcDB::create().unwrap();
+
+    println!("\n**** Example 1 ****");
+    let _cres1 = diskconc.consume(vec!["friends"], vec![city_match], Printer, false);
+    let _ = diskconc.print_channel("friends");
+    let pres1 = diskconc.produce("friends", setup.alice.clone(), false);
+    if pres1.is_some() {
+        run_k(vec![pres1.unwrap()]);
+    }
+    let _ = diskconc.print_channel("friends");
+
+    println!("\n**** Example 2 ****");
+    let _pres2 = diskconc.produce("friends", setup.bob, false);
+    let _ = diskconc.print_channel("friends");
+    let cres2 = diskconc.consume(vec!["friends"], vec![name_match], Printer, false);
+    if cres2.is_some() {
+        run_k(cres2.unwrap());
+    }
+    let _ = diskconc.print_channel("friends");
+
+    println!("\n**** Example 3 ****");
+    let _pres3 = diskconc.produce("colleagues", setup.dan, false);
+    let _pres4 = diskconc.produce("friends", setup.alice.clone(), false);
+    let _ = diskconc.print_channel("friends");
+    let cres3 = diskconc.consume(
+        vec!["friends", "colleagues"],
+        vec![state_match, state_match],
+        Printer,
+        true,
+    );
+    if cres3.is_some() {
+        run_k(cres3.unwrap());
+    }
+    let _ = diskconc.print_channel("friends");
+
+    let _ = diskconc.clear();
+    assert!(diskconc.is_empty());
+    // my_function(&mut diskconc);
 }
 
 fn do_mem_seq() {
@@ -192,11 +238,11 @@ fn do_mem_seq() {
     if cres3.is_some() {
         run_k(cres3.unwrap());
     }
-    //let _ = memseq.print_channel("friends");
+    let _ = memseq.print_channel("friends");
 
-    // let _ = memseq.clear();
-    // assert!(memseq.is_empty());
-    my_function(&mut memseq);
+    let _ = memseq.clear();
+    assert!(memseq.is_empty());
+    // my_function(&mut memseq);
 }
 
 fn do_mem_conc() {
@@ -234,11 +280,11 @@ fn do_mem_conc() {
     if cres3.is_some() {
         run_k(cres3.unwrap());
     }
-    //let _ = memconc.print_channel("friends");
+    let _ = memconc.print_channel("friends");
 
-    // let _ = memconc.clear();
-    // assert!(memconc.is_empty());
-    my_function(&mut memconc);
+    let _ = memconc.clear();
+    assert!(memconc.is_empty());
+    // my_function(&mut memconc);
 }
 
 // fn do_some_db<D, K, T>(somedb: &mut T) where T: MyTrait<D, K> {
@@ -282,7 +328,10 @@ fn do_mem_conc() {
 //     assert!(somedb.is_empty());
 // }
 
-fn my_function<D, K, T>(data: &mut T) where T: MyTrait<D, K> {
+fn my_function<D, K, T>(data: &mut T)
+where
+    T: MyTrait<D, K>,
+{
     data.my_method();
     let _ = data.print_channel("friends");
     let _ = data.clear();

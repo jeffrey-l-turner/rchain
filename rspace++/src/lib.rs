@@ -3,9 +3,10 @@
 //     println!("Hello, world! This was run from Rust code!");
 // }
 
-pub mod example;
+pub mod diskconc;
 pub mod diskseq;
-pub mod memseq;
-pub mod shared;
+pub mod example;
 pub mod memconc;
+pub mod memseq;
 pub mod rspace;
+pub mod shared;
