@@ -8,6 +8,7 @@ edition = "2021"
 # [lib]
 # name = "rust_library"
 crate-type = ["cdylib"]
+path = "src/rspace.rs"
 
 [dependencies]
 bincode = "1.0"

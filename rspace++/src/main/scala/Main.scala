@@ -5,7 +5,7 @@ object BuildRustLibrary extends Library {
   val _ = System.setProperty("jna.library.path", "./rspace++/target/release")
 
   trait RustLib extends Library {
-    def hello_world(): Unit
+    def get_once_durable_concurrent(): Unit
   }
 
   def main(args: Array[String]): Unit = {

@@ -6,6 +6,7 @@ use crate::shared::{OptionResult, Pattern};
 use std::error::Error;
 
 // See https://docs.google.com/document/d/1yWdvJwsq4Ft7elzKBM0dehh4RFoQ-vXt-1TAUTLLxMY/edit
+#[repr(C)]
 pub struct RSpace<D, K> {
     diskseq: DiskSeqDB<D, K>,
     diskconc: DiskConcDB<D, K>,

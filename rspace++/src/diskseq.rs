@@ -11,6 +11,7 @@ use std::path::Path;
 /*
 See RSpace.scala and Tuplespace.scala in rspace/
 */
+#[repr(C)]
 pub struct DiskSeqDB<D, K> {
     env: Env,
     db: Database<Str, SerdeBincode<Vec<u8>>>,
@@ -229,18 +230,19 @@ impl<
 }
 
 impl<
-D: Clone
-    + std::hash::Hash
-    + std::fmt::Debug
-    + serde::Serialize
-    + for<'a> serde::Deserialize<'a>,
-K: Clone
-    + std::hash::Hash
-    + std::fmt::Debug
-    + serde::Serialize
-    + for<'a> serde::Deserialize<'a>
-    + 'static,
-> MyTrait<D, K> for DiskSeqDB<D, K> {
+        D: Clone
+            + std::hash::Hash
+            + std::fmt::Debug
+            + serde::Serialize
+            + for<'a> serde::Deserialize<'a>,
+        K: Clone
+            + std::hash::Hash
+            + std::fmt::Debug
+            + serde::Serialize
+            + for<'a> serde::Deserialize<'a>
+            + 'static,
+    > MyTrait<D, K> for DiskSeqDB<D, K>
+{
     fn my_method(&mut self) {
         // implementation for MemSeqDB's my_method
         println!("DiskSeqDB my_method")
