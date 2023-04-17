@@ -10,10 +10,10 @@ object BuildRustLibrary extends Library {
 
   def main(args: Array[String]): Unit = {
     // Load the Rust library
-    val lib = Native.load("rspace_plus_plus", classOf[RustLib]).asInstanceOf[RustLib]
+    val rspace = Native.load("rspace_plus_plus", classOf[RustLib]).asInstanceOf[RustLib]
 
     // Call the hello_world function
-    lib.hello_world()
+    rspace.get_once_durable_concurrent();
   }
 }
 
