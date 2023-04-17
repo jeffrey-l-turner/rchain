@@ -120,7 +120,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 fn do_disk_seq() {
     let setup = Setup::new();
-    let mut diskseq: DiskSeqDB<Entry, Printer> = DiskSeqDB::create().unwrap();
+    let diskseq: DiskSeqDB<Entry, Printer> = DiskSeqDB::create().unwrap();
 
     println!("\n**** Example 1 ****");
     let _cres1 = diskseq.consume(vec!["friends"], vec![city_match], Printer, false);
@@ -162,7 +162,7 @@ fn do_disk_seq() {
 
 fn do_disk_conc() {
     let setup = Setup::new();
-    let mut diskconc: DiskConcDB<Entry, Printer> = DiskConcDB::create().unwrap();
+    let diskconc: DiskConcDB<Entry, Printer> = DiskConcDB::create().unwrap();
 
     println!("\n**** Example 1 ****");
     let _cres1 = diskconc.consume(vec!["friends"], vec![city_match], Printer, false);
@@ -204,7 +204,7 @@ fn do_disk_conc() {
 
 fn do_mem_seq() {
     let setup = Setup::new();
-    let mut memseq: MemSeqDB<Entry, Printer> = MemSeqDB::create().unwrap();
+    let memseq: MemSeqDB<Entry, Printer> = MemSeqDB::create().unwrap();
 
     // call methods/functions on T
     println!("\n**** Example 1 ****");
@@ -247,7 +247,7 @@ fn do_mem_seq() {
 
 fn do_mem_conc() {
     let setup = Setup::new();
-    let mut memconc: MemConcDB<Entry, Printer> = MemConcDB::create().unwrap();
+    let memconc: MemConcDB<Entry, Printer> = MemConcDB::create().unwrap();
 
     println!("\n**** Example 1 ****");
     let _cres1 = memconc.consume(vec!["friends"], vec![city_match], Printer, false);
@@ -328,12 +328,12 @@ fn do_mem_conc() {
 //     assert!(somedb.is_empty());
 // }
 
-fn my_function<D, K, T>(data: &mut T)
-where
-    T: MyTrait<D, K>,
-{
-    data.my_method();
-    let _ = data.print_channel("friends");
-    let _ = data.clear();
-    assert!(data.is_empty());
-}
+// fn my_function<D, K, T>(data: &mut T)
+// where
+//     T: MyTrait<D, K>,
+// {
+//     data.my_method();
+//     let _ = data.print_channel("friends");
+//     let _ = data.clear();
+//     assert!(data.is_empty());
+// }

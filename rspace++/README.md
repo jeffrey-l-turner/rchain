@@ -21,9 +21,11 @@
 ## Rust
 
 - Run sample code: `cargo run` within `rspace++` directory
+- `rustc <path_to_file>` to compile single rust file
+- `cargo build --release` to build `rspace_plus_plus` library. Outputs to `rspace++/target/release`
+
+<br>
+
 - Run tests sequentially: `cargo test -- --test-threads=1` within `rspace++` directory.
 - Run specific test file sequentially: `cargo test --test my_test_file -- --test-threads=1` within `rspace++` directory.
-
-- `rustc <path_to_file>` to compile single rust file
-
 - `cargo test --test my_test_file -- --test-threads=1` tests all the functions in a single file
