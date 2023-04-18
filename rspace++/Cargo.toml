@@ -5,10 +5,10 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-# [lib]
+[lib]
 # name = "rust_library"
-crate-type = ["cdylib"]
-path = "src/rspace.rs"
+crate-type = ["cdylib", "rlib"]
+# path = "src/rspace.rs"
 
 [dependencies]
 bincode = "1.0"
