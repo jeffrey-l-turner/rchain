@@ -105,13 +105,19 @@ impl<
     pub fn produce(&self, channel: &str, entry: D, persist: bool) -> Option<OptionResult<D, K>> {
         let continuation_prefix = format!("channel-{}-continuation", channel);
         let mut result = None;
+        let mut stopper = false;
 
+        //TODO: make this more efficient...
+        //right now it loops through whole db and doesnt stop after first match
         self.db.retain(|key, value| {
-            if key.starts_with(&continuation_prefix) {
+            println!("\nretain keyval {:?}", key);
+            if key.starts_with(&continuation_prefix) && !stopper {
+                println!("\nmatch keyval {:?}", key);
                 let k_data = bincode::deserialize::<KData<Pattern<D>, K>>(&value).unwrap();
                 let pattern = k_data.pattern;
 
                 if pattern(entry.clone()) {
+                    stopper = true;
                     result = Some(OptionResult {
                         continuation: k_data.continuation,
                         data: entry.clone(),
@@ -296,13 +302,17 @@ K: Clone
     fn produce(&self, channel: &str, entry: D, persist: bool) -> Option<OptionResult<D, K>> {
         let continuation_prefix = format!("channel-{}-continuation", channel);
         let mut result = None;
+        let mut stopper = false;
 
+        //TODO: make this more efficient...
+        //right now it loops through whole db and doesnt stop after first match
         self.db.retain(|key, value| {
-            if key.starts_with(&continuation_prefix) {
+            if key.starts_with(&continuation_prefix) && !stopper {
                 let k_data = bincode::deserialize::<KData<Pattern<D>, K>>(&value).unwrap();
                 let pattern = k_data.pattern;
 
                 if pattern(entry.clone()) {
+                    stopper = true;
                     result = Some(OptionResult {
                         continuation: k_data.continuation,
                         data: entry.clone(),

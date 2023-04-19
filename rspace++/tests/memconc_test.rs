@@ -29,6 +29,8 @@ mod tests {
                     },
                     email: "alicel@ringworld.net".to_string(),
                     phone: "787-555-1212".to_string(),
+                    pos: 1,
+                    posStr: "1".to_string(),
                 },
                 bob: Entry {
                     name: Name {
@@ -43,6 +45,8 @@ mod tests {
                     },
                     email: "blablah@tenex.net".to_string(),
                     phone: "232-555-1212".to_string(),
+                    pos: 1,
+                    posStr: "1".to_string(),
                 },
                 carol: Entry {
                     name: Name {
@@ -57,6 +61,8 @@ mod tests {
                     },
                     email: "carol@blablah.org".to_string(),
                     phone: "232-555-1212".to_string(),
+                    pos: 1,
+                    posStr: "1".to_string(),
                 },
                 dan: Entry {
                     name: Name {
@@ -71,6 +77,8 @@ mod tests {
                     },
                     email: "deejwalters@sdf.lonestar.org".to_string(),
                     phone: "444-555-1212".to_string(),
+                    pos: 1,
+                    posStr: "1".to_string(),
                 },
                 erin: Entry {
                     name: Name {
@@ -85,6 +93,8 @@ mod tests {
                     },
                     email: "erush@lasttraintogoa.net".to_string(),
                     phone: "333-555-1212".to_string(),
+                    pos: 1,
+                    posStr: "1".to_string(),
                 },
             }
         }

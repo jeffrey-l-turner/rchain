@@ -196,8 +196,8 @@ impl<
     ) -> ()
     {
         let _ = self.memseq.print_channel(channel);
-        let _ = self.memconc.print_channel(channel);
-        let _ = self.diskseq.print_channel(channel);
-        let _ = self.diskconc.print_channel(channel);
+        // let _ = self.memconc.print_channel(channel);
+        // let _ = self.diskseq.print_channel(channel);
+        // let _ = self.diskconc.print_channel(channel);
     }
 }

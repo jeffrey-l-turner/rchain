@@ -21,6 +21,8 @@ pub struct Entry {
     pub address: Address,
     pub email: String,
     pub phone: String,
+    pub pos: u8,
+    pub posStr: String,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
