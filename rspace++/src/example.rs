@@ -43,8 +43,10 @@ name:    {}
 address: {}
 email:   {}
 phone:   {}
+pos: {}
+posStr: {}
 "#,
-            name_str, addr_str, entry.email, entry.phone
+            name_str, addr_str, entry.email, entry.phone, entry.pos, entry.posStr
         );
     }
 }

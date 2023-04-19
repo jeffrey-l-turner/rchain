@@ -110,9 +110,9 @@ impl<
         //TODO: make this more efficient...
         //right now it loops through whole db and doesnt stop after first match
         self.db.retain(|key, value| {
-            println!("\nretain keyval {:?}", key);
+            println!("retain keyval {:?}", key);
             if key.starts_with(&continuation_prefix) && !stopper {
-                println!("\nmatch keyval {:?}", key);
+                println!("match keyval {:?}", key);
                 let k_data = bincode::deserialize::<KData<Pattern<D>, K>>(&value).unwrap();
                 let pattern = k_data.pattern;
 
