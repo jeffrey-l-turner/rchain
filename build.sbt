@@ -29,6 +29,7 @@ lazy val projectSettings = Seq(
     Wart.LeakingSealed,
     Wart.Recursion,
     // those don't want
+		Wart.NonUnitStatements,
     Wart.Overloading,
     Wart.Nothing,
     Wart.Equals,
