@@ -16,12 +16,6 @@ object BuildRustLibrary extends Library {
         channel: Pointer,
         entry: Pointer
     ): Pointer
-
-    // Examples
-    def MyStruct_new(x: Int, y: Int): Long
-    def MyStruct_add(myStructPtr: Long): Int
-
-    def print_types(x: Int, y: Double): Unit
   }
 
   def main(args: Array[String]): Unit = {
@@ -48,13 +42,6 @@ object BuildRustLibrary extends Library {
     println("Result 1: ", res1)
 
     lib.space_print(spacePtr, channelPtr)
-
-    // Examples
-    val myStructPtr = lib.MyStruct_new(1, 2)
-    val result      = lib.MyStruct_add(myStructPtr)
-    println(result)
-
-    lib.print_types(42, 3.14);
   }
 }
 
