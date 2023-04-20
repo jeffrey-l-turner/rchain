@@ -221,7 +221,7 @@ impl<
         //return memseq_is_empty || memconc_is_empty || diskseq_is_empty || diskconc_is_empty;
     }
 
-    pub fn clear_db(&self) -> () {
+    pub fn clear_store(&self) -> () {
         let _ = self.memseq.clear();
         let _ = self.memconc.clear();
         let _ = self.diskseq.clear();

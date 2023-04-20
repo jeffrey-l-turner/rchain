@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod tests {
-    use rspace_plus_plus::rspace::RSpace;
     use rspace_plus_plus::example::{Address, Entry, Name, Printer};
-    use std::thread;
+    use rspace_plus_plus::rspace::RSpace;
     use std::sync::Arc;
+    use std::thread;
 
     struct Setup {
         rspace: RSpace<Entry, Printer>,
@@ -20,7 +20,7 @@ mod tests {
         fn new() -> Self {
             Self {
                 rspace: RSpace::create().unwrap(),
-                entries:  Vec::new(),
+                entries: Vec::new(),
                 emptyEntry: Entry {
                     name: Name {
                         first: "First".to_string(),
@@ -117,7 +117,6 @@ mod tests {
                     pos: 1,
                     posStr: "1".to_string(),
                 },
-                
             }
         }
     }
@@ -152,8 +151,7 @@ mod tests {
     //     rspace.print_data(&binding);
 
     //     println!("\npres {:?}", pres);
-        
-        
+
     //     assert!(cres.is_none());
     //     assert!(pres.is_some());
 
@@ -181,7 +179,7 @@ mod tests {
     //         let handle = thread::spawn(move || {
     //             //putting this one on allows the output to go through but its nonsense
     //             //let pres = rspace_clone.put_once_non_durable_concurrent(vec! [&binding], vec! [pos_match],Printer);
-                
+
     //             //this one makes sense to put in the data by calling get knowing it puts the entry in the db
     //             //printouts during test show them going as threaded and out of order
     //             let pres = rspace_clone.get_once_non_durable_concurrent(&binding, e);
@@ -233,7 +231,7 @@ mod tests {
     //         let handle = thread::spawn(move || {
     //             //putting this one on allows the output to go through but its nonsense
     //             let pres = rspace_clone.put_once_non_durable_concurrent(vec! [&binding], vec! [pos_match],Printer);
-                
+
     //             //this one makes sense to put in the data by calling get knowing it puts the entry in the db
     //             //printouts during test show them going as threaded and out of order
     //             //let pres = rspace_clone.get_once_non_durable_concurrent(&binding, e);
@@ -262,7 +260,6 @@ mod tests {
     //     rspace.print_data(&"chan1".to_string());
     //     println!("\nend print state of db\n");
 
-
     // }
     // // //cargo test --test rspace_test -- --test-threads=1
 
@@ -287,17 +284,20 @@ mod tests {
         let _pres1 = rspace.get_once_non_durable_sequential("friends", setup.alice.clone());
         let _pres2 = rspace.get_once_non_durable_sequential("friends", setup.bob);
         rspace.print_data("friends");
-        let cres1 = rspace.put_always_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
+        let cres1 =
+            rspace.put_always_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
         rspace.print_data("friends");
         assert_eq!(cres1.unwrap().len(), 1);
         assert!(!rspace.is_db_empty());
 
-        let cres2: Option<Vec<rspace_plus_plus::shared::OptionResult<Entry, Printer>>> = rspace.put_always_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
+        let cres2: Option<Vec<rspace_plus_plus::shared::OptionResult<Entry, Printer>>> =
+            rspace.put_always_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
 
         assert_eq!(cres2.unwrap().len(), 1);
         assert!(rspace.is_db_empty());
 
-        let cres3 = rspace.put_always_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
+        let cres3 =
+            rspace.put_always_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
 
         assert!(cres3.is_none());
         assert!(!rspace.is_db_empty());
@@ -307,7 +307,7 @@ mod tests {
         assert!(pres3.is_some());
         assert!(!rspace.is_db_empty());
 
-        let _ = rspace.clear_db();
+        let _ = rspace.clear_store();
     }
 
     // fn memseq_test_multiple_channels_consume_match() {
@@ -431,5 +431,4 @@ mod tests {
 
     //     let _ = rspace.clear_db();
     // }
-
 }

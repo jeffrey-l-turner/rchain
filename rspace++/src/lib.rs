@@ -47,3 +47,10 @@ pub extern "C" fn space_print(rspace: *mut Space<String, String>, channel: *cons
         (*rspace).rspace.print_store(channel_str)
     }
 }
+
+#[no_mangle]
+pub extern "C" fn space_clear(rspace: *mut Space<String, String>) -> () {
+    unsafe {
+        (*rspace).rspace.clear_store();
+    }
+}

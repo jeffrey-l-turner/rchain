@@ -10,6 +10,7 @@ object BuildRustLibrary extends Library {
   trait RustLib extends Library {
     def space_new(): Pointer
     def space_print(rspace: Pointer, channel: Pointer): Unit
+    def space_clear(rspace: Pointer): Unit
 
     def space_get_once_durable_concurrent(
         rspace: Pointer,
@@ -42,6 +43,8 @@ object BuildRustLibrary extends Library {
     println("Result 1: ", res1)
 
     lib.space_print(spacePtr, channelPtr)
+
+    lib.space_clear(spacePtr)
   }
 }
 
