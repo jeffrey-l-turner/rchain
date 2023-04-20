@@ -123,15 +123,15 @@ mod tests {
     }
 
     fn city_match(entry: Entry) -> bool {
-        entry.address.city == "City"
+        entry.address.city == "Crystal Lake"
     }
 
     fn name_match(entry: Entry) -> bool {
-        entry.name.last == "Last"
+        entry.name.last == "Lahblah"
     }
 
     fn state_match(entry: Entry) -> bool {
-        entry.address.state == "State"
+        entry.address.state == "Idaho"
     }
 
     fn pos_match(entry: Entry) -> bool {
