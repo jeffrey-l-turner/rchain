@@ -2,12 +2,14 @@ use serde::{Deserialize, Serialize};
 use std::hash::Hash;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
+#[repr(C)]
 pub struct Name {
     pub first: String,
     pub last: String,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
+#[repr(C)]
 pub struct Address {
     pub street: String,
     pub city: String,
@@ -16,6 +18,7 @@ pub struct Address {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
+#[repr(C)]
 pub struct Entry {
     pub name: Name,
     pub address: Address,

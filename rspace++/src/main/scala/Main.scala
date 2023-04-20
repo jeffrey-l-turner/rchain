@@ -6,22 +6,29 @@ object BuildRustLibrary extends Library {
 
   // Define interface for Rust functions
   trait RustLib extends Library {
-    def create_my_struct(a: Int, b: Int): Pointer
-    def print_types(x: Int, y: Double): Unit
+    def space_new(): Pointer
 
+    // Examples
     def MyStruct_new(x: Int, y: Int): Long
     def MyStruct_add(myStructPtr: Long): Int
+
+    def print_types(x: Int, y: Double): Unit
   }
 
   def main(args: Array[String]): Unit = {
     // Load the Rust library
     val lib = Native.load("rspace_plus_plus", classOf[RustLib]).asInstanceOf[RustLib]
 
-    // lib.print_types(42, 3.14);
+    // @SuppressWarnings(Array("unused"))
+    val spacePtr = lib.space_new()
+    println(spacePtr)
+
+    // Examples
     val myStructPtr = lib.MyStruct_new(1, 2)
     val result      = lib.MyStruct_add(myStructPtr)
-
     println(result)
+
+    lib.print_types(42, 3.14);
   }
 }
 
