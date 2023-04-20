@@ -195,9 +195,30 @@ impl<
         channel: &str,
     ) -> ()
     {
-        let _ = self.memseq.print_channel(channel);
-        // let _ = self.memconc.print_channel(channel);
+        //let _ = self.memseq.print_channel(channel);
+        let _ = self.memconc.print_channel(channel);
         // let _ = self.diskseq.print_channel(channel);
         // let _ = self.diskconc.print_channel(channel);
+    }
+
+    pub fn is_db_empty(
+        &self,
+    ) -> bool
+    {
+        let memseq_is_empty = self.memseq.is_empty();
+        let memconc_is_empty = self.memconc.is_empty();
+        let diskseq_is_empty = self.diskseq.is_empty();
+        let diskconc_is_empty = self.diskconc.is_empty();
+        return memseq_is_empty || memconc_is_empty || diskseq_is_empty || diskconc_is_empty;
+    }
+
+    pub fn clear_db(
+        &self,
+    ) -> ()
+    {
+        let _ = self.memseq.clear();
+        let _ = self.memconc.clear();
+        let _ = self.diskseq.clear();
+        let _ = self.diskconc.clear();
     }
 }

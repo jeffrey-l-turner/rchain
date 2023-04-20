@@ -119,8 +119,9 @@ mod tests {
 
         let _pres1 = memseq.produce("friends", setup.alice.clone(), false);
         let _pres2 = memseq.produce("friends", setup.bob, false);
+        let _ = memseq.print_channel("friends");
         let cres1 = memseq.consume(vec!["friends"], vec![city_match], Printer, true);
-
+        let _ = memseq.print_channel("friends");
         assert_eq!(cres1.unwrap().len(), 1);
         assert!(!memseq.is_empty());
 

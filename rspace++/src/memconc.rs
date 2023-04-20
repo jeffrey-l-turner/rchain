@@ -48,7 +48,9 @@ impl<
                 let data_prefix = format!("channel-{}-data", channels[i]);
 
                 self.db.retain(|key, value| {
+                    println!("memconc consume retain keyval {:?}", key);
                     if key.starts_with(&data_prefix) && !stopper {
+                        println!("memconc consume match keyval {:?}", key);
                         let produce_data = bincode::deserialize::<ProduceData<D>>(&value).unwrap();
 
                         if patterns[i](produce_data.data.clone()) {
@@ -109,8 +111,11 @@ impl<
 
         //TODO: make this more efficient...
         //right now it loops through whole db and doesnt stop after first match
+        
         self.db.retain(|key, value| {
+            println!("memconc produce retain keyval {:?}", key);
             if key.starts_with(&continuation_prefix) && !stopper {
+                println!("memconc produce match keyval {:?}", key);
                 let k_data = bincode::deserialize::<KData<Pattern<D>, K>>(&value).unwrap();
                 let pattern = k_data.pattern;
 
