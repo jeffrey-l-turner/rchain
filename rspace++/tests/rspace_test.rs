@@ -288,147 +288,645 @@ mod tests {
             rspace.put_always_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
         rspace.print_data("friends");
         assert_eq!(cres1.unwrap().len(), 1);
-        assert!(!rspace.is_db_empty());
+        assert!(!rspace.is_memseq_empty());
 
         let cres2: Option<Vec<rspace_plus_plus::shared::OptionResult<Entry, Printer>>> =
             rspace.put_always_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
 
         assert_eq!(cres2.unwrap().len(), 1);
-        assert!(rspace.is_db_empty());
+        assert!(rspace.is_memseq_empty());
 
         let cres3 =
             rspace.put_always_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
 
         assert!(cres3.is_none());
-        assert!(!rspace.is_db_empty());
+        assert!(!rspace.is_memseq_empty());
 
         let pres3 = rspace.get_once_non_durable_sequential("friends", setup.alice.clone());
 
         assert!(pres3.is_some());
-        assert!(!rspace.is_db_empty());
+        assert!(!rspace.is_memseq_empty());
 
         let _ = rspace.clear_store();
     }
 
-    // fn memseq_test_multiple_channels_consume_match() {
-    //     let setup = Setup::new();
-    //     let rspace = setup.rspace;
+    #[test]
+    fn memseq_test_multiple_channels_consume_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
 
-    //     let pres1 = rspace.get_once_non_durable_sequential("colleagues", setup.dan);
-    //     let pres2 = rspace.get_once_non_durable_sequential("friends", setup.erin);
+        let pres1 = rspace.get_once_non_durable_sequential("colleagues", setup.dan);
+        let pres2 = rspace.get_once_non_durable_sequential("friends", setup.erin);
 
-    //     let cres = rspace.put_once_non_durable_sequential(
-    //         vec!["friends", "colleagues"],
-    //         vec![state_match, state_match],
-    //         Printer,
-    //     );
+        let cres = rspace.put_once_non_durable_sequential(
+            vec!["friends", "colleagues"],
+            vec![state_match, state_match],
+            Printer,
+        );
 
-    //     assert!(pres1.is_none());
-    //     assert!(pres2.is_none());
-    //     assert!(cres.is_some());
-    //     assert_eq!(cres.unwrap().len(), 2);
-    //     assert!(rspace.is_db_empty());
+        assert!(pres1.is_none());
+        assert!(pres2.is_none());
+        assert!(cres.is_some());
+        assert_eq!(cres.unwrap().len(), 2);
+        assert!(rspace.is_memseq_empty());
 
-    //     let _ = rspace.clear_db();
-    // }
+        let _ = rspace.clear_store();
+    }
 
-    // fn memseq_test_consume_match() {
-    //     let setup = Setup::new();
-    //     let rspace = setup.rspace;
+    #[test]
+    fn memseq_test_consume_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
 
-    //     let pres = rspace.get_once_non_durable_sequential("friends", setup.bob);
-    //     let cres = rspace.put_once_non_durable_sequential(vec!["friends"], vec![name_match], Printer);
+        let pres = rspace.get_once_non_durable_sequential("friends", setup.bob);
+        let cres = rspace.put_once_non_durable_sequential(vec!["friends"], vec![name_match], Printer);
 
-    //     assert!(pres.is_none());
-    //     assert!(cres.is_some());
-    //     assert!(rspace.is_db_empty());
+        assert!(pres.is_none());
+        assert!(cres.is_some());
+        assert!(rspace.is_memseq_empty());
 
-    //     let _ = rspace.clear_db();
-    // }
+        let _ = rspace.clear_store();
+    }
 
-    // fn memseq_test_produce_match() {
-    //     let setup = Setup::new();
-    //     let rspace = setup.rspace;
+    #[test]
+    fn memseq_test_produce_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
 
-    //     let cres = rspace.put_once_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
-    //     let pres = rspace.get_once_non_durable_sequential("friends", setup.alice);
+        let cres = rspace.put_once_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
+        let pres = rspace.get_once_non_durable_sequential("friends", setup.alice);
 
-    //     assert!(cres.is_none());
-    //     assert!(pres.is_some());
-    //     assert!(rspace.is_db_empty());
+        assert!(cres.is_none());
+        assert!(pres.is_some());
+        assert!(rspace.is_memseq_empty());
 
-    //     let _ = rspace.clear_db();
-    // }
+        let _ = rspace.clear_store();
+    }
 
-    // fn memseq_test_produce_no_match() {
-    //     let setup = Setup::new();
-    //     let rspace = setup.rspace;
+    #[test]
+    fn memseq_test_produce_no_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
 
-    //     let cres = rspace.put_once_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
-    //     let pres = rspace.get_once_non_durable_sequential("friends", setup.carol);
+        let cres = rspace.put_once_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
+        let pres = rspace.get_once_non_durable_sequential("friends", setup.carol);
 
-    //     assert!(cres.is_none());
-    //     assert!(pres.is_none());
-    //     assert!(rspace.is_db_empty());
+        assert!(cres.is_none());
+        assert!(pres.is_none());
+        assert!(!rspace.is_memseq_empty());
 
-    //     let _ = rspace.clear_db();
-    // }
+        let _ = rspace.clear_store();
+    }
 
-    // fn memseq_test_consume_persist() {
-    //     let setup = Setup::new();
-    //     let rspace = setup.rspace;
+    #[test]
+    fn memseq_test_consume_persist() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
 
-    //     let cres = rspace.put_always_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
+        let cres = rspace.put_always_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
 
-    //     assert!(cres.is_none());
-    //     assert!(!rspace.is_db_empty());
+        assert!(cres.is_none());
+        assert!(!rspace.is_memseq_empty());
 
-    //     let pres = rspace.get_once_non_durable_sequential("friends", setup.alice.clone());
+        let pres = rspace.get_once_non_durable_sequential("friends", setup.alice.clone());
 
-    //     assert!(pres.is_some());
-    //     assert!(rspace.is_db_empty());
+        assert!(pres.is_some());
+        assert!(!rspace.is_memseq_empty());
 
-    //     let _ = rspace.clear_db();
-    // }
+        let _ = rspace.clear_store();
+    }
 
-    // fn memseq_test_produce_persist() {
-    //     let setup = Setup::new();
-    //     let rspace = setup.rspace;
+    #[test]
+    fn memseq_test_produce_persist() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
 
-    //     let pres = rspace.get_always_non_durable_sequential("friends", setup.alice);
+        let pres = rspace.get_always_non_durable_sequential("friends", setup.alice);
 
-    //     assert!(pres.is_none());
-    //     assert!(!rspace.is_db_empty());
+        assert!(pres.is_none());
+        assert!(!rspace.is_memseq_empty());
 
-    //     let cres = rspace.put_once_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
+        let cres = rspace.put_once_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
 
-    //     assert!(cres.is_some());
-    //     assert_eq!(cres.unwrap().len(), 1);
-    //     assert!(rspace.is_db_empty());
+        assert!(cres.is_some());
+        assert_eq!(cres.unwrap().len(), 1);
+        assert!(!rspace.is_memseq_empty());
 
-    //     let _ = rspace.clear_db();
-    // }
+        let _ = rspace.clear_store();
+    }
 
-    // fn memseq_test_produce_persist_existing_matches() {
-    //     let setup = Setup::new();
-    //     let rspace = setup.rspace;
+    #[test]
+    fn memseq_test_produce_persist_existing_matches() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
 
-    //     let cres1 = rspace.put_once_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
+        let cres1 = rspace.put_once_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
 
-    //     assert!(cres1.is_none());
-    //     assert!(!rspace.is_db_empty());
+        assert!(cres1.is_none());
+        assert!(!rspace.is_memseq_empty());
 
-    //     let pres1 = rspace.get_always_non_durable_sequential("friends", setup.alice.clone());
+        let pres1 = rspace.get_always_non_durable_sequential("friends", setup.alice.clone());
 
-    //     assert!(pres1.is_some());
-    //     assert!((rspace.is_db_empty()));
+        assert!(pres1.is_some());
+        assert!((rspace.is_memseq_empty()));
 
-    //     let pres2 = rspace.get_always_non_durable_sequential("friends", setup.alice.clone());
-    //     let _cres2 = rspace.put_once_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
+        let pres2 = rspace.get_always_non_durable_sequential("friends", setup.alice.clone());
+        let _cres2 = rspace.put_once_non_durable_sequential(vec!["friends"], vec![city_match], Printer);
 
-    //     assert!(pres2.is_none());
-    //     assert!(rspace.is_db_empty());
+        assert!(pres2.is_none());
+        assert!(!rspace.is_memseq_empty());
 
-    //     let _ = rspace.clear_db();
-    // }
+        let _ = rspace.clear_store();
+    }
+
+
+    #[test]
+    fn memconc_test_consume_persist_existing_matches() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let _pres1 = rspace.get_once_non_durable_concurrent("friends", setup.alice.clone());
+        let _pres2 = rspace.get_once_non_durable_concurrent("friends", setup.bob);
+        rspace.print_data("friends");
+        let cres1 =
+            rspace.put_always_non_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+        rspace.print_data("friends");
+        assert_eq!(cres1.unwrap().len(), 1);
+        assert!(!rspace.is_memconc_empty());
+
+        let cres2: Option<Vec<rspace_plus_plus::shared::OptionResult<Entry, Printer>>> =
+            rspace.put_always_non_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+
+        assert_eq!(cres2.unwrap().len(), 1);
+        assert!(rspace.is_memconc_empty());
+
+        let cres3 =
+            rspace.put_always_non_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+
+        assert!(cres3.is_none());
+        assert!(!rspace.is_memconc_empty());
+
+        let pres3 = rspace.get_once_non_durable_concurrent("friends", setup.alice.clone());
+
+        assert!(pres3.is_some());
+        assert!(!rspace.is_memconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn memconc_test_multiple_channels_consume_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let pres1 = rspace.get_once_non_durable_concurrent("colleagues", setup.dan);
+        let pres2 = rspace.get_once_non_durable_concurrent("friends", setup.erin);
+
+        let cres = rspace.put_once_non_durable_concurrent(
+            vec!["friends", "colleagues"],
+            vec![state_match, state_match],
+            Printer,
+        );
+
+        assert!(pres1.is_none());
+        assert!(pres2.is_none());
+        assert!(cres.is_some());
+        assert_eq!(cres.unwrap().len(), 2);
+        assert!(rspace.is_memconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn memconc_test_consume_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let pres = rspace.get_once_non_durable_concurrent("friends", setup.bob);
+        let cres = rspace.put_once_non_durable_concurrent(vec!["friends"], vec![name_match], Printer);
+
+        assert!(pres.is_none());
+        assert!(cres.is_some());
+        assert!(rspace.is_memconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn memconc_test_produce_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let cres = rspace.put_once_non_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+        let pres = rspace.get_once_non_durable_concurrent("friends", setup.alice);
+
+        assert!(cres.is_none());
+        assert!(pres.is_some());
+        assert!(rspace.is_memconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn memconc_test_produce_no_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let cres = rspace.put_once_non_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+        let pres = rspace.get_once_non_durable_concurrent("friends", setup.carol);
+
+        assert!(cres.is_none());
+        assert!(pres.is_none());
+        assert!(!rspace.is_memconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn memconc_test_consume_persist() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let cres = rspace.put_always_non_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+
+        assert!(cres.is_none());
+        assert!(!rspace.is_memconc_empty());
+
+        let pres = rspace.get_once_non_durable_concurrent("friends", setup.alice.clone());
+
+        assert!(pres.is_some());
+        assert!(!rspace.is_memconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn memconc_test_produce_persist() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let pres = rspace.get_always_non_durable_concurrent("friends", setup.alice);
+
+        assert!(pres.is_none());
+        assert!(!rspace.is_memconc_empty());
+
+        let cres = rspace.put_once_non_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+
+        assert!(cres.is_some());
+        assert_eq!(cres.unwrap().len(), 1);
+        assert!(!rspace.is_memconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn memconc_test_produce_persist_existing_matches() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let cres1 = rspace.put_once_non_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+
+        assert!(cres1.is_none());
+        assert!(!rspace.is_memconc_empty());
+
+        let pres1 = rspace.get_always_non_durable_concurrent("friends", setup.alice.clone());
+
+        assert!(pres1.is_some());
+        assert!((rspace.is_memconc_empty()));
+
+        let pres2 = rspace.get_always_non_durable_concurrent("friends", setup.alice.clone());
+        let _cres2 = rspace.put_once_non_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+
+        assert!(pres2.is_none());
+        assert!(!rspace.is_memconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    
+    #[test]
+    fn diskconc_test_consume_persist_existing_matches() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let _pres1 = rspace.get_once_durable_concurrent("friends", setup.alice.clone());
+        let _pres2 = rspace.get_once_durable_concurrent("friends", setup.bob);
+        rspace.print_data("friends");
+        let cres1 =
+            rspace.put_always_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+        rspace.print_data("friends");
+        assert_eq!(cres1.unwrap().len(), 1);
+        assert!(!rspace.is_diskconc_empty());
+
+        let cres2: Option<Vec<rspace_plus_plus::shared::OptionResult<Entry, Printer>>> =
+            rspace.put_always_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+
+        assert_eq!(cres2.unwrap().len(), 1);
+        assert!(rspace.is_diskconc_empty());
+
+        let cres3 =
+            rspace.put_always_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+
+        assert!(cres3.is_none());
+        assert!(!rspace.is_diskconc_empty());
+
+        let pres3 = rspace.get_once_durable_concurrent("friends", setup.alice.clone());
+
+        assert!(pres3.is_some());
+        assert!(!rspace.is_diskconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskconc_test_multiple_channels_consume_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let pres1 = rspace.get_once_durable_concurrent("colleagues", setup.dan);
+        let pres2 = rspace.get_once_durable_concurrent("friends", setup.erin);
+
+        let cres = rspace.put_once_durable_concurrent(
+            vec!["friends", "colleagues"],
+            vec![state_match, state_match],
+            Printer,
+        );
+
+        assert!(pres1.is_none());
+        assert!(pres2.is_none());
+        assert!(cres.is_some());
+        assert_eq!(cres.unwrap().len(), 2);
+        assert!(rspace.is_diskconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskconc_test_consume_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let pres = rspace.get_once_durable_concurrent("friends", setup.bob);
+        let cres = rspace.put_once_durable_concurrent(vec!["friends"], vec![name_match], Printer);
+
+        assert!(pres.is_none());
+        assert!(cres.is_some());
+        assert!(rspace.is_diskconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskconc_test_produce_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let cres = rspace.put_once_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+        let pres = rspace.get_once_durable_concurrent("friends", setup.alice);
+
+        assert!(cres.is_none());
+        assert!(pres.is_some());
+        assert!(rspace.is_diskconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskconc_test_produce_no_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let cres = rspace.put_once_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+        let pres = rspace.get_once_durable_concurrent("friends", setup.carol);
+
+        assert!(cres.is_none());
+        assert!(pres.is_none());
+        assert!(!rspace.is_diskconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskconc_test_consume_persist() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let cres = rspace.put_always_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+
+        assert!(cres.is_none());
+        assert!(!rspace.is_diskconc_empty());
+
+        let pres = rspace.get_once_durable_concurrent("friends", setup.alice.clone());
+
+        assert!(pres.is_some());
+        assert!(!rspace.is_diskconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskconc_test_produce_persist() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let pres = rspace.get_always_durable_concurrent("friends", setup.alice);
+
+        assert!(pres.is_none());
+        assert!(!rspace.is_diskconc_empty());
+
+        let cres = rspace.put_once_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+
+        assert!(cres.is_some());
+        assert_eq!(cres.unwrap().len(), 1);
+        assert!(!rspace.is_diskconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskconc_test_produce_persist_existing_matches() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let cres1 = rspace.put_once_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+
+        assert!(cres1.is_none());
+        assert!(!rspace.is_diskconc_empty());
+
+        let pres1 = rspace.get_always_durable_concurrent("friends", setup.alice.clone());
+
+        assert!(pres1.is_some());
+        assert!((rspace.is_diskconc_empty()));
+
+        let pres2 = rspace.get_always_durable_concurrent("friends", setup.alice.clone());
+        let _cres2 = rspace.put_once_durable_concurrent(vec!["friends"], vec![city_match], Printer);
+
+        assert!(pres2.is_none());
+        assert!(!rspace.is_diskconc_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskseq_test_consume_persist_existing_matches() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let _pres1 = rspace.get_once_durable_sequential("friends", setup.alice.clone());
+        let _pres2 = rspace.get_once_durable_sequential("friends", setup.bob);
+        rspace.print_data("friends");
+        let cres1 =
+            rspace.put_always_durable_sequential(vec!["friends"], vec![city_match], Printer);
+        rspace.print_data("friends");
+        assert_eq!(cres1.unwrap().len(), 1);
+        assert!(!rspace.is_diskseq_empty());
+
+        let cres2: Option<Vec<rspace_plus_plus::shared::OptionResult<Entry, Printer>>> =
+            rspace.put_always_durable_sequential(vec!["friends"], vec![city_match], Printer);
+
+        assert_eq!(cres2.unwrap().len(), 1);
+        assert!(rspace.is_diskseq_empty());
+
+        let cres3 =
+            rspace.put_always_durable_sequential(vec!["friends"], vec![city_match], Printer);
+
+        assert!(cres3.is_none());
+        assert!(!rspace.is_diskseq_empty());
+
+        let pres3 = rspace.get_once_durable_sequential("friends", setup.alice.clone());
+
+        assert!(pres3.is_some());
+        assert!(!rspace.is_diskseq_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskseq_test_multiple_channels_consume_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let pres1 = rspace.get_once_durable_sequential("colleagues", setup.dan);
+        let pres2 = rspace.get_once_durable_sequential("friends", setup.erin);
+
+        let cres = rspace.put_once_durable_sequential(
+            vec!["friends", "colleagues"],
+            vec![state_match, state_match],
+            Printer,
+        );
+
+        assert!(pres1.is_none());
+        assert!(pres2.is_none());
+        assert!(cres.is_some());
+        assert_eq!(cres.unwrap().len(), 2);
+        assert!(rspace.is_diskseq_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskseq_test_consume_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let pres = rspace.get_once_durable_sequential("friends", setup.bob);
+        let cres = rspace.put_once_durable_sequential(vec!["friends"], vec![name_match], Printer);
+
+        assert!(pres.is_none());
+        assert!(cres.is_some());
+        assert!(rspace.is_diskseq_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskseq_test_produce_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let cres = rspace.put_once_durable_sequential(vec!["friends"], vec![city_match], Printer);
+        let pres = rspace.get_once_durable_sequential("friends", setup.alice);
+
+        assert!(cres.is_none());
+        assert!(pres.is_some());
+        assert!(rspace.is_diskseq_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskseq_test_produce_no_match() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let cres = rspace.put_once_durable_sequential(vec!["friends"], vec![city_match], Printer);
+        let pres = rspace.get_once_durable_sequential("friends", setup.carol);
+
+        assert!(cres.is_none());
+        assert!(pres.is_none());
+        assert!(!rspace.is_diskseq_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskseq_test_consume_persist() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let cres = rspace.put_always_durable_sequential(vec!["friends"], vec![city_match], Printer);
+
+        assert!(cres.is_none());
+        assert!(!rspace.is_diskseq_empty());
+
+        let pres = rspace.get_once_durable_sequential("friends", setup.alice.clone());
+
+        assert!(pres.is_some());
+        assert!(!rspace.is_diskseq_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskseq_test_produce_persist() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let pres = rspace.get_always_durable_sequential("friends", setup.alice);
+
+        assert!(pres.is_none());
+        assert!(!rspace.is_diskseq_empty());
+
+        let cres = rspace.put_once_durable_sequential(vec!["friends"], vec![city_match], Printer);
+
+        assert!(cres.is_some());
+        assert_eq!(cres.unwrap().len(), 1);
+        assert!(!rspace.is_diskseq_empty());
+
+        let _ = rspace.clear_store();
+    }
+
+    #[test]
+    fn diskseq_test_produce_persist_existing_matches() {
+        let setup = Setup::new();
+        let rspace = setup.rspace;
+
+        let cres1 = rspace.put_once_durable_sequential(vec!["friends"], vec![city_match], Printer);
+
+        assert!(cres1.is_none());
+        assert!(!rspace.is_diskseq_empty());
+
+        let pres1 = rspace.get_always_durable_sequential("friends", setup.alice.clone());
+
+        assert!(pres1.is_some());
+        assert!((rspace.is_diskseq_empty()));
+
+        let pres2 = rspace.get_always_durable_sequential("friends", setup.alice.clone());
+        let _cres2 = rspace.put_once_durable_sequential(vec!["friends"], vec![city_match], Printer);
+
+        assert!(pres2.is_none());
+        assert!(!rspace.is_diskseq_empty());
+
+        let _ = rspace.clear_store();
+    }
 }
