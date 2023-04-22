@@ -34,7 +34,7 @@ object BuildRustLibrary extends Library {
 
     // type Pattern = Function1[String, Boolean]
 
-    trait Pattern[D] extends Function1[D, Boolean]
+    // trait Pattern[D] extends Function1[D, Boolean]
 
     // def toRustPattern(f: Pattern): Pointer = {
     //   val cb = new Callback(f)
@@ -49,11 +49,11 @@ object BuildRustLibrary extends Library {
     //   s => s == "alice"
     // ).map(toRustPattern).toArray
 
-    val patterns: Vector[Pattern[String]] = Vector(
-      (s: String) => s == "alice"
-    )
+    // val patterns: Vector[Pattern[String]] = Vector(
+    //   (s: String) => s == "alice"
+    // )
 
-    val javaPatterns: List[Pattern[String]] = patterns.asJava
+    // val javaPatterns: List[Pattern[String]] = patterns.asJava
 
     val spacePtr = lib.space_new()
 
@@ -73,19 +73,19 @@ object BuildRustLibrary extends Library {
     val continuationBuffer = ByteBuffer.allocateDirect(continuationBytes.length)
     continuationBuffer.put(continuationBytes)
 
-    val channelPtr: Pointer      = Native.getDirectBufferPointer(channelBuffer)
-    val entryPtr: Pointer        = Native.getDirectBufferPointer(entryBuffer)
-    val continuationPtr: Pointer = Native.getDirectBufferPointer(continuationBuffer)
+    val channelPtr: Pointer = Native.getDirectBufferPointer(channelBuffer)
+    val entryPtr: Pointer   = Native.getDirectBufferPointer(entryBuffer)
+    // val continuationPtr: Pointer = Native.getDirectBufferPointer(continuationBuffer)
 
     // val patternsPtr = new Memory(NativeLong.SIZE * patternsVec.length)
     // patternsPtr.write(0, patternsVec, 0, patternsVec.length)
 
-    lib.space_put_once_durable_concurrent(
-      spacePtr,
-      Array(channelPtr),
-      javaPatterns,
-      continuationPtr
-    )
+    // lib.space_put_once_durable_concurrent(
+    //   spacePtr,
+    //   Array(channelPtr),
+    //   javaPatterns,
+    //   continuationPtr
+    // )
 
     lib.space_get_once_durable_concurrent(spacePtr, channelPtr, entryPtr)
     // println("Result 1: ", res1)
