@@ -10,6 +10,8 @@ object RustLibrary extends Library {
   trait RustLib extends Library {
     trait Pattern[D] extends Function1[D, Boolean]
 
+    def process_strings(strings: Array[String], length: Int): Unit
+
     def space_new(): Pointer
     def space_print(rspace: Pointer, channel: String): Unit
     def space_clear(rspace: Pointer): Unit
@@ -42,6 +44,9 @@ object RustLibrary extends Library {
     lib.space_print(spacePtr, channel)
 
     lib.space_clear(spacePtr)
+
+    val strings = Array("Hello", "from", "Scala!")
+    lib.process_strings(strings, strings.length)
   }
 
 }

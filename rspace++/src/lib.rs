@@ -10,6 +10,21 @@ use rspace::RSpace;
 use shared::{OptionResult, Pattern};
 use std::ffi::{c_char, CStr};
 
+#[no_mangle]
+pub extern "C" fn process_strings(input: *const *const c_char, length: usize) {
+    let input_strings: Vec<&str> = (0..length)
+        .map(|i| {
+            let cstr = unsafe { CStr::from_ptr(*input.offset(i as isize)) };
+            cstr.to_str().unwrap()
+        })
+        .collect();
+
+    // Process the vector of strings
+    for string in input_strings {
+        println!("{}", string);
+    }
+}
+
 #[repr(C)]
 pub struct Space<D, K> {
     rspace: RSpace<D, K>,
