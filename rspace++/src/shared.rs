@@ -3,10 +3,11 @@ use serde::ser::SerializeStruct;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::error::Error;
 use std::hash::Hash;
+use crate::rtypes::rtypes;
 
-pub mod rtypes {
-    include!(concat!(env!("OUT_DIR"), "/firefly.rtypes.rs"));
-}
+// pub mod rtypes {
+//     include!(concat!(env!("OUT_DIR"), "/firefly.rtypes.rs"));
+// }
 
 #[derive(Debug, Hash, Clone)]
 pub struct OptionResult {

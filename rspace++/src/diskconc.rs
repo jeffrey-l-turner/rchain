@@ -2,7 +2,7 @@ use crate::shared::*;
 use heed::types::*;
 use heed::{Database, Env, EnvOpenOptions};
 use prost::Message;
-use rtypes;
+use crate::rtypes::rtypes;
 use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
 use std::fs;
@@ -54,7 +54,7 @@ impl<
                     let pdata_buf = iter_data_unwrap.1;
                     let pdata = rtypes::ProduceData::decode(pdata_buf.as_slice()).unwrap();
 
-                    if cdata.patterns[i] == pdata.data.unwrap().name.unwrap().last {
+                    if cdata.patterns[i] == pdata.data.clone().unwrap().name.unwrap().last {
                         if !pdata.persistent {
                             let mut wtxn = self.env.write_txn().unwrap();
                             let _ = self.db.delete(&mut wtxn, iter_data_unwrap.0);
@@ -63,7 +63,7 @@ impl<
 
                         results.push(OptionResult {
                             continuation: cdata.continuation.clone(),
-                            data: pdata.data.as_ref().unwrap(),
+                            data: pdata.data.clone().unwrap(),
                         });
                         break;
                     }
@@ -78,8 +78,8 @@ impl<
             } else {
                 for i in 0..cdata.channels.len() {
                     let mut consume_data = rtypes::ConsumeData::default();
-                    consume_data.pattern = cdata.patterns[i];
-                    consume_data.continuation = cdata.continuation;
+                    consume_data.pattern = cdata.patterns[i].clone();
+                    consume_data.continuation = cdata.continuation.clone();
                     consume_data.persistent = cdata.persistent;
 
                     println!("\nNo matching data for {:?}", consume_data);
@@ -119,7 +119,7 @@ impl<
             let cdata = rtypes::ConsumeData::decode(cdata_buf.as_slice()).unwrap();
 
             // TODO: Implement better pattern/match schema
-            if cdata.pattern == pdata.data.unwrap().name.unwrap().last {
+            if cdata.pattern == pdata.data.as_ref().unwrap().name.as_ref().unwrap().last {
                 if !cdata.persistent {
                     let mut wtxn = self.env.write_txn().unwrap();
                     let _ = self.db.delete(&mut wtxn, iter_data.0);
@@ -129,7 +129,7 @@ impl<
                 // TODO: Add OptionResult to rtypes.proto
                 return Some(OptionResult {
                     continuation: cdata.continuation,
-                    data: pdata.data.as_ref().unwrap(),
+                    data: pdata.data.clone().unwrap(),
                 });
             }
             iter_continuation_option = iter_continuation.next().transpose().unwrap();
@@ -138,7 +138,7 @@ impl<
         rtxn.commit().unwrap();
 
         let mut produce_data = rtypes::ProduceData::default();
-        produce_data.data = pdata.data;
+        produce_data.data = pdata.data.clone();
         produce_data.persistent = pdata.persistent;
 
         println!("\nNo matching continuation for {:?}", pdata);
@@ -413,3 +413,21 @@ impl<
 //         Ok(())
 //     }
 // }
+
+
+// alice: Entry {
+//   name: Name {
+//       first: "Alice".to_string(),
+//       last: "Lincoln".to_string(),
+//   },
+//   address: Address {
+//       street: "777 Ford St".to_string(),
+//       city: "Crystal Lake".to_string(),
+//       state: "Idaho".to_string(),
+//       zip: "223322".to_string(),
+//   },
+//   email: "alicel@ringworld.net".to_string(),
+//   phone: "787-555-1212".to_string(),
+//   pos: 1,
+//   pos_str: "1".to_string(),
+// },
