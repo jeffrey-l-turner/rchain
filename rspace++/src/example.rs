@@ -25,7 +25,7 @@ pub struct Entry {
     pub email: String,
     pub phone: String,
     pub pos: u8,
-    pub posStr: String,
+    pub pos_str: String,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
@@ -49,7 +49,7 @@ phone:   {}
 pos: {}
 posStr: {}
 "#,
-            name_str, addr_str, entry.email, entry.phone, entry.pos, entry.posStr
+            name_str, addr_str, entry.email, entry.phone, entry.pos, entry.pos_str
         );
     }
 }
