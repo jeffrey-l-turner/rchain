@@ -7,8 +7,8 @@ use std::ops::Add;
 use crate::diskconc::DiskConcDB;
 use crate::diskseq::DiskSeqDB;
 use crate::memconc::MemConcDB;
+use crate::memseq::MemSeqDB;
 use crate::rtypes::rtypes::{Address, Entry, Name};
-// use crate::memseq::MemSeqDB;
 use crate::shared::OptionResult;
 // use example::{Address, Entry, Name, Printer};
 
@@ -103,7 +103,7 @@ fn run_k(ks: Vec<OptionResult>) {
     }
 }
 
-fn createSend(_channel: String, _data: Entry, _persistent: bool) -> rtypes::rtypes::Send {
+fn create_send(_channel: String, _data: Entry, _persistent: bool) -> rtypes::rtypes::Send {
     let mut send = rtypes::rtypes::Send::default();
     send.chan = _channel;
     send.data = Some(_data);
@@ -111,7 +111,7 @@ fn createSend(_channel: String, _data: Entry, _persistent: bool) -> rtypes::rtyp
     send
 }
 
-fn createReceive(
+fn create_receive(
     _channels: Vec<String>,
     _patterns: Vec<String>,
     _continutation: String,
@@ -126,8 +126,8 @@ fn createReceive(
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    // println!("\n*********** IN-MEMORY SEQUENTIAL ***********");
-    // do_mem_seq();
+    println!("\n*********** IN-MEMORY SEQUENTIAL ***********");
+    do_mem_seq();
 
     println!("\n*********** IN-MEMORY CONCURRENT ***********");
     do_mem_conc();
@@ -157,7 +157,7 @@ fn do_disk_seq() {
 
     println!("\n**** Example 1 ****");
 
-    let rec1 = createReceive(
+    let rec1 = create_receive(
         vec![String::from("friends")],
         vec![String::from("Lincoln")],
         String::from("I am the continuation, for now..."),
@@ -167,7 +167,7 @@ fn do_disk_seq() {
 
     let _ = diskseq.print_channel("friends");
 
-    let send1 = createSend(String::from("friends"), setup.alice.clone(), false);
+    let send1 = create_send(String::from("friends"), setup.alice.clone(), false);
     let pres1 = diskseq.produce(send1);
     if pres1.is_some() {
         run_k(vec![pres1.unwrap()]);
@@ -176,12 +176,12 @@ fn do_disk_seq() {
 
     println!("\n**** Example 2 ****");
 
-    let send2 = createSend(String::from("friends"), setup.bob, false);
+    let send2 = create_send(String::from("friends"), setup.bob, false);
     let _pres2 = diskseq.produce(send2);
 
     let _ = diskseq.print_channel("friends");
 
-    let rec2 = createReceive(
+    let rec2 = create_receive(
         vec![String::from("friends")],
         vec![String::from("Lahblah")],
         String::from("I am the continuation, for now..."),
@@ -196,15 +196,15 @@ fn do_disk_seq() {
 
     println!("\n**** Example 3 ****");
 
-    let send3 = createSend(String::from("colleagues"), setup.dan, false);
+    let send3 = create_send(String::from("colleagues"), setup.dan, false);
     let _pres3 = diskseq.produce(send3);
 
-    let send4 = createSend(String::from("friends"), setup.alice.clone(), false);
+    let send4 = create_send(String::from("friends"), setup.alice.clone(), false);
     let _pres4 = diskseq.produce(send4);
 
     let _ = diskseq.print_channel("friends");
 
-    let rec3 = createReceive(
+    let rec3 = create_receive(
         vec![String::from("friends"), String::from("colleagues")],
         vec![String::from("Lincoln"), String::from("Walters")],
         String::from("I am the continuation, for now..."),
@@ -228,7 +228,7 @@ fn do_disk_conc() {
 
     println!("\n**** Example 1 ****");
 
-    let rec1 = createReceive(
+    let rec1 = create_receive(
         vec![String::from("friends")],
         vec![String::from("Lincoln")],
         String::from("I am the continuation, for now..."),
@@ -238,7 +238,7 @@ fn do_disk_conc() {
 
     let _ = diskconc.print_channel("friends");
 
-    let send1 = createSend(String::from("friends"), setup.alice.clone(), false);
+    let send1 = create_send(String::from("friends"), setup.alice.clone(), false);
     let pres1 = diskconc.produce(send1);
     if pres1.is_some() {
         run_k(vec![pres1.unwrap()]);
@@ -247,12 +247,12 @@ fn do_disk_conc() {
 
     println!("\n**** Example 2 ****");
 
-    let send2 = createSend(String::from("friends"), setup.bob, false);
+    let send2 = create_send(String::from("friends"), setup.bob, false);
     let _pres2 = diskconc.produce(send2);
 
     let _ = diskconc.print_channel("friends");
 
-    let rec2 = createReceive(
+    let rec2 = create_receive(
         vec![String::from("friends")],
         vec![String::from("Lahblah")],
         String::from("I am the continuation, for now..."),
@@ -267,15 +267,15 @@ fn do_disk_conc() {
 
     println!("\n**** Example 3 ****");
 
-    let send3 = createSend(String::from("colleagues"), setup.dan, false);
+    let send3 = create_send(String::from("colleagues"), setup.dan, false);
     let _pres3 = diskconc.produce(send3);
 
-    let send4 = createSend(String::from("friends"), setup.alice.clone(), false);
+    let send4 = create_send(String::from("friends"), setup.alice.clone(), false);
     let _pres4 = diskconc.produce(send4);
 
     let _ = diskconc.print_channel("friends");
 
-    let rec3 = createReceive(
+    let rec3 = create_receive(
         vec![String::from("friends"), String::from("colleagues")],
         vec![String::from("Lincoln"), String::from("Walters")],
         String::from("I am the continuation, for now..."),
@@ -293,48 +293,74 @@ fn do_disk_conc() {
     // my_function(&mut diskconc);
 }
 
-// fn do_mem_seq() {
-//     let setup = Setup::new();
-//     let memseq: MemSeqDB<Entry, Printer> = MemSeqDB::create().unwrap();
+fn do_mem_seq() {
+    let setup = Setup::new();
+    let memseq: MemSeqDB<Entry, String> = MemSeqDB::create().unwrap();
 
-//     // call methods/functions on T
-//     println!("\n**** Example 1 ****");
-//     let _cres1 = memseq.consume(vec!["friends"], vec![city_match], Printer, false);
-//     let _ = memseq.print_channel("friends");
-//     let pres1 = memseq.produce("friends", setup.alice.clone(), false);
-//     if pres1.is_some() {
-//         run_k(vec![pres1.unwrap()]);
-//     }
-//     let _ = memseq.print_channel("friends");
+    println!("\n**** Example 1 ****");
 
-//     println!("\n**** Example 2 ****");
-//     let _pres2 = memseq.produce("friends", setup.bob, false);
-//     let _ = memseq.print_channel("friends");
-//     let cres2 = memseq.consume(vec!["friends"], vec![name_match], Printer, false);
-//     if cres2.is_some() {
-//         run_k(cres2.unwrap());
-//     }
-//     let _ = memseq.print_channel("friends");
+    let rec1 = create_receive(
+        vec![String::from("friends")],
+        vec![String::from("Lincoln")],
+        String::from("I am the continuation, for now..."),
+        false,
+    );
+    let _cres1 = memseq.consume(rec1);
 
-//     println!("\n**** Example 3 ****");
-//     let _pres3 = memseq.produce("colleagues", setup.dan, false);
-//     let _pres4 = memseq.produce("friends", setup.alice.clone(), false);
-//     let _ = memseq.print_channel("friends");
-//     let cres3 = memseq.consume(
-//         vec!["friends", "colleagues"],
-//         vec![state_match, state_match],
-//         Printer,
-//         true,
-//     );
-//     if cres3.is_some() {
-//         run_k(cres3.unwrap());
-//     }
-//     let _ = memseq.print_channel("friends");
+    let _ = memseq.print_channel("friends");
 
-//     let _ = memseq.clear();
-//     assert!(memseq.is_empty());
-//     // my_function(&mut memseq);
-// }
+    let send1 = create_send(String::from("friends"), setup.alice.clone(), false);
+    let pres1 = memseq.produce(send1);
+    if pres1.is_some() {
+        run_k(vec![pres1.unwrap()]);
+    }
+    let _ = memseq.print_channel("friends");
+
+    println!("\n**** Example 2 ****");
+
+    let send2 = create_send(String::from("friends"), setup.bob, false);
+    let _pres2 = memseq.produce(send2);
+
+    let _ = memseq.print_channel("friends");
+
+    let rec2 = create_receive(
+        vec![String::from("friends")],
+        vec![String::from("Lahblah")],
+        String::from("I am the continuation, for now..."),
+        false,
+    );
+
+    let cres2 = memseq.consume(rec2);
+    if cres2.is_some() {
+        run_k(cres2.unwrap());
+    }
+    let _ = memseq.print_channel("friends");
+
+    println!("\n**** Example 3 ****");
+
+    let send3 = create_send(String::from("colleagues"), setup.dan, false);
+    let _pres3 = memseq.produce(send3);
+
+    let send4 = create_send(String::from("friends"), setup.alice.clone(), false);
+    let _pres4 = memseq.produce(send4);
+
+    let _ = memseq.print_channel("friends");
+
+    let rec3 = create_receive(
+        vec![String::from("friends"), String::from("colleagues")],
+        vec![String::from("Lincoln"), String::from("Walters")],
+        String::from("I am the continuation, for now..."),
+        true,
+    );
+    let cres3 = memseq.consume(rec3);
+    if cres3.is_some() {
+        run_k(cres3.unwrap());
+    }
+    let _ = memseq.print_channel("friends");
+
+    let _ = memseq.clear();
+    assert!(memseq.is_empty());
+}
 
 fn do_mem_conc() {
     let setup = Setup::new();
@@ -342,7 +368,7 @@ fn do_mem_conc() {
 
     println!("\n**** Example 1 ****");
 
-    let rec1 = createReceive(
+    let rec1 = create_receive(
         vec![String::from("friends")],
         vec![String::from("Lincoln")],
         String::from("I am the continuation, for now..."),
@@ -352,7 +378,7 @@ fn do_mem_conc() {
 
     let _ = memconc.print_channel("friends");
 
-    let send1 = createSend(String::from("friends"), setup.alice.clone(), false);
+    let send1 = create_send(String::from("friends"), setup.alice.clone(), false);
     let pres1 = memconc.produce(send1);
     if pres1.is_some() {
         run_k(vec![pres1.unwrap()]);
@@ -361,12 +387,12 @@ fn do_mem_conc() {
 
     println!("\n**** Example 2 ****");
 
-    let send2 = createSend(String::from("friends"), setup.bob, false);
+    let send2 = create_send(String::from("friends"), setup.bob, false);
     let _pres2 = memconc.produce(send2);
 
     let _ = memconc.print_channel("friends");
 
-    let rec2 = createReceive(
+    let rec2 = create_receive(
         vec![String::from("friends")],
         vec![String::from("Lahblah")],
         String::from("I am the continuation, for now..."),
@@ -381,15 +407,15 @@ fn do_mem_conc() {
 
     println!("\n**** Example 3 ****");
 
-    let send3 = createSend(String::from("colleagues"), setup.dan, false);
+    let send3 = create_send(String::from("colleagues"), setup.dan, false);
     let _pres3 = memconc.produce(send3);
 
-    let send4 = createSend(String::from("friends"), setup.alice.clone(), false);
+    let send4 = create_send(String::from("friends"), setup.alice.clone(), false);
     let _pres4 = memconc.produce(send4);
 
     let _ = memconc.print_channel("friends");
 
-    let rec3 = createReceive(
+    let rec3 = create_receive(
         vec![String::from("friends"), String::from("colleagues")],
         vec![String::from("Lincoln"), String::from("Walters")],
         String::from("I am the continuation, for now..."),
