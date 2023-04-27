@@ -29,7 +29,7 @@ lazy val projectSettings = Seq(
     Wart.LeakingSealed,
     Wart.Recursion,
     // those don't want
-		Wart.NonUnitStatements,
+    Wart.NonUnitStatements,
     Wart.Overloading,
     Wart.Nothing,
     Wart.Equals,
@@ -464,9 +464,12 @@ lazy val rspacePlusPlus = (project in file("rspace++"))
   .settings(
     name := "rspace++",
     version := "0.1.0-SNAPSHOT",
-		mainClass := Some("BuildRustLibrary"),
+    mainClass := Some("BuildRustLibrary"),
     libraryDependencies ++= commonDependencies ++ kamonDependencies ++ Seq(
       "net.java.dev.jna" % "jna" % "5.7.0"
+    ),
+    PB.targets in Compile := Seq(
+      scalapb.gen(grpc = false) -> (sourceManaged in Compile).value / "protobuf"
     )
   )
 
@@ -550,7 +553,7 @@ lazy val rchain = (project in file("."))
 lazy val runCargoBuild = taskKey[Unit]("Builds Rust library for rspace++")
 runCargoBuild := {
   import scala.sys.process._
-	Seq("./scripts/build_rspace++.sh")!
+  Seq("./scripts/build_rspace++.sh") !
 }
 
 (compile in Compile) := ((compile in Compile) dependsOn runCargoBuild).value

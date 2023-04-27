@@ -3,7 +3,7 @@
  */
  syntax = "proto3";
 
- package firefly.rtypes;
+ package firefly;
 
  message Name {
 	string first = 1;
