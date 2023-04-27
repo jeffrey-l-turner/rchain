@@ -27,18 +27,23 @@ pub extern "C" fn space_new() -> *mut Space {
 
 // Verb Set 1
 #[no_mangle]
-pub extern "C" fn space_get_once_durable_concurrent(rspace: *mut Space, pdata_buf: &[u8]) -> () {
+pub extern "C" fn space_get_once_durable_concurrent(
+    rspace: *mut Space,
+    pdata_buf: &[u8],
+) -> *mut Option<OptionResult> {
     // let channel_str = CStr::from_ptr(channel).to_str().unwrap();
     // let entry_str = { CStr::from_ptr(entry) }.to_string_lossy().into_owned();
 
-    // let result = (unsafe { *rspace })
-    //     .rspace
-    //     .get_once_durable_concurrent(pdata);
-
-    // Box::into_raw(Box::new(result))
-
     let pdata = Send::decode(pdata_buf).unwrap();
-    println!("{:?}", pdata)
+
+    let result = (unsafe { *rspace })
+        .rspace
+        .get_once_durable_concurrent(pdata);
+
+    Box::into_raw(Box::new(result))
+
+    // let pdata = Send::decode(pdata_buf).unwrap();
+    // println!("{:?}", pdata)
 }
 
 // Verb Set 3
