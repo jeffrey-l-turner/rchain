@@ -1,13 +1,12 @@
+use crate::rtypes::rtypes;
 use crate::shared::*;
 use heed::types::*;
 use heed::{Database, Env, EnvOpenOptions};
 use prost::Message;
-use crate::rtypes::rtypes;
 use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
 use std::fs;
 use std::hash::{Hash, Hasher};
-use std::io::Cursor;
 use std::marker::PhantomData;
 use std::path::Path;
 
@@ -54,6 +53,7 @@ impl<
                     let pdata_buf = iter_data_unwrap.1;
                     let pdata = rtypes::ProduceData::decode(pdata_buf.as_slice()).unwrap();
 
+                    // TODO: Implement better pattern/match schema
                     if cdata.patterns[i] == pdata.data.clone().unwrap().name.unwrap().last {
                         if !pdata.persistent {
                             let mut wtxn = self.env.write_txn().unwrap();
@@ -61,6 +61,7 @@ impl<
                             wtxn.commit().unwrap();
                         }
 
+                        // TODO: Add OptionResult to rtypes.proto
                         results.push(OptionResult {
                             continuation: cdata.continuation.clone(),
                             data: pdata.data.clone().unwrap(),
@@ -82,7 +83,7 @@ impl<
                     consume_data.continuation = cdata.continuation.clone();
                     consume_data.persistent = cdata.persistent;
 
-                    println!("\nNo matching data for {:?}", consume_data);
+                    println!("\nNo matching data for {:?}", cdata);
 
                     // opening a write transaction
                     let mut wtxn = self.env.write_txn().unwrap();
@@ -413,7 +414,6 @@ impl<
 //         Ok(())
 //     }
 // }
-
 
 // alice: Entry {
 //   name: Name {

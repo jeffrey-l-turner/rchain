@@ -1,233 +1,224 @@
-// use crate::shared::*;
-// use heed::types::*;
-// use heed::{Database, Env, EnvOpenOptions};
-// use std::collections::hash_map::DefaultHasher;
-// use std::error::Error;
-// use std::fs;
-// use std::hash::{Hash, Hasher};
-// use std::marker::PhantomData;
-// use std::path::Path;
+use crate::rtypes::rtypes;
+use crate::shared::*;
+use heed::types::*;
+use heed::{Database, Env, EnvOpenOptions};
+use prost::Message;
+use std::collections::hash_map::DefaultHasher;
+use std::error::Error;
+use std::fs;
+use std::hash::{Hash, Hasher};
+use std::marker::PhantomData;
+use std::path::Path;
 
-// /*
-// See RSpace.scala and Tuplespace.scala in rspace/
-// */
-// #[repr(C)]
-// pub struct DiskSeqDB<D, K> {
-//     env: Env,
-//     db: Database<Str, SerdeBincode<Vec<u8>>>,
-//     phantom: PhantomData<(D, K)>,
-// }
+/*
+See RSpace.scala and Tuplespace.scala in rspace/
+*/
+#[repr(C)]
+pub struct DiskSeqDB<D: Message, K: Message> {
+    env: Env,
+    db: Database<Str, SerdeBincode<Vec<u8>>>,
+    phantom: PhantomData<(D, K)>,
+}
 
-// impl<
-//         D: Clone
-//             + std::hash::Hash
-//             + std::fmt::Debug
-//             + serde::Serialize
-//             + for<'a> serde::Deserialize<'a>,
-//         K: Clone
-//             + std::hash::Hash
-//             + std::fmt::Debug
-//             + serde::Serialize
-//             + for<'a> serde::Deserialize<'a>
-//             + 'static,
-//     > DiskSeqDB<D, K>
-// {
-//     pub fn create() -> Result<DiskSeqDB<D, K>, Box<dyn Error>> {
-//         fs::create_dir_all(Path::new("target").join("DiskSeqDB"))?;
-//         let env = EnvOpenOptions::new().open(Path::new("target").join("DiskSeqDB"))?;
+impl<
+        D: Clone + std::hash::Hash + std::fmt::Debug + std::default::Default + prost::Message,
+        K: Clone + std::hash::Hash + std::fmt::Debug + std::default::Default + prost::Message,
+    > DiskSeqDB<D, K>
+{
+    pub fn create() -> Result<DiskSeqDB<D, K>, Box<dyn Error>> {
+        fs::create_dir_all(Path::new("target").join("DiskSeqDB"))?;
+        let env = EnvOpenOptions::new().open(Path::new("target").join("DiskSeqDB"))?;
 
-//         // open the default unamed database
-//         let db = env.create_database(None)?;
+        // open the default unamed database
+        let db = env.create_database(None)?;
 
-//         Ok(DiskSeqDB {
-//             env,
-//             db,
-//             phantom: PhantomData,
-//         })
-//     }
+        Ok(DiskSeqDB {
+            env,
+            db,
+            phantom: PhantomData,
+        })
+    }
 
-//     pub fn consume(
-//         &self,
-//         channels: Vec<&str>,
-//         patterns: Vec<Pattern<D>>,
-//         continuation: K,
-//         persist: bool,
-//     ) -> Option<Vec<OptionResult<D>>> {
-//         if channels.len() == patterns.len() {
-//             let mut results: Vec<OptionResult<D>> = vec![];
-//             let rtxn = self.env.read_txn().unwrap();
+    pub fn consume(&self, cdata: rtypes::Receive) -> Option<Vec<OptionResult>> {
+        if cdata.channels.len() == cdata.patterns.len() {
+            let mut results: Vec<OptionResult> = vec![];
+            let rtxn = self.env.read_txn().unwrap();
 
-//             for i in 0..channels.len() {
-//                 let data_prefix = format!("channel-{}-data", channels[i]);
-//                 let mut iter_data = self.db.prefix_iter(&rtxn, &data_prefix).unwrap();
-//                 let mut iter_data_option = iter_data.next().transpose().unwrap();
+            for i in 0..cdata.channels.len() {
+                let data_prefix = format!("channel-{}-data", cdata.channels[i]);
+                let mut iter_data = self.db.prefix_iter(&rtxn, &data_prefix).unwrap();
+                let mut iter_data_option = iter_data.next().transpose().unwrap();
 
-//                 while iter_data_option.is_some() {
-//                     let iter_data_unwrap = iter_data_option.unwrap();
-//                     let data_bytes = iter_data_unwrap.1;
-//                     let produce_data: ProduceData<D> =
-//                         bincode::deserialize::<ProduceData<D>>(&data_bytes).unwrap();
+                while iter_data_option.is_some() {
+                    let iter_data_unwrap = iter_data_option.unwrap();
+                    let pdata_buf = iter_data_unwrap.1;
+                    let pdata = rtypes::ProduceData::decode(pdata_buf.as_slice()).unwrap();
 
-//                     if patterns[i](produce_data.data.clone()) {
-//                         if !produce_data.persist {
-//                             let mut wtxn = self.env.write_txn().unwrap();
-//                             let _ = self.db.delete(&mut wtxn, iter_data_unwrap.0);
-//                             wtxn.commit().unwrap();
-//                         }
+                    // TODO: Implement better pattern/match schema
+                    if cdata.patterns[i] == pdata.data.clone().unwrap().name.unwrap().last {
+                        if !pdata.persistent {
+                            let mut wtxn = self.env.write_txn().unwrap();
+                            let _ = self.db.delete(&mut wtxn, iter_data_unwrap.0);
+                            wtxn.commit().unwrap();
+                        }
 
-//                         results.push(OptionResult {
-//                             continuation: continuation.clone(),
-//                             data: produce_data.data,
-//                         });
-//                         break;
-//                     }
-//                     iter_data_option = iter_data.next().transpose().unwrap();
-//                 }
-//                 drop(iter_data);
-//             }
-//             rtxn.commit().unwrap();
+                        // TODO: Add OptionResult to rtypes.proto
+                        results.push(OptionResult {
+                            continuation: cdata.continuation.clone(),
+                            data: pdata.data.clone().unwrap(),
+                        });
+                        break;
+                    }
+                    iter_data_option = iter_data.next().transpose().unwrap();
+                }
+                drop(iter_data);
+            }
+            rtxn.commit().unwrap();
 
-//             if results.len() > 0 {
-//                 return Some(results);
-//             } else {
-//                 for i in 0..channels.len() {
-//                     let k_data = KData {
-//                         pattern: patterns[i],
-//                         continuation: continuation.clone(),
-//                         persist,
-//                     };
+            if results.len() > 0 {
+                return Some(results);
+            } else {
+                for i in 0..cdata.channels.len() {
+                    let mut consume_data = rtypes::ConsumeData::default();
+                    consume_data.pattern = cdata.patterns[i].clone();
+                    consume_data.continuation = cdata.continuation.clone();
+                    consume_data.persistent = cdata.persistent;
 
-//                     println!("\nNo matching data for {:?}", k_data);
+                    println!("\nNo matching data for {:?}", cdata);
 
-//                     let k_data_bytes = bincode::serialize(&k_data).unwrap();
+                    // opening a write transaction
+                    let mut wtxn = self.env.write_txn().unwrap();
 
-//                     // opening a write transaction
-//                     let mut wtxn = self.env.write_txn().unwrap();
+                    let data_hash = self.calculate_hash(&consume_data);
+                    let key = format!("channel-{}-continuation-{}", &cdata.channels[i], &data_hash);
 
-//                     let kdata_hash = self.calculate_hash(&k_data);
-//                     let key = format!("channel-{}-continuation-{}", &channels[i], &kdata_hash);
+                    let mut consume_data_buf = Vec::new();
+                    consume_data_buf.reserve(consume_data.encoded_len());
+                    consume_data.encode(&mut consume_data_buf).unwrap();
 
-//                     let _ = self.db.put(&mut wtxn, &key, &k_data_bytes);
-//                     wtxn.commit().unwrap();
-//                 }
+                    let _ = self.db.put(&mut wtxn, &key, &consume_data_buf);
+                    wtxn.commit().unwrap();
+                }
 
-//                 None
-//             }
-//         } else {
-//             println!("channel and pattern vectors are not equal length!");
-//             None
-//         }
-//     }
+                None
+            }
+        } else {
+            println!("channel and pattern vectors are not equal length!");
+            None
+        }
+    }
 
-//     pub fn produce(&self, channel: &str, entry: D, persist: bool) -> Option<OptionResult<D>> {
-//         let rtxn = self.env.read_txn().unwrap();
+    pub fn produce(&self, pdata: rtypes::Send) -> Option<OptionResult> {
+        let rtxn = self.env.read_txn().unwrap();
 
-//         let continuation_prefix = format!("channel-{}-continuation", channel);
-//         let mut iter_continuation = self.db.prefix_iter(&rtxn, &continuation_prefix).unwrap();
-//         let mut iter_continuation_option = iter_continuation.next().transpose().unwrap();
+        let continuation_prefix = format!("channel-{}-continuation", pdata.chan);
+        let mut iter_continuation = self.db.prefix_iter(&rtxn, &continuation_prefix).unwrap();
+        let mut iter_continuation_option = iter_continuation.next().transpose().unwrap();
 
-//         while iter_continuation_option.is_some() {
-//             let iter_data = iter_continuation_option.unwrap();
-//             let k_data_bytes = iter_data.1;
-//             let k_data: KData<Pattern<D>, K> =
-//                 bincode::deserialize::<KData<Pattern<D>, K>>(&k_data_bytes).unwrap();
-//             let pattern = k_data.pattern;
+        while iter_continuation_option.is_some() {
+            let iter_data = iter_continuation_option.unwrap();
+            let cdata_buf = iter_data.1;
+            let cdata = rtypes::ConsumeData::decode(cdata_buf.as_slice()).unwrap();
 
-//             if pattern(entry.clone()) {
-//                 if !k_data.persist {
-//                     let mut wtxn = self.env.write_txn().unwrap();
-//                     let _ = self.db.delete(&mut wtxn, iter_data.0);
-//                     wtxn.commit().unwrap();
-//                 }
+            // TODO: Implement better pattern/match schema
+            if cdata.pattern == pdata.data.as_ref().unwrap().name.as_ref().unwrap().last {
+                if !cdata.persistent {
+                    let mut wtxn = self.env.write_txn().unwrap();
+                    let _ = self.db.delete(&mut wtxn, iter_data.0);
+                    wtxn.commit().unwrap();
+                }
 
-//                 return Some(OptionResult {
-//                     continuation: k_data.continuation,
-//                     data: entry.clone(),
-//                 });
-//             }
-//             iter_continuation_option = iter_continuation.next().transpose().unwrap();
-//         }
-//         drop(iter_continuation);
-//         rtxn.commit().unwrap();
+                // TODO: Add OptionResult to rtypes.proto
+                return Some(OptionResult {
+                    continuation: cdata.continuation,
+                    data: pdata.data.clone().unwrap(),
+                });
+            }
+            iter_continuation_option = iter_continuation.next().transpose().unwrap();
+        }
+        drop(iter_continuation);
+        rtxn.commit().unwrap();
 
-//         let produce_data = ProduceData {
-//             data: entry.clone(),
-//             persist,
-//         };
+        let mut produce_data = rtypes::ProduceData::default();
+        produce_data.data = pdata.data.clone();
+        produce_data.persistent = pdata.persistent;
 
-//         println!("\nNo matching continuation for {:?}", produce_data);
+        println!("\nNo matching continuation for {:?}", pdata);
 
-//         let mut wtxn = self.env.write_txn().unwrap();
+        let mut wtxn = self.env.write_txn().unwrap();
 
-//         let data_hash = self.calculate_hash(&produce_data);
-//         let key = format!("channel-{}-data-{}", &channel, &data_hash);
-//         let data_bytes = bincode::serialize(&produce_data).unwrap();
+        let data_hash = self.calculate_hash(&produce_data);
+        let key = format!("channel-{}-data-{}", &pdata.chan, &data_hash);
 
-//         let _ = self.db.put(&mut wtxn, &key, &data_bytes);
-//         wtxn.commit().unwrap();
+        let mut produce_data_buf = Vec::new();
+        produce_data_buf.reserve(produce_data.encoded_len());
+        produce_data.encode(&mut produce_data_buf).unwrap();
 
-//         None
-//     }
+        let _ = self.db.put(&mut wtxn, &key, &produce_data_buf);
+        wtxn.commit().unwrap();
 
-//     pub fn print_channel(&self, channel: &str) -> Result<(), Box<dyn Error>> {
-//         let rtxn = self.env.read_txn()?;
+        None
+    }
 
-//         let continuation_prefix = format!("channel-{}-continuation", channel);
-//         let mut iter_continuation = self.db.prefix_iter(&rtxn, &continuation_prefix)?;
+    pub fn print_channel(&self, channel: &str) -> Result<(), Box<dyn Error>> {
+        let rtxn = self.env.read_txn()?;
 
-//         let data_prefix = format!("channel-{}-data", channel);
-//         let mut iter_data = self.db.prefix_iter(&rtxn, &data_prefix)?;
+        let continuation_prefix = format!("channel-{}-continuation", channel);
+        let mut iter_continuation = self.db.prefix_iter(&rtxn, &continuation_prefix)?;
 
-//         if !self.db.is_empty(&rtxn)? {
-//             println!("\nCurrent channel state for \"{}\":", channel);
+        let data_prefix = format!("channel-{}-data", channel);
+        let mut iter_data = self.db.prefix_iter(&rtxn, &data_prefix)?;
 
-//             let mut iter_continuation_option = iter_continuation.next().transpose()?;
-//             while iter_continuation_option.is_some() {
-//                 let k_data_bytes = &iter_continuation_option.as_ref().unwrap().1;
-//                 let key = iter_continuation_option.as_ref().unwrap().0;
-//                 let k_data = bincode::deserialize::<KData<Pattern<D>, K>>(&k_data_bytes).unwrap();
-//                 println!("KEY: {:?} VALUE: {:?}", key, k_data);
-//                 iter_continuation_option = iter_continuation.next().transpose()?;
-//             }
+        if !self.db.is_empty(&rtxn)? {
+            println!("\nCurrent channel state for \"{}\":", channel);
 
-//             let mut iter_data_option = iter_data.next().transpose()?;
-//             while iter_data_option.is_some() {
-//                 let data_bytes = &iter_data_option.as_ref().unwrap().1;
-//                 let key = iter_data_option.as_ref().unwrap().0;
-//                 let data = bincode::deserialize::<D>(&data_bytes).unwrap();
-//                 println!("KEY: {:?} VALUE: {:?}", key, data);
-//                 iter_data_option = iter_data.next().transpose()?;
-//             }
-//         } else {
-//             println!("\nDatabase is empty")
-//         }
+            let mut iter_continuation_option = iter_continuation.next().transpose()?;
+            while iter_continuation_option.is_some() {
+                let key = iter_continuation_option.as_ref().unwrap().0;
+                let cdata_buf = &iter_continuation_option.as_ref().unwrap().1;
+                let cdata = rtypes::ConsumeData::decode(cdata_buf.as_slice()).unwrap();
+                println!("KEY: {:?} VALUE: {:?}", key, cdata);
+                iter_continuation_option = iter_continuation.next().transpose()?;
+            }
 
-//         drop(iter_continuation);
-//         drop(iter_data);
-//         rtxn.commit()?;
+            let mut iter_data_option = iter_data.next().transpose()?;
+            while iter_data_option.is_some() {
+                let key = iter_data_option.as_ref().unwrap().0;
+                let pdata_buf = &iter_data_option.as_ref().unwrap().1;
+                let pdata = rtypes::ProduceData::decode(pdata_buf.as_slice()).unwrap();
+                println!("KEY: {:?} VALUE: {:?}", key, pdata);
+                iter_data_option = iter_data.next().transpose()?;
+            }
+        } else {
+            println!("\nDatabase is empty")
+        }
 
-//         Ok(())
-//     }
+        drop(iter_continuation);
+        drop(iter_data);
+        rtxn.commit()?;
 
-//     pub fn is_empty(&self) -> bool {
-//         let rtxn = self.env.read_txn().unwrap();
-//         return self.db.is_empty(&rtxn).unwrap();
-//     }
+        Ok(())
+    }
 
-//     pub fn clear(&self) -> Result<(), Box<dyn Error>> {
-//         let mut wtxn = self.env.write_txn()?;
-//         let _ = self.db.clear(&mut wtxn)?;
-//         wtxn.commit()?;
+    pub fn is_empty(&self) -> bool {
+        let rtxn = self.env.read_txn().unwrap();
+        return self.db.is_empty(&rtxn).unwrap();
+    }
 
-//         Ok(())
-//     }
+    pub fn clear(&self) -> Result<(), Box<dyn Error>> {
+        let mut wtxn = self.env.write_txn()?;
+        let _ = self.db.clear(&mut wtxn)?;
+        wtxn.commit()?;
 
-//     fn calculate_hash<T: Hash>(&self, t: &T) -> u64 {
-//         let mut s = DefaultHasher::new();
-//         t.hash(&mut s);
-//         s.finish()
-//     }
-// }
+        Ok(())
+    }
+
+    fn calculate_hash<T: Hash>(&self, t: &T) -> u64 {
+        let mut s = DefaultHasher::new();
+        t.hash(&mut s);
+        s.finish()
+    }
+}
 
 // // impl<
 // //         D: Clone
