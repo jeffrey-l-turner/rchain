@@ -6,8 +6,8 @@ use std::ops::Add;
 
 use crate::diskconc::DiskConcDB;
 use crate::diskseq::DiskSeqDB;
+use crate::memconc::MemConcDB;
 use crate::rtypes::rtypes::{Address, Entry, Name};
-// use crate::memconc::MemConcDB;
 // use crate::memseq::MemSeqDB;
 use crate::shared::OptionResult;
 // use example::{Address, Entry, Name, Printer};
@@ -129,8 +129,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     // println!("\n*********** IN-MEMORY SEQUENTIAL ***********");
     // do_mem_seq();
 
-    // println!("\n*********** IN-MEMORY CONCURRENT ***********");
-    // do_mem_conc();
+    println!("\n*********** IN-MEMORY CONCURRENT ***********");
+    do_mem_conc();
 
     println!("\n*********** ON-DISK SEQUENTIAL ***********");
     do_disk_seq();
@@ -336,47 +336,74 @@ fn do_disk_conc() {
 //     // my_function(&mut memseq);
 // }
 
-// fn do_mem_conc() {
-//     let setup = Setup::new();
-//     let memconc: MemConcDB<Entry, Printer> = MemConcDB::create().unwrap();
+fn do_mem_conc() {
+    let setup = Setup::new();
+    let memconc: MemConcDB<Entry, String> = MemConcDB::create().unwrap();
 
-//     println!("\n**** Example 1 ****");
-//     let _cres1 = memconc.consume(vec!["friends"], vec![city_match], Printer, false);
-//     let _ = memconc.print_channel("friends");
-//     let pres1 = memconc.produce("friends", setup.alice.clone(), false);
-//     if pres1.is_some() {
-//         run_k(vec![pres1.unwrap()]);
-//     }
-//     let _ = memconc.print_channel("friends");
+    println!("\n**** Example 1 ****");
 
-//     println!("\n**** Example 2 ****");
-//     let _pres2 = memconc.produce("friends", setup.bob, false);
-//     let _ = memconc.print_channel("friends");
-//     let cres2 = memconc.consume(vec!["friends"], vec![name_match], Printer, false);
-//     if cres2.is_some() {
-//         run_k(cres2.unwrap());
-//     }
-//     let _ = memconc.print_channel("friends");
+    let rec1 = createReceive(
+        vec![String::from("friends")],
+        vec![String::from("Lincoln")],
+        String::from("I am the continuation, for now..."),
+        false,
+    );
+    let _cres1 = memconc.consume(rec1);
 
-//     println!("\n**** Example 3 ****");
-//     let _pres3 = memconc.produce("colleagues", setup.dan, false);
-//     let _pres4 = memconc.produce("friends", setup.alice.clone(), false);
-//     let _ = memconc.print_channel("friends");
-//     let cres3 = memconc.consume(
-//         vec!["friends", "colleagues"],
-//         vec![state_match, state_match],
-//         Printer,
-//         true,
-//     );
-//     if cres3.is_some() {
-//         run_k(cres3.unwrap());
-//     }
-//     let _ = memconc.print_channel("friends");
+    let _ = memconc.print_channel("friends");
 
-//     let _ = memconc.clear();
-//     assert!(memconc.is_empty());
-//     // my_function(&mut memconc);
-// }
+    let send1 = createSend(String::from("friends"), setup.alice.clone(), false);
+    let pres1 = memconc.produce(send1);
+    if pres1.is_some() {
+        run_k(vec![pres1.unwrap()]);
+    }
+    let _ = memconc.print_channel("friends");
+
+    println!("\n**** Example 2 ****");
+
+    let send2 = createSend(String::from("friends"), setup.bob, false);
+    let _pres2 = memconc.produce(send2);
+
+    let _ = memconc.print_channel("friends");
+
+    let rec2 = createReceive(
+        vec![String::from("friends")],
+        vec![String::from("Lahblah")],
+        String::from("I am the continuation, for now..."),
+        false,
+    );
+
+    let cres2 = memconc.consume(rec2);
+    if cres2.is_some() {
+        run_k(cres2.unwrap());
+    }
+    let _ = memconc.print_channel("friends");
+
+    println!("\n**** Example 3 ****");
+
+    let send3 = createSend(String::from("colleagues"), setup.dan, false);
+    let _pres3 = memconc.produce(send3);
+
+    let send4 = createSend(String::from("friends"), setup.alice.clone(), false);
+    let _pres4 = memconc.produce(send4);
+
+    let _ = memconc.print_channel("friends");
+
+    let rec3 = createReceive(
+        vec![String::from("friends"), String::from("colleagues")],
+        vec![String::from("Lincoln"), String::from("Walters")],
+        String::from("I am the continuation, for now..."),
+        true,
+    );
+    let cres3 = memconc.consume(rec3);
+    if cres3.is_some() {
+        run_k(cres3.unwrap());
+    }
+    let _ = memconc.print_channel("friends");
+
+    let _ = memconc.clear();
+    assert!(memconc.is_empty());
+}
 
 // fn do_some_db<D, K, T>(somedb: &mut T) where T: MyTrait<D, K> {
 //     let setup = Setup::new();
