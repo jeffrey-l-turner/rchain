@@ -42,6 +42,119 @@ pub extern "C" fn space_get_once_durable_concurrent(
     }
 }
 
+#[no_mangle]
+pub extern "C" fn space_get_once_non_durable_concurrent(
+    rspace: *mut Space,
+    pdata_ptr: *const u8,
+    pdata_len: usize,
+) -> *mut Option<OptionResult> {
+    unsafe {
+        let pdata_buf = std::slice::from_raw_parts(pdata_ptr, pdata_len);
+        let pdata = Send::decode(pdata_buf).unwrap();
+
+        let result = (*rspace).rspace.get_once_non_durable_concurrent(pdata);
+
+        Box::into_raw(Box::new(result))
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn space_get_once_durable_sequential(
+    rspace: *mut Space,
+    pdata_ptr: *const u8,
+    pdata_len: usize,
+) -> *mut Option<OptionResult> {
+    unsafe {
+        let pdata_buf = std::slice::from_raw_parts(pdata_ptr, pdata_len);
+        let pdata = Send::decode(pdata_buf).unwrap();
+
+        let result = (*rspace).rspace.get_once_durable_sequential(pdata);
+
+        Box::into_raw(Box::new(result))
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn space_get_once_non_durable_sequential(
+    rspace: *mut Space,
+    pdata_ptr: *const u8,
+    pdata_len: usize,
+) -> *mut Option<OptionResult> {
+    unsafe {
+        let pdata_buf = std::slice::from_raw_parts(pdata_ptr, pdata_len);
+        let pdata = Send::decode(pdata_buf).unwrap();
+
+        let result = (*rspace).rspace.get_once_non_durable_sequential(pdata);
+
+        Box::into_raw(Box::new(result))
+    }
+}
+
+// Verb Set 2
+#[no_mangle]
+pub extern "C" fn space_get_always_durable_concurrent(
+    rspace: *mut Space,
+    pdata_ptr: *const u8,
+    pdata_len: usize,
+) -> *mut Option<OptionResult> {
+    unsafe {
+        let pdata_buf = std::slice::from_raw_parts(pdata_ptr, pdata_len);
+        let pdata = Send::decode(pdata_buf).unwrap();
+
+        let result = (*rspace).rspace.get_always_durable_concurrent(pdata);
+
+        Box::into_raw(Box::new(result))
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn space_get_always_non_durable_concurrent(
+    rspace: *mut Space,
+    pdata_ptr: *const u8,
+    pdata_len: usize,
+) -> *mut Option<OptionResult> {
+    unsafe {
+        let pdata_buf = std::slice::from_raw_parts(pdata_ptr, pdata_len);
+        let pdata = Send::decode(pdata_buf).unwrap();
+
+        let result = (*rspace).rspace.get_always_non_durable_concurrent(pdata);
+
+        Box::into_raw(Box::new(result))
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn space_get_always_durable_sequential(
+    rspace: *mut Space,
+    pdata_ptr: *const u8,
+    pdata_len: usize,
+) -> *mut Option<OptionResult> {
+    unsafe {
+        let pdata_buf = std::slice::from_raw_parts(pdata_ptr, pdata_len);
+        let pdata = Send::decode(pdata_buf).unwrap();
+
+        let result = (*rspace).rspace.get_always_durable_sequential(pdata);
+
+        Box::into_raw(Box::new(result))
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn space_get_always_non_durable_sequential(
+    rspace: *mut Space,
+    pdata_ptr: *const u8,
+    pdata_len: usize,
+) -> *mut Option<OptionResult> {
+    unsafe {
+        let pdata_buf = std::slice::from_raw_parts(pdata_ptr, pdata_len);
+        let pdata = Send::decode(pdata_buf).unwrap();
+
+        let result = (*rspace).rspace.get_always_non_durable_sequential(pdata);
+
+        Box::into_raw(Box::new(result))
+    }
+}
+
 // Verb Set 3
 #[no_mangle]
 pub extern "C" fn space_put_once_durable_concurrent(
@@ -54,6 +167,119 @@ pub extern "C" fn space_put_once_durable_concurrent(
         let cdata = Receive::decode(cdata_buf).unwrap();
 
         let result = (*rspace).rspace.put_once_durable_concurrent(cdata);
+
+        Box::into_raw(Box::new(result))
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn space_put_once_non_durable_concurrent(
+    rspace: *mut Space,
+    cdata_ptr: *const u8,
+    cdata_len: usize,
+) -> *mut Option<Vec<OptionResult>> {
+    unsafe {
+        let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
+        let cdata = Receive::decode(cdata_buf).unwrap();
+
+        let result = (*rspace).rspace.put_once_non_durable_concurrent(cdata);
+
+        Box::into_raw(Box::new(result))
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn space_put_once_durable_sequential(
+    rspace: *mut Space,
+    cdata_ptr: *const u8,
+    cdata_len: usize,
+) -> *mut Option<Vec<OptionResult>> {
+    unsafe {
+        let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
+        let cdata = Receive::decode(cdata_buf).unwrap();
+
+        let result = (*rspace).rspace.put_once_durable_sequential(cdata);
+
+        Box::into_raw(Box::new(result))
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn space_put_once_non_durable_sequential(
+    rspace: *mut Space,
+    cdata_ptr: *const u8,
+    cdata_len: usize,
+) -> *mut Option<Vec<OptionResult>> {
+    unsafe {
+        let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
+        let cdata = Receive::decode(cdata_buf).unwrap();
+
+        let result = (*rspace).rspace.put_once_non_durable_sequential(cdata);
+
+        Box::into_raw(Box::new(result))
+    }
+}
+
+// Verb Set 4
+#[no_mangle]
+pub extern "C" fn space_put_always_durable_concurrent(
+    rspace: *mut Space,
+    cdata_ptr: *const u8,
+    cdata_len: usize,
+) -> *mut Option<Vec<OptionResult>> {
+    unsafe {
+        let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
+        let cdata = Receive::decode(cdata_buf).unwrap();
+
+        let result = (*rspace).rspace.put_always_durable_concurrent(cdata);
+
+        Box::into_raw(Box::new(result))
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn space_put_always_non_durable_concurrent(
+    rspace: *mut Space,
+    cdata_ptr: *const u8,
+    cdata_len: usize,
+) -> *mut Option<Vec<OptionResult>> {
+    unsafe {
+        let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
+        let cdata = Receive::decode(cdata_buf).unwrap();
+
+        let result = (*rspace).rspace.put_always_non_durable_concurrent(cdata);
+
+        Box::into_raw(Box::new(result))
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn space_put_always_durable_sequential(
+    rspace: *mut Space,
+    cdata_ptr: *const u8,
+    cdata_len: usize,
+) -> *mut Option<Vec<OptionResult>> {
+    unsafe {
+        let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
+        let cdata = Receive::decode(cdata_buf).unwrap();
+
+        let result = (*rspace).rspace.put_always_durable_sequential(cdata);
+
+        Box::into_raw(Box::new(result))
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn space_put_always_non_durable_sequential(
+    rspace: *mut Space,
+    cdata_ptr: *const u8,
+    cdata_len: usize,
+) -> *mut Option<Vec<OptionResult>> {
+    unsafe {
+        let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
+        let cdata = Receive::decode(cdata_buf).unwrap();
+
+        let result = (*rspace).rspace.put_always_non_durable_sequential(cdata);
 
         Box::into_raw(Box::new(result))
     }

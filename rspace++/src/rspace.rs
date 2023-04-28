@@ -34,6 +34,8 @@ impl<
         })
     }
 
+    // TODO: Hard code persistence according to function name
+
     // Verb Set 1
     pub fn get_once_durable_concurrent(&self, pdata: rtypes::Send) -> Option<OptionResult> {
         return self.diskconc.produce(pdata);
