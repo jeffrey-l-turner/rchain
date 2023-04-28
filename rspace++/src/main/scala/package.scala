@@ -4,7 +4,7 @@ import com.sun.jna._
 import java.nio.charset.StandardCharsets
 import java.nio.ByteBuffer
 
-import firefly.rtypes.{Address, Entry, Name, Send}
+import firefly.rtypes.{Address, Entry, Name, Receive, Send}
 
 object RustLibrary extends Library {
   val _ = System.setProperty("jna.library.path", "./rspace++/target/release")
@@ -20,15 +20,15 @@ object RustLibrary extends Library {
 
     def space_get_once_durable_concurrent(
         rspace: Pointer,
-        pdata: Array[Byte]
-    ): Unit
+        pdata: Array[Byte],
+        pdata_len: Int
+    ): Pointer
 
-    // def space_put_once_durable_concurrent(
-    //     rspace: Pointer,
-    //     channels: Array[String],
-    //     patterns: List[Pattern[String]],
-    //     continuation: String
-    // ): Pointer
+    def space_put_once_durable_concurrent(
+        rspace: Pointer,
+        cdata: Array[Byte],
+        cdata_len: Int
+    ): Pointer
   }
 
   val lib = Native.load("rspace_plus_plus", classOf[RustLib]).asInstanceOf[RustLib]
@@ -40,6 +40,12 @@ object RustLibrary extends Library {
     // val entry   = "alice"
     // val continuation = "k-function"
 
+    // Consume
+    val rec1     = Receive(Seq("friends"), Seq("Lincoln"), "I am the continuation, for now...", false);
+    val rec1_buf = rec1.toByteArray;
+    lib.space_put_once_durable_concurrent(spacePtr, rec1_buf, rec1_buf.length);
+
+    // Produce
     val alice_name = Name(first = "Alice", last = "Lincoln")
     val alice_address =
       Address(street = "777 Ford St", city = "Crystal Lake", state = "Idaho", zip = "223322")
@@ -50,14 +56,11 @@ object RustLibrary extends Library {
       phone = "787-555-1212"
     )
 
-    println(alice, alice_name, alice_address, "\n\n\n")
-
-    val send1 = Send("friends", Some(alice), false).toByteArray;
-
-    lib.space_get_once_durable_concurrent(spacePtr, send1)
+    val send1     = Send("friends", Some(alice), false);
+    val send1_buf = send1.toByteArray;
+    lib.space_get_once_durable_concurrent(spacePtr, send1_buf, send1_buf.length)
 
     lib.space_print(spacePtr, channel)
-
     lib.space_clear(spacePtr)
 
     // val strings = Array("Hello", "from", "Scala!")
