@@ -1,36 +1,13 @@
-use prost::Message;
+use crate::rtypes::rtypes;
 use serde::ser::SerializeStruct;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::error::Error;
 use std::hash::Hash;
-use crate::rtypes::rtypes;
-
-// pub mod rtypes {
-//     include!(concat!(env!("OUT_DIR"), "/firefly.rtypes.rs"));
-// }
 
 #[derive(Debug, Hash, Clone)]
 pub struct OptionResult {
     pub continuation: String,
     pub data: rtypes::Entry,
 }
-
-// pub trait MyTrait<D, K> {
-//     fn my_method(&mut self);
-
-//     fn consume(
-//         &self,
-//         channels: Vec<&str>,
-//         patterns: Vec<Pattern<D>>,
-//         continuation: K,
-//         persist: bool,
-//     ) -> Option<Vec<OptionResult<D,>>>;
-//     fn produce(&self, channel: &str, entry: D, persist: bool) -> Option<OptionResult<D, K>>;
-//     fn print_channel(&self, channel: &str) -> Result<(), Box<dyn Error>>;
-//     fn is_empty(&self) -> bool;
-//     fn clear(&self) -> Result<(), Box<dyn Error>>;
-//     // fn calculate_hash<T: Hash>(&self, t: &T) -> u64;
-// }
 
 pub type Pattern<D> = fn(D) -> bool;
 

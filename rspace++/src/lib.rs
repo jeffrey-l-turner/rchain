@@ -10,7 +10,7 @@ pub mod shared;
 use prost::Message;
 use rspace::RSpace;
 use rtypes::rtypes::{Receive, Send};
-use shared::{OptionResult, Pattern};
+use shared::OptionResult;
 use std::ffi::{c_char, CStr};
 
 #[repr(C)]
@@ -73,33 +73,3 @@ pub extern "C" fn space_clear(rspace: *mut Space) -> () {
         (*rspace).rspace.clear_store();
     }
 }
-
-/*
-#[no_mangle]
-pub extern "C" fn space_put_once_durable_concurrent(
-    // raw pointers. c_char represents C string type
-    rspace: *mut Space<c_char, c_char>,
-    channels: *const Vec<c_char>,
-    patterns: *const Vec<Pattern<c_char>>,
-    continuation: *const c_char,
-) -> *mut Option<Vec<OptionResult<c_char, c_char>>> {
-    unsafe {
-        // dereference pointers
-        // TODO: channel should be type String not &str
-        let channels_values: Vec<&str> = (*channels)
-            .iter()
-            .map(|ptr| CStr::from_ptr(ptr).to_str().unwrap())
-            .collect();
-        let patterns_values = (&*patterns).to_vec();
-        let continuation_value = *continuation;
-
-        let result = (*rspace).rspace.put_once_durable_concurrent(
-            channels_values,
-            patterns_values,
-            continuation_value,
-        );
-
-        Box::into_raw(Box::new(result))
-    }
-}
-*/

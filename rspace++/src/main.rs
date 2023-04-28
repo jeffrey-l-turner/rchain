@@ -1,8 +1,4 @@
 use std::error::Error;
-use std::ops::Add;
-
-// use rspace_plus_plus::example::Address;
-// use rspace_plus_plus::rtypes::rtypes::{Address, Name};
 
 use crate::diskconc::DiskConcDB;
 use crate::diskseq::DiskSeqDB;
@@ -10,7 +6,6 @@ use crate::memconc::MemConcDB;
 use crate::memseq::MemSeqDB;
 use crate::rtypes::rtypes::{Address, Entry, Name};
 use crate::shared::OptionResult;
-// use example::{Address, Entry, Name, Printer};
 
 mod diskconc;
 mod diskseq;
@@ -138,16 +133,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("\n*********** ON-DISK CONCURRENT ***********");
     do_disk_conc();
 
-    // let mut diskseq: DiskSeqDB<Entry, Printer> = DiskSeqDB::create().unwrap();
-    // let mut memseq: MemSeqDB<Entry, Printer> = MemSeqDB::create().unwrap();
-    // let mut memconc: MemConcDB<Entry, Printer> = MemConcDB::create().unwrap();
-
-    // let _ = diskseq.clear();
-
-    // my_function(&mut diskseq);
-    // my_function(&mut memseq);
-    // my_function(&mut memconc);
-
     Ok(())
 }
 
@@ -218,8 +203,6 @@ fn do_disk_seq() {
 
     let _ = diskseq.clear();
     assert!(diskseq.is_empty());
-
-    // my_function(&mut diskconc);
 }
 
 fn do_disk_conc() {
@@ -289,8 +272,6 @@ fn do_disk_conc() {
 
     let _ = diskconc.clear();
     assert!(diskconc.is_empty());
-
-    // my_function(&mut diskconc);
 }
 
 fn do_mem_seq() {
@@ -430,54 +411,3 @@ fn do_mem_conc() {
     let _ = memconc.clear();
     assert!(memconc.is_empty());
 }
-
-// fn do_some_db<D, K, T>(somedb: &mut T) where T: MyTrait<D, K> {
-//     let setup = Setup::new();
-
-//     // call methods/functions on T
-//     println!("\n**** Example 1 ****");
-//     let _cres1 = somedb.consume(vec!["friends"], vec![city_match], Printer, false);
-//     let _ = somedb.print_channel("friends");
-//     let pres1 = somedb.produce("friends", setup.alice.clone(), false);
-//     if pres1.is_some() {
-//         run_k(vec![pres1.unwrap()]);
-//     }
-//     let _ = somedb.print_channel("friends");
-
-//     println!("\n**** Example 2 ****");
-//     let _pres2 = somedb.produce("friends", setup.bob, false);
-//     let _ = somedb.print_channel("friends");
-//     let cres2 = somedb.consume(vec!["friends"], vec![name_match], Printer, false);
-//     if cres2.is_some() {
-//         run_k(cres2.unwrap());
-//     }
-//     let _ = somedb.print_channel("friends");
-
-//     println!("\n**** Example 3 ****");
-//     let _pres3 = somedb.produce("colleagues", setup.dan, false);
-//     let _pres4 = somedb.produce("friends", setup.alice.clone(), false);
-//     let _ = somedb.print_channel("friends");
-//     let cres3 = somedb.consume(
-//         vec!["friends", "colleagues"],
-//         vec![state_match, state_match],
-//         Printer,
-//         true,
-//     );
-//     if cres3.is_some() {
-//         run_k(cres3.unwrap());
-//     }
-//     let _ = somedb.print_channel("friends");
-
-//     let _ = somedb.clear();
-//     assert!(somedb.is_empty());
-// }
-
-// fn my_function<D, K, T>(data: &mut T)
-// where
-//     T: MyTrait<D, K>,
-// {
-//     data.my_method();
-//     let _ = data.print_channel("friends");
-//     let _ = data.clear();
-//     assert!(data.is_empty());
-// }

@@ -3,7 +3,7 @@ use crate::diskseq::DiskSeqDB;
 use crate::memconc::MemConcDB;
 use crate::memseq::MemSeqDB;
 use crate::rtypes::rtypes;
-use crate::shared::{OptionResult, Pattern};
+use crate::shared::OptionResult;
 use std::error::Error;
 
 // See https://docs.google.com/document/d/1yWdvJwsq4Ft7elzKBM0dehh4RFoQ-vXt-1TAUTLLxMY/edit
