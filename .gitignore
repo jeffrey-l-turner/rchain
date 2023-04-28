@@ -87,3 +87,4 @@ integration-tests.log
 dist-newstyle/
 
 rspacePlusPlus/
+/**/metals.sbt
