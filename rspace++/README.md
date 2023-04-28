@@ -1,10 +1,17 @@
 ## Notes: Rust + Scala
 
-- Using `jna`
+- Using `jna`, `prost`, `heed`, `dashmap`
+
+## Quickstart
+
+1. `cd rspace++` & run `cargo build && cargo build --release`
+2. `cd ..` to be in root directory and run `sbt rspacePlusPlus/run`. &nbsp; `rspacePlusPlus/run` if already in sbt shell
 
 ## Scala
 
-- Run `sbt rspacePlusPlus/run` to run `Main.scala` file in `rspace++/src/main/scala`
+- Run `sbt rspacePlusPlus/run` to run `example.scala` file in `rspace++/src/main/scala`
+- Run `sbt rsapcePlusPlus/compile` to compile rspace++ subproject. Build corresponding `.proto` file for Scala. Outputs to `rspace++/target/scala-2.12/src_managed/`
+  
 - `scalac <path_to_file>` to compile scala package. Ex: `scalac rspace++/src/main/scala/package.scala` - creates `rspacePlusPlus` directory at root
 - `scala <path_to_file>` to run scala file. Ex: `scala rspace++/src/main/scala/example.scala`
 
@@ -12,7 +19,7 @@
 
 - `sbt <project_name>/<command>` to compile, stage, run, clean single project. For example: `node/compile node/stage` will compile and stage only node project directory.
 
-- `sbt compile` will build Rust library in `rspace++/target/release/`. This is where JNA pulls library 
+- `sbt compile` will compile entire project, also builds Rust library in `rspace++/target/release/`. This is where JNA pulls library 
 
 - Integrating new rspace++ into rnode setup, I think, will happen in `node/src/main/scala/coop/rchain/node/runtime/Setup.scala`
 
@@ -22,7 +29,8 @@
 
 - Run sample code: `cargo run` within `rspace++` directory
 - `rustc <path_to_file>` to compile single rust file
-- `cargo build --release` to build `rspace_plus_plus` library. Outputs to `rspace++/target/release`
+- `cargo build --release` to build `rspace_plus_plus` library. Outputs to `rspace++/target/release/`. Scala code pulls from here.
+- `cargo build` to build corresponding `.proto` file for Rust. Outputs to `rspace++/target/debug/`
 
 <br>
 
