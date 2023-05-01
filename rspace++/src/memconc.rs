@@ -1,11 +1,12 @@
 use crate::rtypes::rtypes;
-use crate::shared::*;
 use dashmap::DashMap;
 use prost::Message;
 use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
+
+// TODO: Change to better naming throughout
 
 pub struct MemConcDB<D: Message, K: Message> {
     db: DashMap<String, Vec<u8>>,
@@ -26,9 +27,9 @@ impl<
         })
     }
 
-    pub fn consume(&self, cdata: rtypes::Receive) -> Option<Vec<OptionResult>> {
+    pub fn consume(&self, cdata: rtypes::Receive) -> Option<Vec<rtypes::OptionResult>> {
         if cdata.channels.len() == cdata.patterns.len() {
-            let mut results: Vec<OptionResult> = vec![];
+            let mut results: Vec<rtypes::OptionResult> = vec![];
             let mut stopper = false;
 
             for i in 0..cdata.channels.len() {
@@ -43,11 +44,12 @@ impl<
                         // TODO: Implement better pattern/match schema
                         if cdata.patterns[i] == pdata.data.clone().unwrap().name.unwrap().last {
                             stopper = true;
-                            // TODO: Add OptionResult to rtypes.proto
-                            results.push(OptionResult {
-                                continuation: cdata.continuation.clone(),
-                                data: pdata.data.clone().unwrap(),
-                            });
+
+                            let mut option_result = rtypes::OptionResult::default();
+                            option_result.continuation = cdata.continuation.clone();
+                            option_result.data = pdata.data.clone();
+
+                            results.push(option_result);
 
                             if !pdata.persistent {
                                 false
@@ -94,7 +96,7 @@ impl<
         }
     }
 
-    pub fn produce(&self, pdata: rtypes::Send) -> Option<OptionResult> {
+    pub fn produce(&self, pdata: rtypes::Send) -> Option<rtypes::OptionResult> {
         let continuation_prefix = format!("channel-{}-continuation", pdata.chan);
         let mut result = None;
         let mut stopper = false;
@@ -111,11 +113,12 @@ impl<
                 // TODO: Implement better pattern/match schema
                 if cdata.pattern == pdata.data.as_ref().unwrap().name.as_ref().unwrap().last {
                     stopper = true;
-                    // TODO: Add OptionResult to rtypes.proto
-                    result = Some(OptionResult {
-                        continuation: cdata.continuation,
-                        data: pdata.data.clone().unwrap(),
-                    });
+
+                    let mut option_result = rtypes::OptionResult::default();
+                    option_result.continuation = cdata.continuation.clone();
+                    option_result.data = pdata.data.clone();
+
+                    result = Some(option_result);
                     if !cdata.persistent {
                         false
                     } else {

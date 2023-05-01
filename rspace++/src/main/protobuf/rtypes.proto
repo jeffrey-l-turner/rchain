@@ -35,6 +35,11 @@
 	bool persistent = 3;
  }
 
+ message OptionResult {
+	string continuation = 1;
+	Entry data = 2;
+ }
+
 /** 
 	* alias: get or produce
 	*/

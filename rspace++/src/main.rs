@@ -4,8 +4,7 @@ use crate::diskconc::DiskConcDB;
 use crate::diskseq::DiskSeqDB;
 use crate::memconc::MemConcDB;
 use crate::memseq::MemSeqDB;
-use crate::rtypes::rtypes::{Address, Entry, Name};
-use crate::shared::OptionResult;
+use crate::rtypes::rtypes::{Address, Entry, Name, OptionResult};
 
 mod diskconc;
 mod diskseq;
@@ -92,7 +91,10 @@ impl Setup {
 
 fn run_k(ks: Vec<OptionResult>) {
     for k in ks {
-        println!("\nRunning continuation for {:?}...", k.data.name.unwrap());
+        println!(
+            "\nRunning continuation for {:?}...",
+            k.data.unwrap().name.unwrap()
+        );
 
         println!("\n{:?}", k.continuation);
     }

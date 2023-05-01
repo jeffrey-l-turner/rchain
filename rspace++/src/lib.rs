@@ -9,8 +9,7 @@ pub mod shared;
 
 use prost::Message;
 use rspace::RSpace;
-use rtypes::rtypes::{Receive, Send};
-use shared::OptionResult;
+use rtypes::rtypes::{OptionResult, Receive, Send};
 use std::ffi::{c_char, CStr};
 
 #[repr(C)]

@@ -1,5 +1,4 @@
 use crate::rtypes::rtypes;
-use crate::shared::*;
 use heed::types::*;
 use heed::{Database, Env, EnvOpenOptions};
 use prost::Message;
@@ -9,6 +8,8 @@ use std::fs;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::path::Path;
+
+// TODO: Change to better naming throughout
 
 /*
 See RSpace.scala and Tuplespace.scala in rspace/
@@ -39,9 +40,9 @@ impl<
         })
     }
 
-    pub fn consume(&self, cdata: rtypes::Receive) -> Option<Vec<OptionResult>> {
+    pub fn consume(&self, cdata: rtypes::Receive) -> Option<Vec<rtypes::OptionResult>> {
         if cdata.channels.len() == cdata.patterns.len() {
-            let mut results: Vec<OptionResult> = vec![];
+            let mut results: Vec<rtypes::OptionResult> = vec![];
             let rtxn = self.env.read_txn().unwrap();
 
             for i in 0..cdata.channels.len() {
@@ -62,11 +63,11 @@ impl<
                             wtxn.commit().unwrap();
                         }
 
-                        // TODO: Add OptionResult to rtypes.proto
-                        results.push(OptionResult {
-                            continuation: cdata.continuation.clone(),
-                            data: pdata.data.clone().unwrap(),
-                        });
+                        let mut option_result = rtypes::OptionResult::default();
+                        option_result.continuation = cdata.continuation.clone();
+                        option_result.data = pdata.data.clone();
+
+                        results.push(option_result);
                         break;
                     }
                     iter_data_option = iter_data.next().transpose().unwrap();
@@ -108,7 +109,7 @@ impl<
         }
     }
 
-    pub fn produce(&self, pdata: rtypes::Send) -> Option<OptionResult> {
+    pub fn produce(&self, pdata: rtypes::Send) -> Option<rtypes::OptionResult> {
         let rtxn = self.env.read_txn().unwrap();
 
         let continuation_prefix = format!("channel-{}-continuation", pdata.chan);
@@ -128,11 +129,11 @@ impl<
                     wtxn.commit().unwrap();
                 }
 
-                // TODO: Add OptionResult to rtypes.proto
-                return Some(OptionResult {
-                    continuation: cdata.continuation,
-                    data: pdata.data.clone().unwrap(),
-                });
+                let mut option_result = rtypes::OptionResult::default();
+                option_result.continuation = cdata.continuation.clone();
+                option_result.data = pdata.data.clone();
+
+                return Some(option_result);
             }
             iter_continuation_option = iter_continuation.next().transpose().unwrap();
         }

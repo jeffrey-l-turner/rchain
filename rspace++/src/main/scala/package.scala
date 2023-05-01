@@ -52,7 +52,8 @@ object RustLibrary extends Library {
 
     val send1     = Send("friends", Some(alice), false);
     val send1_buf = send1.toByteArray;
-    lib.space_get_once_durable_concurrent(spacePtr, send1_buf, send1_buf.length)
+    val res1      = lib.space_get_once_durable_concurrent(spacePtr, send1_buf, send1_buf.length);
+    println("\n", res1);
 
     lib.space_print(spacePtr, channel)
     lib.space_clear(spacePtr)
