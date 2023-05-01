@@ -469,7 +469,7 @@ lazy val rspacePlusPlus = (project in file("rspace++"))
       "net.java.dev.jna" % "jna" % "5.7.0"
     ),
     PB.targets in Compile := Seq(
-      scalapb.gen(grpc = false) -> (sourceManaged in Compile).value / "protobuf"
+      scalapb.gen(grpc = true) -> (sourceManaged in Compile).value / "protobuf"
     )
   )
 
