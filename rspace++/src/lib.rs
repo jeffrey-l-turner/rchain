@@ -285,6 +285,11 @@ pub extern "C" fn space_put_always_non_durable_sequential(
 }
 
 #[no_mangle]
+pub extern "C" fn is_empty(rspace: *mut Space) -> bool {
+    unsafe { (*rspace).rspace.is_empty() }
+}
+
+#[no_mangle]
 pub extern "C" fn space_print(rspace: *mut Space, channel: *const c_char) -> () {
     unsafe {
         let channel_str = CStr::from_ptr(channel).to_str().unwrap();

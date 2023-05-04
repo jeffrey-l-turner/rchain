@@ -459,12 +459,15 @@ lazy val blockStorage = (project in file("block-storage"))
   )
   .dependsOn(shared, models % "compile->compile;test->test")
 
+// Using dependencyOverrides bc of ConflictManager
 lazy val rspacePlusPlus = (project in file("rspace++"))
   .settings(commonSettings: _*)
   .settings(
     name := "rspace++",
     version := "0.1.0-SNAPSHOT",
-    mainClass := Some("BuildRustLibrary"),
+    // mainClass := Some("BuildRustLibrary"),
+    dependencyOverrides += "org.scalactic" %% "scalactic" % "3.2.15",
+    dependencyOverrides += "org.scalatest" %% "scalatest" % "3.2.15" % "test",
     libraryDependencies ++= commonDependencies ++ kamonDependencies ++ Seq(
       "net.java.dev.jna" % "jna" % "5.7.0"
     ),

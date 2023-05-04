@@ -7,10 +7,14 @@ import java.nio.ByteBuffer
 import firefly.rtypes.{Address, Entry, Name, Receive, Send}
 
 object RustLibrary extends Library {
-  val _ = System.setProperty("jna.library.path", "./rspace++/target/release")
+  val _ = System.setProperty("jna.library.path", "./rspace++/target/release/")
+
+  val libraryPath = System.getProperty("jna.library.path")
+  println(s"JNA library path is: $libraryPath")
 
   trait RustLib extends Library {
     def space_new(): Pointer
+    def is_empty(rspace: Pointer): Boolean
     def space_print(rspace: Pointer, channel: String): Unit
     def space_clear(rspace: Pointer): Unit
 
@@ -50,7 +54,7 @@ object RustLibrary extends Library {
       phone = "787-555-1212"
     )
 
-    val send1     = Send("friends", Some(alice), false);
+    val send1     = Send("friends", Some(alice), "Lincoln", false);
     val send1_buf = send1.toByteArray;
     val res1      = lib.space_get_once_durable_concurrent(spacePtr, send1_buf, send1_buf.length);
     println("\n", res1);

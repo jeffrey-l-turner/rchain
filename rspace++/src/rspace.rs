@@ -167,6 +167,13 @@ impl<
         let _ = self.diskconc.print_channel(channel);
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.memseq.is_empty()
+            && self.memconc.is_empty()
+            && self.diskseq.is_empty()
+            && self.diskconc.is_empty()
+    }
+
     pub fn is_memseq_empty(&self) -> bool {
         let memseq_is_empty = self.memseq.is_empty();
         return memseq_is_empty;
