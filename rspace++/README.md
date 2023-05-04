@@ -6,6 +6,7 @@
 
 1. `cd rspace++` & run `cargo build && cargo build --release`
 2. `cd ..` to be in root directory and run `sbt rspacePlusPlus/run`. &nbsp; `rspacePlusPlus/run` if already in sbt shell
+3. Run Scala tests: In root directory run `sbt rspacePlusPlus/test`. &nbsp; `rspacePlusPlus/test` if already in sbt shell
 
 ## Scala
 

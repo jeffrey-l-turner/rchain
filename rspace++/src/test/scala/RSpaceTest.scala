@@ -1,36 +1,17 @@
 // package rspacePlusPlus
 
 import org.scalatest.funsuite.AnyFunSuite
-// import rspacePlusPlus.RustLibrary
+import rspacePlusPlus.RustLibrary
 import firefly.rtypes.{Address, Entry, Name, Receive, Send}
 import com.sun.jna._
 import java.io.File
 
 class RSpaceTest extends AnyFunSuite {
 
-  trait RustLib extends Library {
-    def space_new(): Pointer
-    def is_empty(rspace: Pointer): Boolean
-    def space_print(rspace: Pointer, channel: String): Unit
-    def space_clear(rspace: Pointer): Unit
-
-    def space_get_once_durable_concurrent(
-        rspace: Pointer,
-        pdata: Array[Byte],
-        pdata_len: Int
-    ): Pointer
-
-    def space_put_once_durable_concurrent(
-        rspace: Pointer,
-        cdata: Array[Byte],
-        cdata_len: Int
-    ): Pointer
-  }
-
   val _ = System.setProperty("jna.library.path", "./target/release/")
 
   val lib =
-    Native.load("rspace_plus_plus", classOf[RustLib]).asInstanceOf[RustLib]
+    Native.load("rspace_plus_plus", classOf[RustLibrary.RustLib]).asInstanceOf[RustLibrary.RustLib]
 
   val spacePtr = lib.space_new();
 
