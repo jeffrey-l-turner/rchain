@@ -27,13 +27,13 @@ impl<
         })
     }
 
-    pub fn consume(&self, cdata: rtypes::Receive) -> Option<Vec<rtypes::OptionResult>> {
-        if cdata.channels.len() == cdata.patterns.len() {
+    pub fn consume(&self, receive: rtypes::Receive) -> Option<Vec<rtypes::OptionResult>> {
+        if receive.channels.len() == receive.patterns.len() {
             let mut results: Vec<rtypes::OptionResult> = vec![];
             let mut stopper = false;
 
-            for i in 0..cdata.channels.len() {
-                let data_prefix = format!("channel-{}-data", cdata.channels[i]);
+            for i in 0..receive.channels.len() {
+                let data_prefix = format!("channel-{}-data", receive.channels[i]);
 
                 self.db.retain(|key, value| {
                     println!("memconc consume retain keyval {:?}", key);
@@ -42,11 +42,11 @@ impl<
                         let pdata = rtypes::ProduceData::decode(value.as_slice()).unwrap();
 
                         // TODO: Implement better pattern/match schema
-                        if cdata.patterns[i] == pdata.data.clone().unwrap().name.unwrap().last {
+                        if receive.patterns[i] == pdata.match_case {
                             stopper = true;
 
                             let mut option_result = rtypes::OptionResult::default();
-                            option_result.continuation = cdata.continuation.clone();
+                            option_result.continuation = receive.continuation.clone();
                             option_result.data = pdata.data.clone();
 
                             results.push(option_result);
@@ -69,16 +69,19 @@ impl<
             if results.len() > 0 {
                 return Some(results);
             } else {
-                for i in 0..cdata.channels.len() {
+                for i in 0..receive.channels.len() {
                     let mut consume_data = rtypes::ConsumeData::default();
-                    consume_data.pattern = cdata.patterns[i].clone();
-                    consume_data.continuation = cdata.continuation.clone();
-                    consume_data.persistent = cdata.persistent;
+                    consume_data.pattern = receive.patterns[i].clone();
+                    consume_data.continuation = receive.continuation.clone();
+                    consume_data.persistent = receive.persistent;
 
-                    println!("\nNo matching data for {:?}", cdata);
+                    println!("\nNo matching data for {:?}", receive);
 
                     let data_hash = self.calculate_hash(&consume_data);
-                    let key = format!("channel-{}-continuation-{}", &cdata.channels[i], &data_hash);
+                    let key = format!(
+                        "channel-{}-continuation-{}",
+                        &receive.channels[i], &data_hash
+                    );
 
                     let mut consume_data_buf = Vec::new();
                     consume_data_buf.reserve(consume_data.encoded_len());
@@ -96,8 +99,8 @@ impl<
         }
     }
 
-    pub fn produce(&self, pdata: rtypes::Send) -> Option<rtypes::OptionResult> {
-        let continuation_prefix = format!("channel-{}-continuation", pdata.chan);
+    pub fn produce(&self, send: rtypes::Send) -> Option<rtypes::OptionResult> {
+        let continuation_prefix = format!("channel-{}-continuation", send.chan);
         let mut result = None;
         let mut stopper = false;
 
@@ -111,12 +114,12 @@ impl<
                 let cdata = rtypes::ConsumeData::decode(value.as_slice()).unwrap();
 
                 // TODO: Implement better pattern/match schema
-                if cdata.pattern == pdata.data.as_ref().unwrap().name.as_ref().unwrap().last {
+                if cdata.pattern == send.match_case {
                     stopper = true;
 
                     let mut option_result = rtypes::OptionResult::default();
                     option_result.continuation = cdata.continuation.clone();
-                    option_result.data = pdata.data.clone();
+                    option_result.data = send.data.clone();
 
                     result = Some(option_result);
                     if !cdata.persistent {
@@ -136,13 +139,14 @@ impl<
             return result;
         } else {
             let mut produce_data = rtypes::ProduceData::default();
-            produce_data.data = pdata.data.clone();
-            produce_data.persistent = pdata.persistent;
+            produce_data.data = send.data.clone();
+            produce_data.match_case = send.match_case.clone();
+            produce_data.persistent = send.persistent;
 
-            println!("\nNo matching continuation for {:?}", pdata);
+            println!("\nNo matching continuation for {:?}", send);
 
             let data_hash = self.calculate_hash(&produce_data);
-            let key = format!("channel-{}-data-{}", &pdata.chan, &data_hash);
+            let key = format!("channel-{}-data-{}", &send.chan, &data_hash);
 
             let mut produce_data_buf = Vec::new();
             produce_data_buf.reserve(produce_data.encoded_len());

@@ -26,7 +26,8 @@
 
  message ProduceData {
 	Entry data = 1;
-	bool persistent = 2;
+	string match_case = 2;
+	bool persistent = 3;
  }
 
  message ConsumeData {
@@ -46,7 +47,8 @@
  message Send {
 	string chan = 1;
 	Entry data = 2;
-	bool persistent = 3;
+	string match_case = 3;
+	bool persistent = 4;
 }
 
 /** 
