@@ -34,7 +34,8 @@ class RSpaceTest extends AnyFunSuite {
 
     val send1     = Send("friends", Some(alice), "Lincoln", false);
     val send1_buf = send1.toByteArray;
-    val _         = lib.space_get_once_durable_concurrent(spacePtr, send1_buf, send1_buf.length);
+    val pres1     = lib.space_get_once_durable_concurrent(spacePtr, send1_buf, send1_buf.length);
+    println(pres1);
 
     assert(lib.is_empty(spacePtr));
   }
