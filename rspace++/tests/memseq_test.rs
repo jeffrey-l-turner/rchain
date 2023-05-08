@@ -1,275 +1,455 @@
-// #[cfg(test)]
-// mod tests {
-//     use rspace_plus_plus::example::{Address, Entry, Name, Printer};
-//     use rspace_plus_plus::memseq::MemSeqDB;
+#[cfg(test)]
+mod tests {
+    use rspace_plus_plus::memseq::MemSeqDB;
+    use rspace_plus_plus::rtypes::rtypes::{Address, Entry, Name, Receive, Send};
 
-//     struct Setup {
-//         memseq: MemSeqDB<Entry, Printer>,
-//         alice: Entry,
-//         bob: Entry,
-//         carol: Entry,
-//         dan: Entry,
-//         erin: Entry,
-//     }
+    struct Setup {
+        memseq: MemSeqDB<Send, Receive>,
+        city_pattern: String,
+        name_pattern: String,
+        state_pattern: String,
+        alice: Entry,
+        bob: Entry,
+        carol: Entry,
+        dan: Entry,
+        erin: Entry,
+    }
 
-//     impl Setup {
-//         fn new() -> Self {
-//             Self {
-//                 memseq: MemSeqDB::create().unwrap(),
-//                 alice: Entry {
-//                     name: Name {
-//                         first: "Alice".to_string(),
-//                         last: "Lincoln".to_string(),
-//                     },
-//                     address: Address {
-//                         street: "777 Ford St".to_string(),
-//                         city: "Crystal Lake".to_string(),
-//                         state: "Idaho".to_string(),
-//                         zip: "223322".to_string(),
-//                     },
-//                     email: "alicel@ringworld.net".to_string(),
-//                     phone: "787-555-1212".to_string(),
-//                     pos: 1,
-//                     pos_str: "1".to_string(),
-//                 },
-//                 bob: Entry {
-//                     name: Name {
-//                         first: "Bob".to_string(),
-//                         last: "Lahblah".to_string(),
-//                     },
-//                     address: Address {
-//                         street: "1000 Main St".to_string(),
-//                         city: "Crystal Lake".to_string(),
-//                         state: "Idaho".to_string(),
-//                         zip: "223322".to_string(),
-//                     },
-//                     email: "blablah@tenex.net".to_string(),
-//                     phone: "232-555-1212".to_string(),
-//                     pos: 1,
-//                     pos_str: "1".to_string(),
-//                 },
-//                 carol: Entry {
-//                     name: Name {
-//                         first: "Carol".to_string(),
-//                         last: "Lahblah".to_string(),
-//                     },
-//                     address: Address {
-//                         street: "22 Goldwater Way".to_string(),
-//                         city: "Herbert".to_string(),
-//                         state: "Nevada".to_string(),
-//                         zip: "334433".to_string(),
-//                     },
-//                     email: "carol@blablah.org".to_string(),
-//                     phone: "232-555-1212".to_string(),
-//                     pos: 1,
-//                     pos_str: "1".to_string(),
-//                 },
-//                 dan: Entry {
-//                     name: Name {
-//                         first: "Dan".to_string(),
-//                         last: "Walters".to_string(),
-//                     },
-//                     address: Address {
-//                         street: "40 Shady Lane".to_string(),
-//                         city: "Crystal Lake".to_string(),
-//                         state: "Idaho".to_string(),
-//                         zip: "223322".to_string(),
-//                     },
-//                     email: "deejwalters@sdf.lonestar.org".to_string(),
-//                     phone: "444-555-1212".to_string(),
-//                     pos: 1,
-//                     pos_str: "1".to_string(),
-//                 },
-//                 erin: Entry {
-//                     name: Name {
-//                         first: "Erin".to_string(),
-//                         last: "Rush".to_string(),
-//                     },
-//                     address: Address {
-//                         street: "23 Market St.".to_string(),
-//                         city: "Peony".to_string(),
-//                         state: "Idaho".to_string(),
-//                         zip: "224422".to_string(),
-//                     },
-//                     email: "erush@lasttraintogoa.net".to_string(),
-//                     phone: "333-555-1212".to_string(),
-//                     pos: 1,
-//                     pos_str: "1".to_string(),
-//                 },
-//             }
-//         }
-//     }
+    impl Setup {
+        fn new() -> Self {
+            let memseq = MemSeqDB::<Send, Receive>::create().unwrap();
 
-//     fn city_match(entry: Entry) -> bool {
-//         entry.address.city == "Crystal Lake"
-//     }
+            // Alice
+            let mut alice_name = Name::default();
+            alice_name.first = "Alice".to_string();
+            alice_name.last = "Lincoln".to_string();
 
-//     fn name_match(entry: Entry) -> bool {
-//         entry.name.last == "Lahblah"
-//     }
+            let mut alice_address = Address::default();
+            alice_address.street = "777 Ford St".to_string();
+            alice_address.city = "Crystal Lake".to_string();
+            alice_address.state = "Idaho".to_string();
+            alice_address.zip = "223322".to_string();
 
-//     fn state_match(entry: Entry) -> bool {
-//         entry.address.state == "Idaho"
-//     }
+            let mut alice = Entry::default();
+            alice.name = Some(alice_name);
+            alice.address = Some(alice_address);
+            alice.email = "alicel@ringworld.net".to_string();
+            alice.phone = "787-555-1212".to_string();
 
-//     #[test]
-//     fn memseq_test_consume_persist_existing_matches() {
-//         let setup = Setup::new();
-//         let memseq = setup.memseq;
+            // Bob
+            let mut bob_name = Name::default();
+            bob_name.first = "Bob".to_string();
+            bob_name.last = "Lahblah".to_string();
 
-//         let _pres1 = memseq.produce("friends", setup.alice.clone(), false);
-//         let _pres2 = memseq.produce("friends", setup.bob, false);
-//         let _ = memseq.print_channel("friends");
-//         let cres1 = memseq.consume(vec!["friends"], vec![city_match], Printer, true);
-//         let _ = memseq.print_channel("friends");
-//         assert_eq!(cres1.unwrap().len(), 1);
-//         assert!(!memseq.is_empty());
+            let mut bob_address = Address::default();
+            bob_address.street = "1000 Main St".to_string();
+            bob_address.city = "Crystal Lake".to_string();
+            bob_address.state = "Idaho".to_string();
+            bob_address.zip = "223322".to_string();
 
-//         let cres2 = memseq.consume(vec!["friends"], vec![city_match], Printer, true);
+            let mut bob = Entry::default();
+            bob.name = Some(bob_name);
+            bob.address = Some(bob_address);
+            bob.email = "blablah@tenex.net".to_string();
+            bob.phone = "698-555-1212".to_string();
 
-//         assert_eq!(cres2.unwrap().len(), 1);
-//         assert!(memseq.is_empty());
+            // Carol
+            let mut carol_name = Name::default();
+            carol_name.first = "Carol".to_string();
+            carol_name.last = "Lahblah".to_string();
 
-//         let cres3 = memseq.consume(vec!["friends"], vec![city_match], Printer, true);
+            let mut carol_address = Address::default();
+            carol_address.street = "22 Goldwater Way".to_string();
+            carol_address.city = "Herbert".to_string();
+            carol_address.state = "Nevada".to_string();
+            carol_address.zip = "334433".to_string();
 
-//         assert!(cres3.is_none());
-//         assert!(!memseq.is_empty());
+            let mut carol = Entry::default();
+            carol.name = Some(carol_name);
+            carol.address = Some(carol_address);
+            carol.email = "carol@blablah.org".to_string();
+            carol.phone = "232-555-1212".to_string();
 
-//         let pres3 = memseq.produce("friends", setup.alice.clone(), false);
+            // Dan
+            let mut dan_name = Name::default();
+            dan_name.first = "Dan".to_string();
+            dan_name.last = "Walters".to_string();
 
-//         assert!(pres3.is_some());
-//         assert!(!memseq.is_empty());
+            let mut dan_address = Address::default();
+            dan_address.street = "40 Shady Lane".to_string();
+            dan_address.city = "Crystal Lake".to_string();
+            dan_address.state = "Idaho".to_string();
+            dan_address.zip = "223322".to_string();
 
-//         let _ = memseq.clear();
-//     }
+            let mut dan = Entry::default();
+            dan.name = Some(dan_name);
+            dan.address = Some(dan_address);
+            dan.email = "deejwalters@sdf.lonestar.org".to_string();
+            dan.phone = "444-555-1212".to_string();
 
-//     #[test]
-//     fn memseq_test_multiple_channels_consume_match() {
-//         let setup = Setup::new();
-//         let memseq = setup.memseq;
+            // Erin
+            let mut erin_name = Name::default();
+            erin_name.first = "Erin".to_string();
+            erin_name.last = "Rush".to_string();
 
-//         let pres1 = memseq.produce("colleagues", setup.dan, false);
-//         let pres2 = memseq.produce("friends", setup.erin, false);
+            let mut erin_address = Address::default();
+            erin_address.street = "23 Market St.".to_string();
+            erin_address.city = "Peony".to_string();
+            erin_address.state = "Idaho".to_string();
+            erin_address.zip = "224422".to_string();
 
-//         let cres = memseq.consume(
-//             vec!["friends", "colleagues"],
-//             vec![state_match, state_match],
-//             Printer,
-//             false,
-//         );
+            let mut erin = Entry::default();
+            erin.name = Some(erin_name);
+            erin.address = Some(erin_address);
+            erin.email = "erush@lasttraintogoa.net".to_string();
+            erin.phone = "333-555-1212".to_string();
 
-//         assert!(pres1.is_none());
-//         assert!(pres2.is_none());
-//         assert!(cres.is_some());
-//         assert_eq!(cres.unwrap().len(), 2);
-//         assert!(memseq.is_empty());
+            Setup {
+                memseq,
+                city_pattern: String::from("Crystal Lake"),
+                name_pattern: String::from("Lahblah"),
+                state_pattern: String::from("Idaho"),
+                alice,
+                bob,
+                carol,
+                dan,
+                erin,
+            }
+        }
+    }
 
-//         let _ = memseq.clear();
-//     }
+    fn city_match_case(entry: Entry) -> String {
+        entry.address.unwrap().city
+    }
 
-//     #[test]
-//     fn memseq_test_consume_match() {
-//         let setup = Setup::new();
-//         let memseq = setup.memseq;
+    fn name_match_case(entry: Entry) -> String {
+        entry.name.unwrap().last
+    }
 
-//         let pres = memseq.produce("friends", setup.bob, false);
-//         let cres = memseq.consume(vec!["friends"], vec![name_match], Printer, false);
+    fn state_match_case(entry: Entry) -> String {
+        entry.address.unwrap().state
+    }
 
-//         assert!(pres.is_none());
-//         assert!(cres.is_some());
-//         assert!(memseq.is_empty());
+    fn create_send(_channel: String, _data: Entry, _match_case: String, _persistent: bool) -> Send {
+        let mut send = Send::default();
+        send.chan = _channel;
+        send.data = Some(_data);
+        send.match_case = _match_case;
+        send.persistent = _persistent;
+        send
+    }
 
-//         let _ = memseq.clear();
-//     }
+    fn create_receive(
+        _channels: Vec<String>,
+        _patterns: Vec<String>,
+        _continutation: String,
+        _persistent: bool,
+    ) -> Receive {
+        let mut receive = Receive::default();
+        receive.channels = _channels;
+        receive.patterns = _patterns;
+        receive.continuation = _continutation;
+        receive.persistent = _persistent;
+        receive
+    }
 
-//     #[test]
-//     fn memseq_test_produce_match() {
-//         let setup = Setup::new();
-//         let memseq = setup.memseq;
+    #[test]
+    fn memseq_test_produce_match() {
+        let setup = Setup::new();
+        let memseq = setup.memseq;
 
-//         let cres = memseq.consume(vec!["friends"], vec![city_match], Printer, false);
-//         let pres = memseq.produce("friends", setup.alice, false);
+        let receive = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern],
+            String::from("I am the continuation, for now..."),
+            false,
+        );
+        let cres = memseq.consume(receive);
 
-//         assert!(cres.is_none());
-//         assert!(pres.is_some());
-//         assert!(memseq.is_empty());
+        let send = create_send(
+            String::from("friends"),
+            setup.alice.clone(),
+            city_match_case(setup.alice),
+            false,
+        );
+        let pres = memseq.produce(send);
 
-//         let _ = memseq.clear();
-//     }
+        assert!(cres.is_none());
+        assert!(pres.is_some());
+        assert!(memseq.is_empty());
 
-//     #[test]
-//     fn memseq_test_produce_no_match() {
-//         let setup = Setup::new();
-//         let memseq = setup.memseq;
+        let _ = memseq.clear();
+    }
 
-//         let cres = memseq.consume(vec!["friends"], vec![city_match], Printer, false);
-//         let pres = memseq.produce("friends", setup.carol, false);
+    #[test]
+    fn memseq_test_produce_no_match() {
+        let setup = Setup::new();
+        let memseq = setup.memseq;
 
-//         assert!(cres.is_none());
-//         assert!(pres.is_none());
-//         assert!(!memseq.is_empty());
+        let receive = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern],
+            String::from("I am the continuation, for now..."),
+            false,
+        );
+        let cres = memseq.consume(receive);
 
-//         let _ = memseq.clear();
-//     }
+        let send = create_send(
+            String::from("friends"),
+            setup.carol.clone(),
+            city_match_case(setup.carol),
+            false,
+        );
+        let pres = memseq.produce(send);
 
-//     #[test]
-//     fn memseq_test_consume_persist() {
-//         let setup = Setup::new();
-//         let memseq = setup.memseq;
+        assert!(cres.is_none());
+        assert!(pres.is_none());
+        assert!(!memseq.is_empty());
 
-//         let cres = memseq.consume(vec!["friends"], vec![city_match], Printer, true);
+        let _ = memseq.clear();
+    }
 
-//         assert!(cres.is_none());
-//         assert!(!memseq.is_empty());
+    #[test]
+    fn memseq_test_consume_match() {
+        let setup = Setup::new();
+        let memseq = setup.memseq;
 
-//         let pres = memseq.produce("friends", setup.alice.clone(), false);
+        let send = create_send(
+            String::from("friends"),
+            setup.bob.clone(),
+            name_match_case(setup.bob),
+            false,
+        );
+        let pres = memseq.produce(send);
 
-//         assert!(pres.is_some());
-//         assert!(!memseq.is_empty());
+        let receive = create_receive(
+            vec![String::from("friends")],
+            vec![setup.name_pattern],
+            String::from("I am the continuation, for now..."),
+            false,
+        );
+        let cres = memseq.consume(receive);
 
-//         let _ = memseq.clear();
-//     }
+        assert!(pres.is_none());
+        assert!(cres.is_some());
+        assert!(memseq.is_empty());
 
-//     #[test]
-//     fn memseq_test_produce_persist() {
-//         let setup = Setup::new();
-//         let memseq = setup.memseq;
+        let _ = memseq.clear();
+    }
 
-//         let pres = memseq.produce("friends", setup.alice, true);
+    #[test]
+    fn memseq_test_multiple_channels_consume_match() {
+        let setup = Setup::new();
+        let memseq = setup.memseq;
 
-//         assert!(pres.is_none());
-//         assert!(!memseq.is_empty());
+        let send1 = create_send(
+            String::from("colleagues"),
+            setup.dan.clone(),
+            state_match_case(setup.dan),
+            false,
+        );
+        let pres1 = memseq.produce(send1);
 
-//         let cres = memseq.consume(vec!["friends"], vec![city_match], Printer, false);
+        let send2 = create_send(
+            String::from("friends"),
+            setup.erin.clone(),
+            state_match_case(setup.erin),
+            false,
+        );
+        let pres2 = memseq.produce(send2);
 
-//         assert!(cres.is_some());
-//         assert_eq!(cres.unwrap().len(), 1);
-//         assert!(!memseq.is_empty());
+        let receive = create_receive(
+            vec![String::from("friends"), String::from("colleagues")],
+            vec![setup.state_pattern.clone(), setup.state_pattern],
+            String::from("I am the continuation, for now..."),
+            false,
+        );
+        let cres = memseq.consume(receive);
 
-//         let _ = memseq.clear();
-//     }
+        assert!(pres1.is_none());
+        assert!(pres2.is_none());
+        assert!(cres.is_some());
+        assert_eq!(cres.unwrap().len(), 2);
+        assert!(memseq.is_empty());
 
-//     #[test]
-//     fn memseq_test_produce_persist_existing_matches() {
-//         let setup = Setup::new();
-//         let memseq = setup.memseq;
+        let _ = memseq.clear();
+    }
 
-//         let cres1 = memseq.consume(vec!["friends"], vec![city_match], Printer, false);
+    #[test]
+    fn memseq_test_consume_persist() {
+        let setup = Setup::new();
+        let memseq = setup.memseq;
 
-//         assert!(cres1.is_none());
-//         assert!(!memseq.is_empty());
+        let receive = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern],
+            String::from("I am the continuation, for now..."),
+            true,
+        );
+        let cres = memseq.consume(receive);
 
-//         let pres1 = memseq.produce("friends", setup.alice.clone(), true);
+        assert!(cres.is_none());
+        assert!(!memseq.is_empty());
 
-//         assert!(pres1.is_some());
-//         assert!((memseq.is_empty()));
+        let send = create_send(
+            String::from("friends"),
+            setup.alice.clone(),
+            city_match_case(setup.alice),
+            false,
+        );
+        let pres = memseq.produce(send);
 
-//         let pres2 = memseq.produce("friends", setup.alice.clone(), true);
-//         let _cres2 = memseq.consume(vec!["friends"], vec![city_match], Printer, false);
+        assert!(pres.is_some());
+        assert!(!memseq.is_empty());
 
-//         assert!(pres2.is_none());
-//         assert!(!memseq.is_empty());
+        let _ = memseq.clear();
+    }
 
-//         let _ = memseq.clear();
-//     }
-// }
+    #[test]
+    fn memseq_test_consume_persist_existing_matches() {
+        let setup = Setup::new();
+        let memseq = setup.memseq;
+
+        let send1 = create_send(
+            String::from("friends"),
+            setup.alice.clone(),
+            city_match_case(setup.alice.clone()),
+            false,
+        );
+        let _pres1 = memseq.produce(send1);
+
+        let send2 = create_send(
+            String::from("friends"),
+            setup.bob.clone(),
+            city_match_case(setup.bob),
+            false,
+        );
+        let _pres2 = memseq.produce(send2);
+
+        let receive1 = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern.clone()],
+            String::from("I am the continuation, for now..."),
+            true,
+        );
+        let cres1 = memseq.consume(receive1);
+
+        assert_eq!(cres1.unwrap().len(), 1);
+        assert!(!memseq.is_empty());
+
+        let receive2 = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern.clone()],
+            String::from("I am the continuation, for now..."),
+            true,
+        );
+        let cres2 = memseq.consume(receive2);
+
+        assert_eq!(cres2.unwrap().len(), 1);
+        assert!(memseq.is_empty());
+
+        let receive3 = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern],
+            String::from("I am the continuation, for now..."),
+            true,
+        );
+        let cres3 = memseq.consume(receive3);
+
+        assert!(cres3.is_none());
+        assert!(!memseq.is_empty());
+
+        let send3 = create_send(
+            String::from("friends"),
+            setup.alice.clone(),
+            city_match_case(setup.alice),
+            false,
+        );
+        let pres3 = memseq.produce(send3);
+
+        assert!(pres3.is_some());
+        assert!(!memseq.is_empty());
+
+        let _ = memseq.clear();
+    }
+
+    #[test]
+    fn memseq_test_produce_persist() {
+        let setup = Setup::new();
+        let memseq = setup.memseq;
+
+        let send = create_send(
+            String::from("friends"),
+            setup.alice.clone(),
+            city_match_case(setup.alice),
+            true,
+        );
+        let pres = memseq.produce(send);
+
+        assert!(pres.is_none());
+        assert!(!memseq.is_empty());
+
+        let receive = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern],
+            String::from("I am the continuation, for now..."),
+            false,
+        );
+        let cres = memseq.consume(receive);
+
+        assert!(cres.is_some());
+        assert_eq!(cres.unwrap().len(), 1);
+        assert!(!memseq.is_empty());
+
+        let _ = memseq.clear();
+    }
+
+    #[test]
+    fn memseq_test_produce_persist_existing_matches() {
+        let setup = Setup::new();
+        let memseq = setup.memseq;
+
+        let receive1 = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern.clone()],
+            String::from("I am the continuation, for now..."),
+            false,
+        );
+        let cres1 = memseq.consume(receive1);
+
+        assert!(cres1.is_none());
+        assert!(!memseq.is_empty());
+
+        let send1 = create_send(
+            String::from("friends"),
+            setup.alice.clone(),
+            city_match_case(setup.alice.clone()),
+            true,
+        );
+        let pres1 = memseq.produce(send1);
+
+        assert!(pres1.is_some());
+        assert!((memseq.is_empty()));
+
+        let send2 = create_send(
+            String::from("friends"),
+            setup.alice.clone(),
+            city_match_case(setup.alice),
+            true,
+        );
+        let pres2 = memseq.produce(send2);
+
+        let receive2 = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern],
+            String::from("I am the continuation, for now..."),
+            false,
+        );
+        let _cres2 = memseq.consume(receive2);
+
+        assert!(pres2.is_none());
+        assert!(!memseq.is_empty());
+
+        let _ = memseq.clear();
+    }
+}
