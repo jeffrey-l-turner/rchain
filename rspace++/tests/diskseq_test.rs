@@ -5,6 +5,9 @@ mod tests {
 
     struct Setup {
         diskseq: DiskSeqDB<Send, Receive>,
+        city_pattern: String,
+        name_pattern: String,
+        state_pattern: String,
         alice: Entry,
         bob: Entry,
         carol: Entry,
@@ -103,6 +106,9 @@ mod tests {
 
             Setup {
                 diskseq,
+                city_pattern: String::from("Crystal Lake"),
+                name_pattern: String::from("Lahblah"),
+                state_pattern: String::from("Idaho"),
                 alice,
                 bob,
                 carol,
@@ -112,17 +118,17 @@ mod tests {
         }
     }
 
-    // fn city_match(entry: Entry) -> bool {
-    //     entry.address.city == "Crystal Lake"
-    // }
+    fn city_match_case(entry: Entry) -> String {
+        entry.address.unwrap().city
+    }
 
-    // fn name_match(entry: Entry) -> bool {
-    //     entry.name.last == "Lahblah"
-    // }
+    fn name_match_case(entry: Entry) -> String {
+        entry.name.unwrap().last
+    }
 
-    // fn state_match(entry: Entry) -> bool {
-    //     entry.address.state == "Idaho"
-    // }
+    fn state_match_case(entry: Entry) -> String {
+        entry.address.unwrap().state
+    }
 
     fn create_send(_channel: String, _data: Entry, _match_case: String, _persistent: bool) -> Send {
         let mut send = Send::default();
@@ -154,7 +160,7 @@ mod tests {
 
         let receive = create_receive(
             vec![String::from("friends")],
-            vec![String::from("Crystal Lake")],
+            vec![setup.city_pattern],
             String::from("I am the continuation, for now..."),
             false,
         );
@@ -162,8 +168,8 @@ mod tests {
 
         let send = create_send(
             String::from("friends"),
-            setup.alice,
-            String::from("Crystal Lake"),
+            setup.alice.clone(),
+            city_match_case(setup.alice),
             false,
         );
         let pres = diskseq.produce(send);
@@ -175,148 +181,275 @@ mod tests {
         let _ = diskseq.clear();
     }
 
-    // #[test]
-    // fn diskseq_test_produce_no_match() {
-    //     let setup = Setup::new();
-    //     let diskseq = setup.diskseq;
+    #[test]
+    fn diskseq_test_produce_no_match() {
+        let setup = Setup::new();
+        let diskseq = setup.diskseq;
 
-    //     let cres = diskseq.consume(vec!["friends"], vec![city_match], Printer, false);
-    //     let pres = diskseq.produce("friends", setup.carol, false);
+        let receive = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern],
+            String::from("I am the continuation, for now..."),
+            false,
+        );
+        let cres = diskseq.consume(receive);
 
-    //     assert!(cres.is_none());
-    //     assert!(pres.is_none());
-    //     assert!(!diskseq.is_empty());
+        let send = create_send(
+            String::from("friends"),
+            setup.carol.clone(),
+            city_match_case(setup.carol),
+            false,
+        );
+        let pres = diskseq.produce(send);
 
-    //     let _ = diskseq.clear();
-    // }
+        assert!(cres.is_none());
+        assert!(pres.is_none());
+        assert!(!diskseq.is_empty());
 
-    // #[test]
-    // fn diskseq_test_consume_match() {
-    //     let setup = Setup::new();
-    //     let diskseq = setup.diskseq;
+        let _ = diskseq.clear();
+    }
 
-    //     let pres = diskseq.produce("friends", setup.bob, false);
-    //     let cres = diskseq.consume(vec!["friends"], vec![name_match], Printer, false);
+    #[test]
+    fn diskseq_test_consume_match() {
+        let setup = Setup::new();
+        let diskseq = setup.diskseq;
 
-    //     assert!(pres.is_none());
-    //     assert!(cres.is_some());
-    //     assert!(diskseq.is_empty());
+        let send = create_send(
+            String::from("friends"),
+            setup.bob.clone(),
+            name_match_case(setup.bob),
+            false,
+        );
+        let pres = diskseq.produce(send);
 
-    //     let _ = diskseq.clear();
-    // }
+        let receive = create_receive(
+            vec![String::from("friends")],
+            vec![setup.name_pattern],
+            String::from("I am the continuation, for now..."),
+            false,
+        );
+        let cres = diskseq.consume(receive);
 
-    // #[test]
-    // fn diskseq_test_multiple_channels_consume_match() {
-    //     let setup = Setup::new();
-    //     let diskseq = setup.diskseq;
+        assert!(pres.is_none());
+        assert!(cres.is_some());
+        assert!(diskseq.is_empty());
 
-    //     let pres1 = diskseq.produce("colleagues", setup.dan, false);
-    //     let pres2 = diskseq.produce("friends", setup.erin, false);
+        let _ = diskseq.clear();
+    }
 
-    //     let cres = diskseq.consume(
-    //         vec!["friends", "colleagues"],
-    //         vec![state_match, state_match],
-    //         Printer,
-    //         false,
-    //     );
+    #[test]
+    fn diskseq_test_multiple_channels_consume_match() {
+        let setup = Setup::new();
+        let diskseq = setup.diskseq;
 
-    //     assert!(pres1.is_none());
-    //     assert!(pres2.is_none());
-    //     assert!(cres.is_some());
-    //     assert_eq!(cres.unwrap().len(), 2);
-    //     assert!(diskseq.is_empty());
+        let send1 = create_send(
+            String::from("colleagues"),
+            setup.dan.clone(),
+            state_match_case(setup.dan),
+            false,
+        );
+        let pres1 = diskseq.produce(send1);
 
-    //     let _ = diskseq.clear();
-    // }
+        let send2 = create_send(
+            String::from("friends"),
+            setup.erin.clone(),
+            state_match_case(setup.erin),
+            false,
+        );
+        let pres2 = diskseq.produce(send2);
 
-    // #[test]
-    // fn diskseq_test_consume_persist() {
-    //     let setup = Setup::new();
-    //     let diskseq = setup.diskseq;
+        let receive = create_receive(
+            vec![String::from("friends"), String::from("colleagues")],
+            vec![setup.state_pattern.clone(), setup.state_pattern],
+            String::from("I am the continuation, for now..."),
+            false,
+        );
+        let cres = diskseq.consume(receive);
 
-    //     let cres = diskseq.consume(vec!["friends"], vec![city_match], Printer, true);
+        assert!(pres1.is_none());
+        assert!(pres2.is_none());
+        assert!(cres.is_some());
+        assert_eq!(cres.unwrap().len(), 2);
+        assert!(diskseq.is_empty());
 
-    //     assert!(cres.is_none());
-    //     assert!(!diskseq.is_empty());
+        let _ = diskseq.clear();
+    }
 
-    //     let pres = diskseq.produce("friends", setup.alice.clone(), false);
+    #[test]
+    fn diskseq_test_consume_persist() {
+        let setup = Setup::new();
+        let diskseq = setup.diskseq;
 
-    //     assert!(pres.is_some());
-    //     assert!(!diskseq.is_empty());
+        let receive = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern],
+            String::from("I am the continuation, for now..."),
+            true,
+        );
+        let cres = diskseq.consume(receive);
 
-    //     let _ = diskseq.clear();
-    // }
+        assert!(cres.is_none());
+        assert!(!diskseq.is_empty());
 
-    // #[test]
-    // fn diskseq_test_consume_persist_existing_matches() {
-    //     let setup = Setup::new();
-    //     let diskseq = setup.diskseq;
+        let send = create_send(
+            String::from("friends"),
+            setup.alice.clone(),
+            city_match_case(setup.alice),
+            false,
+        );
+        let pres = diskseq.produce(send);
 
-    //     let _pres1 = diskseq.produce("friends", setup.alice.clone(), false);
-    //     let _pres2 = diskseq.produce("friends", setup.bob, false);
-    //     let cres1 = diskseq.consume(vec!["friends"], vec![city_match], Printer, true);
+        assert!(pres.is_some());
+        assert!(!diskseq.is_empty());
 
-    //     assert_eq!(cres1.unwrap().len(), 1);
-    //     assert!(!diskseq.is_empty());
+        let _ = diskseq.clear();
+    }
 
-    //     let cres2 = diskseq.consume(vec!["friends"], vec![city_match], Printer, true);
+    #[test]
+    fn diskseq_test_consume_persist_existing_matches() {
+        let setup = Setup::new();
+        let diskseq = setup.diskseq;
 
-    //     assert_eq!(cres2.unwrap().len(), 1);
-    //     assert!(diskseq.is_empty());
+        let send1 = create_send(
+            String::from("friends"),
+            setup.alice.clone(),
+            city_match_case(setup.alice.clone()),
+            false,
+        );
+        let _pres1 = diskseq.produce(send1);
 
-    //     let cres3 = diskseq.consume(vec!["friends"], vec![city_match], Printer, true);
+        let send2 = create_send(
+            String::from("friends"),
+            setup.bob.clone(),
+            city_match_case(setup.bob),
+            false,
+        );
+        let _pres2 = diskseq.produce(send2);
 
-    //     assert!(cres3.is_none());
-    //     assert!(!diskseq.is_empty());
+        let receive1 = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern.clone()],
+            String::from("I am the continuation, for now..."),
+            true,
+        );
+        let cres1 = diskseq.consume(receive1);
 
-    //     let pres3 = diskseq.produce("friends", setup.alice.clone(), false);
+        assert_eq!(cres1.unwrap().len(), 1);
+        assert!(!diskseq.is_empty());
 
-    //     assert!(pres3.is_some());
-    //     assert!(!diskseq.is_empty());
+        let receive2 = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern.clone()],
+            String::from("I am the continuation, for now..."),
+            true,
+        );
+        let cres2 = diskseq.consume(receive2);
 
-    //     let _ = diskseq.clear();
-    // }
+        assert_eq!(cres2.unwrap().len(), 1);
+        assert!(diskseq.is_empty());
 
-    // #[test]
-    // fn diskseq_test_produce_persist() {
-    //     let setup = Setup::new();
-    //     let diskseq = setup.diskseq;
+        let receive3 = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern],
+            String::from("I am the continuation, for now..."),
+            true,
+        );
+        let cres3 = diskseq.consume(receive3);
 
-    //     let pres = diskseq.produce("friends", setup.alice, true);
+        assert!(cres3.is_none());
+        assert!(!diskseq.is_empty());
 
-    //     assert!(pres.is_none());
-    //     assert!(!diskseq.is_empty());
+        let send3 = create_send(
+            String::from("friends"),
+            setup.alice.clone(),
+            city_match_case(setup.alice),
+            false,
+        );
+        let pres3 = diskseq.produce(send3);
 
-    //     let cres = diskseq.consume(vec!["friends"], vec![city_match], Printer, false);
+        assert!(pres3.is_some());
+        assert!(!diskseq.is_empty());
 
-    //     assert!(cres.is_some());
-    //     assert_eq!(cres.unwrap().len(), 1);
-    //     assert!(!diskseq.is_empty());
+        let _ = diskseq.clear();
+    }
 
-    //     let _ = diskseq.clear();
-    // }
+    #[test]
+    fn diskseq_test_produce_persist() {
+        let setup = Setup::new();
+        let diskseq = setup.diskseq;
 
-    // #[test]
-    // fn diskseq_test_produce_persist_existing_matches() {
-    //     let setup = Setup::new();
-    //     let diskseq = setup.diskseq;
+        let send = create_send(
+            String::from("friends"),
+            setup.alice.clone(),
+            city_match_case(setup.alice),
+            true,
+        );
+        let pres = diskseq.produce(send);
 
-    //     let cres1 = diskseq.consume(vec!["friends"], vec![city_match], Printer, false);
+        assert!(pres.is_none());
+        assert!(!diskseq.is_empty());
 
-    //     assert!(cres1.is_none());
-    //     assert!(!diskseq.is_empty());
+        let receive = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern],
+            String::from("I am the continuation, for now..."),
+            false,
+        );
+        let cres = diskseq.consume(receive);
 
-    //     let pres1 = diskseq.produce("friends", setup.alice.clone(), true);
+        assert!(cres.is_some());
+        assert_eq!(cres.unwrap().len(), 1);
+        assert!(!diskseq.is_empty());
 
-    //     assert!(pres1.is_some());
-    //     assert!((diskseq.is_empty()));
+        let _ = diskseq.clear();
+    }
 
-    //     let pres2 = diskseq.produce("friends", setup.alice.clone(), true);
-    //     let _cres2 = diskseq.consume(vec!["friends"], vec![city_match], Printer, false);
+    #[test]
+    fn diskseq_test_produce_persist_existing_matches() {
+        let setup = Setup::new();
+        let diskseq = setup.diskseq;
 
-    //     assert!(pres2.is_none());
-    //     assert!(!diskseq.is_empty());
+        let receive1 = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern.clone()],
+            String::from("I am the continuation, for now..."),
+            false,
+        );
+        let cres1 = diskseq.consume(receive1);
 
-    //     let _ = diskseq.clear();
-    // }
+        assert!(cres1.is_none());
+        assert!(!diskseq.is_empty());
+
+        let send1 = create_send(
+            String::from("friends"),
+            setup.alice.clone(),
+            city_match_case(setup.alice.clone()),
+            true,
+        );
+        let pres1 = diskseq.produce(send1);
+
+        assert!(pres1.is_some());
+        assert!((diskseq.is_empty()));
+
+        let send2 = create_send(
+            String::from("friends"),
+            setup.alice.clone(),
+            city_match_case(setup.alice),
+            true,
+        );
+        let pres2 = diskseq.produce(send2);
+
+        let receive2 = create_receive(
+            vec![String::from("friends")],
+            vec![setup.city_pattern],
+            String::from("I am the continuation, for now..."),
+            false,
+        );
+        let _cres2 = diskseq.consume(receive2);
+
+        assert!(pres2.is_none());
+        assert!(!diskseq.is_empty());
+
+        let _ = diskseq.clear();
+    }
 }
