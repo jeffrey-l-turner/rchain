@@ -5,8 +5,6 @@ use crate::memseq::MemSeqDB;
 use crate::rtypes::rtypes;
 use std::error::Error;
 
-// TODO: hardwire persist flag based on method call
-
 // See https://docs.google.com/document/d/1yWdvJwsq4Ft7elzKBM0dehh4RFoQ-vXt-1TAUTLLxMY/edit
 #[repr(C)]
 pub struct RSpace<D: prost::Message, K: prost::Message> {
@@ -35,29 +33,27 @@ impl<
         })
     }
 
-    // TODO: Hard code persistence according to function name
-
     // Verb Set 1
     pub fn get_once_durable_concurrent(&self, pdata: rtypes::Send) -> Option<rtypes::OptionResult> {
-        return self.diskconc.produce(pdata);
+        return self.diskconc.produce(pdata, false);
     }
 
     pub fn get_once_non_durable_concurrent(
         &self,
         pdata: rtypes::Send,
     ) -> Option<rtypes::OptionResult> {
-        return self.memconc.produce(pdata);
+        return self.memconc.produce(pdata, false);
     }
 
     pub fn get_once_durable_sequential(&self, pdata: rtypes::Send) -> Option<rtypes::OptionResult> {
-        return self.diskseq.produce(pdata);
+        return self.diskseq.produce(pdata, false);
     }
 
     pub fn get_once_non_durable_sequential(
         &self,
         pdata: rtypes::Send,
     ) -> Option<rtypes::OptionResult> {
-        return self.memseq.produce(pdata);
+        return self.memseq.produce(pdata, false);
     }
 
     // Verb Set 2
@@ -65,28 +61,28 @@ impl<
         &self,
         pdata: rtypes::Send,
     ) -> Option<rtypes::OptionResult> {
-        return self.diskconc.produce(pdata);
+        return self.diskconc.produce(pdata, true);
     }
 
     pub fn get_always_non_durable_concurrent(
         &self,
         pdata: rtypes::Send,
     ) -> Option<rtypes::OptionResult> {
-        return self.memconc.produce(pdata);
+        return self.memconc.produce(pdata, true);
     }
 
     pub fn get_always_durable_sequential(
         &self,
         pdata: rtypes::Send,
     ) -> Option<rtypes::OptionResult> {
-        return self.diskseq.produce(pdata);
+        return self.diskseq.produce(pdata, true);
     }
 
     pub fn get_always_non_durable_sequential(
         &self,
         pdata: rtypes::Send,
     ) -> Option<rtypes::OptionResult> {
-        return self.memseq.produce(pdata);
+        return self.memseq.produce(pdata, true);
     }
 
     // Verb Set 3
@@ -94,28 +90,28 @@ impl<
         &self,
         cdata: rtypes::Receive,
     ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.diskconc.consume(cdata);
+        return self.diskconc.consume(cdata, false);
     }
 
     pub fn put_once_non_durable_concurrent(
         &self,
         cdata: rtypes::Receive,
     ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.memconc.consume(cdata);
+        return self.memconc.consume(cdata, false);
     }
 
     pub fn put_once_durable_sequential(
         &self,
         cdata: rtypes::Receive,
     ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.diskseq.consume(cdata);
+        return self.diskseq.consume(cdata, false);
     }
 
     pub fn put_once_non_durable_sequential(
         &self,
         cdata: rtypes::Receive,
     ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.memseq.consume(cdata);
+        return self.memseq.consume(cdata, false);
     }
 
     // Verb Set 4
@@ -123,28 +119,28 @@ impl<
         &self,
         cdata: rtypes::Receive,
     ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.diskconc.consume(cdata);
+        return self.diskconc.consume(cdata, true);
     }
 
     pub fn put_always_non_durable_concurrent(
         &self,
         cdata: rtypes::Receive,
     ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.memconc.consume(cdata);
+        return self.memconc.consume(cdata, true);
     }
 
     pub fn put_always_durable_sequential(
         &self,
         cdata: rtypes::Receive,
     ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.diskseq.consume(cdata);
+        return self.diskseq.consume(cdata, true);
     }
 
     pub fn put_always_non_durable_sequential(
         &self,
         cdata: rtypes::Receive,
     ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.memseq.consume(cdata);
+        return self.memseq.consume(cdata, true);
     }
 
     pub fn print_data(&self, channel: &str) -> () {

@@ -127,7 +127,7 @@ object RustLibrary extends Library {
     val channel = "friends"
 
     // Consume
-    val rec1     = Receive(Seq("friends"), Seq("Lincoln"), "I am the continuation, for now...", false);
+    val rec1     = Receive(Seq("friends"), Seq("Lincoln"), "I am the continuation, for now...");
     val rec1_buf = rec1.toByteArray;
     lib.space_put_once_durable_concurrent(spacePtr, rec1_buf, rec1_buf.length);
 
@@ -142,7 +142,7 @@ object RustLibrary extends Library {
       phone = "787-555-1212"
     )
 
-    val send1     = Send("friends", Some(alice), "Lincoln", false);
+    val send1     = Send("friends", Some(alice), "Lincoln");
     val send1_buf = send1.toByteArray;
     val res1      = lib.space_get_once_durable_concurrent(spacePtr, send1_buf, send1_buf.length);
     println("\n", res1);

@@ -95,12 +95,11 @@ impl Setup {
 //     entry.address.state == "Idaho"
 // }
 
-fn create_send(_channel: String, _data: Entry, _match_case: String, _persistent: bool) -> Send {
+fn create_send(_channel: String, _data: Entry, _match_case: String) -> Send {
     let mut send = Send::default();
     send.chan = _channel;
     send.data = Some(_data);
     send.match_case = _match_case;
-    send.persistent = _persistent;
     send
 }
 
@@ -108,13 +107,11 @@ fn create_receive(
     _channels: Vec<String>,
     _patterns: Vec<String>,
     _continutation: String,
-    _persistent: bool,
 ) -> Receive {
     let mut receive = Receive::default();
     receive.channels = _channels;
     receive.patterns = _patterns;
     receive.continuation = _continutation;
-    receive.persistent = _persistent;
     receive
 }
 
@@ -139,7 +136,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         vec![String::from("friends")],
         vec![String::from("Crystal Lake")],
         String::from("I am the continuation, for now..."),
-        false,
     );
     let _cres1 = rspace.put_once_durable_sequential(rec1);
 
@@ -149,7 +145,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         String::from("friends"),
         setup.alice.clone(),
         String::from("Crystal Lake"),
-        false,
     );
     let pres1 = rspace.get_once_durable_sequential(send1);
     if pres1.is_some() {
@@ -159,27 +154,16 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     println!("\n**** Example 2 ****");
 
-    let send2 = create_send(
-        String::from("colleagues"),
-        setup.dan,
-        String::from("Idaho"),
-        false,
-    );
+    let send2 = create_send(String::from("colleagues"), setup.dan, String::from("Idaho"));
     let _pres2 = rspace.get_once_durable_concurrent(send2);
 
-    let send3 = create_send(
-        String::from("friends"),
-        setup.bob,
-        String::from("Idaho"),
-        false,
-    );
+    let send3 = create_send(String::from("friends"), setup.bob, String::from("Idaho"));
     let _pres3 = rspace.get_once_durable_concurrent(send3);
 
     let rec3 = create_receive(
         vec![String::from("friends"), String::from("colleagues")],
         vec![String::from("Idaho"), String::from("Idaho")],
         String::from("I am the continuation, for now..."),
-        true,
     );
     let cres3 = rspace.put_once_durable_concurrent(rec3);
     if cres3.is_some() {
