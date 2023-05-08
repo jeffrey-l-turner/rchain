@@ -3,6 +3,8 @@ import BNFC._
 import Rholang._
 import NativePackagerHelper._
 import com.typesafe.sbt.packager.docker._
+import sys.process._
+
 //allow stopping sbt tasks using ctrl+c without killing sbt itself
 Global / cancelable := true
 
@@ -97,6 +99,46 @@ lazy val coverageSettings = Seq(
   ).mkString(";")
 )
 
+// changlog update and git tag
+lazy val changelog = taskKey[Unit]("Run benchmark, tag new release, and update changelog")
+
+changelog := {
+  val log = streams.value.log
+  val currentVersion = version.value
+
+  log.info("Running benchmark tests...")
+  if (Seq("sbt", "benchmark:test").! == 0) {
+    log.info("Benchmark tests passed.")
+
+    log.info(s"Tagging new release (v$currentVersion)...")
+    if (Seq("git", "tag", s"v$currentVersion").! == 0) {
+      log.info(s"New release (v$currentVersion) successfully tagged.")
+    } else {
+      log.error(s"Failed to tag new release (v$currentVersion).")
+      throw new IllegalStateException("Failed to tag new release")
+    }
+
+    log.info("Updating changelog...")
+    val changelogFile = new File("CHANGELOG.md")
+    val changelogContent = IO.read(changelogFile)
+    val formattedDate = java.time.LocalDate.now.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+
+    val newEntry = s"""
+      |## [v$currentVersion] - $formattedDate
+      |- Added new features
+      |- Fixed bugs
+      |- Improved performance
+      """.stripMargin
+
+    val updatedChangelogContent = newEntry + "\n\n" + changelogContent
+    IO.write(changelogFile, updatedChangelogContent)
+
+    log.info("Changelog successfully updated.")
+  } else {
+    log.error("Benchmark tests failed. Aborting the release process.")
+    throw new IllegalStateException("Benchmark tests failed")
+  }
+}
 lazy val compilerSettings = CompilerSettings.options ++ Seq(
   crossScalaVersions := Seq(scalaVersion.value)
 )
