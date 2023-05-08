@@ -10,7 +10,7 @@ object RustLibrary extends Library {
   val _ = System.setProperty("jna.library.path", "./rspace++/target/release/")
 
   val libraryPath = System.getProperty("jna.library.path")
-  println(s"JNA library path is: $libraryPath")
+  // println(s"JNA library path is: $libraryPath")
 
   trait RustLib extends Library {
     def space_new(): Pointer

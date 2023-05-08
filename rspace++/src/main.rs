@@ -1,4 +1,7 @@
-use crate::rtypes::rtypes::{Address, Entry, Name, OptionResult};
+use rspace_plus_plus::{
+    rspace::RSpace,
+    rtypes::rtypes::{Address, Entry, Name, OptionResult, Receive, Send},
+};
 use std::error::Error;
 
 mod diskconc;
@@ -10,6 +13,7 @@ mod rtypes;
 mod shared;
 
 struct Setup {
+    rspace: RSpace<Send, Receive>,
     alice: Entry,
     bob: Entry,
     dan: Entry,
@@ -17,6 +21,8 @@ struct Setup {
 
 impl Setup {
     fn new() -> Self {
+        let rspace = RSpace::<Send, Receive>::create().unwrap();
+
         // Alice
         let mut alice_name = Name::default();
         alice_name.first = "Alice".to_string();
@@ -68,7 +74,12 @@ impl Setup {
         dan.email = "deejwalters@sdf.lonestar.org".to_string();
         dan.phone = "444-555-1212".to_string();
 
-        Setup { alice, bob, dan }
+        Setup {
+            rspace,
+            alice,
+            bob,
+            dan,
+        }
     }
 }
 
@@ -95,13 +106,8 @@ fn run_k(ks: Vec<OptionResult>) {
     }
 }
 
-fn create_send(
-    _channel: String,
-    _data: Entry,
-    _match_case: String,
-    _persistent: bool,
-) -> rtypes::rtypes::Send {
-    let mut send = rtypes::rtypes::Send::default();
+fn create_send(_channel: String, _data: Entry, _match_case: String, _persistent: bool) -> Send {
+    let mut send = Send::default();
     send.chan = _channel;
     send.data = Some(_data);
     send.match_case = _match_case;
@@ -114,8 +120,8 @@ fn create_receive(
     _patterns: Vec<String>,
     _continutation: String,
     _persistent: bool,
-) -> rtypes::rtypes::Receive {
-    let mut receive = rtypes::rtypes::Receive::default();
+) -> Receive {
+    let mut receive = Receive::default();
     receive.channels = _channels;
     receive.patterns = _patterns;
     receive.continuation = _continutation;
@@ -124,7 +130,30 @@ fn create_receive(
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    println!("\nNeed to add example using rspace, not individual dbs");
+    let setup = Setup::new();
+    let rspace = setup.rspace;
+
+    let rec1 = create_receive(
+        vec![String::from("friends")],
+        vec![String::from("Crystal Lake")],
+        String::from("I am the continuation, for now..."),
+        false,
+    );
+    let _cres1 = rspace.put_once_durable_sequential(rec1);
+
+    let _ = rspace.print_store("friends");
+
+    let send1 = create_send(
+        String::from("friends"),
+        setup.alice.clone(),
+        String::from("Crystal Lake"),
+        false,
+    );
+    let pres1 = rspace.get_once_durable_sequential(send1);
+    if pres1.is_some() {
+        run_k(vec![pres1.unwrap()]);
+    }
+    let _ = rspace.print_store("friends");
 
     Ok(())
 }
