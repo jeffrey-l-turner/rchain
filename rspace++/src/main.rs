@@ -133,6 +133,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let setup = Setup::new();
     let rspace = setup.rspace;
 
+    println!("\n**** Example 1 ****");
+
     let rec1 = create_receive(
         vec![String::from("friends")],
         vec![String::from("Crystal Lake")],
@@ -154,6 +156,39 @@ fn main() -> Result<(), Box<dyn Error>> {
         run_k(vec![pres1.unwrap()]);
     }
     let _ = rspace.print_store("friends");
+
+    println!("\n**** Example 2 ****");
+
+    let send2 = create_send(
+        String::from("colleagues"),
+        setup.dan,
+        String::from("Idaho"),
+        false,
+    );
+    let _pres2 = rspace.get_once_durable_concurrent(send2);
+
+    let send3 = create_send(
+        String::from("friends"),
+        setup.bob,
+        String::from("Idaho"),
+        false,
+    );
+    let _pres3 = rspace.get_once_durable_concurrent(send3);
+
+    let rec3 = create_receive(
+        vec![String::from("friends"), String::from("colleagues")],
+        vec![String::from("Idaho"), String::from("Idaho")],
+        String::from("I am the continuation, for now..."),
+        true,
+    );
+    let cres3 = rspace.put_once_durable_concurrent(rec3);
+    if cres3.is_some() {
+        run_k(cres3.unwrap());
+    }
+    let _ = rspace.print_store("friends");
+
+    let _ = rspace.clear_store();
+    assert!(rspace.is_empty());
 
     Ok(())
 }
