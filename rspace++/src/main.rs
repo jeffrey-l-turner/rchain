@@ -6,11 +6,9 @@ use std::error::Error;
 
 mod diskconc;
 mod diskseq;
-mod example;
 mod memconc;
 mod memseq;
 mod rtypes;
-mod shared;
 
 struct Setup {
     rspace: RSpace<Send, Receive>,

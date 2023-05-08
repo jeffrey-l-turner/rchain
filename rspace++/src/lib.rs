@@ -1,11 +1,9 @@
 pub mod diskconc;
 pub mod diskseq;
-pub mod example;
 pub mod memconc;
 pub mod memseq;
 pub mod rspace;
 pub mod rtypes;
-pub mod shared;
 
 use prost::Message;
 use rspace::RSpace;
