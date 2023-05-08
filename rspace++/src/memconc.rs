@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::rtypes::rtypes;
 use dashmap::DashMap;
 use prost::Message;

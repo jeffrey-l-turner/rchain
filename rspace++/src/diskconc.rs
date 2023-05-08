@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::rtypes::rtypes;
 use heed::types::*;
 use heed::{Database, Env, EnvOpenOptions};
