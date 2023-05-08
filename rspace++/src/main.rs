@@ -55,7 +55,7 @@ impl Setup {
         bob.name = Some(bob_name);
         bob.address = Some(bob_address);
         bob.email = "blablah@tenex.net".to_string();
-        bob.phone = "232-555-1212".to_string();
+        bob.phone = "698-555-1212".to_string();
 
         // Dan
         let mut dan_name = Name::default();
@@ -95,17 +95,6 @@ impl Setup {
 //     entry.address.state == "Idaho"
 // }
 
-fn run_k(ks: Vec<OptionResult>) {
-    for k in ks {
-        println!(
-            "\nRunning continuation for {:?}...",
-            k.data.unwrap().name.unwrap()
-        );
-
-        println!("\n{:?}", k.continuation);
-    }
-}
-
 fn create_send(_channel: String, _data: Entry, _match_case: String, _persistent: bool) -> Send {
     let mut send = Send::default();
     send.chan = _channel;
@@ -127,6 +116,17 @@ fn create_receive(
     receive.continuation = _continutation;
     receive.persistent = _persistent;
     receive
+}
+
+fn run_k(ks: Vec<OptionResult>) {
+    for k in ks {
+        println!(
+            "\nRunning continuation for {:?}...",
+            k.data.unwrap().name.unwrap()
+        );
+
+        println!("\n{:?}", k.continuation);
+    }
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
