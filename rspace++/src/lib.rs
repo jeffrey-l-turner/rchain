@@ -9,7 +9,7 @@ pub mod shared;
 
 use prost::Message;
 use rspace::RSpace;
-use rtypes::rtypes::{Name, OptionResult, Receive, Send};
+use rtypes::rtypes::{OptionResult, Receive, Send};
 use std::ffi::{c_char, CStr};
 
 #[repr(C)]
@@ -27,27 +27,17 @@ pub extern "C" fn space_new() -> *mut Space {
 // Verb Set 1
 #[no_mangle]
 pub extern "C" fn space_get_once_durable_concurrent(
-    // rspace: *mut Space,
+    rspace: *mut Space,
     pdata_ptr: *const u8,
     pdata_len: usize,
-) -> Name {
+) -> *mut Option<OptionResult> {
     unsafe {
-        // let pdata_buf = std::slice::from_raw_parts(pdata_ptr, pdata_len);
-        // let pdata = Send::decode(pdata_buf).unwrap();
+        let pdata_buf = std::slice::from_raw_parts(pdata_ptr, pdata_len);
+        let pdata = Send::decode(pdata_buf).unwrap();
 
-        // let result_option = (*rspace).rspace.get_once_durable_concurrent(pdata);
-        // let result = result_option.unwrap();
-        // let mut result_buf = Vec::new();
-        // result_buf.reserve(result.encoded_len());
-        // result.encode(&mut result_buf).unwrap();
+        let result = (*rspace).rspace.get_once_durable_concurrent(pdata);
 
-        // result_buf.as_mut_ptr()
-
-        // Box::into_raw(Box::new(result))
-        Name {
-            first: String::from("John"),
-            last: String::from("Doe"),
-        }
+        Box::into_raw(Box::new(result))
     }
 }
 

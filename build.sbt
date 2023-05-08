@@ -469,7 +469,7 @@ lazy val rspacePlusPlus = (project in file("rspace++"))
     dependencyOverrides += "org.scalactic" %% "scalactic" % "3.2.15",
     dependencyOverrides += "org.scalatest" %% "scalatest" % "3.2.15" % "test",
     libraryDependencies ++= commonDependencies ++ kamonDependencies ++ Seq(
-      "net.java.dev.jna" % "jna" % "5.7.0"
+      "net.java.dev.jna" % "jna" % "5.9.0"
     ),
     PB.targets in Compile := Seq(
       scalapb.gen(grpc = true) -> (sourceManaged in Compile).value / "protobuf"
