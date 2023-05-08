@@ -18,13 +18,101 @@ object RustLibrary extends Library {
     def space_print(rspace: Pointer, channel: String): Unit
     def space_clear(rspace: Pointer): Unit
 
+    // Verb Set 1
     def space_get_once_durable_concurrent(
         rspace: Pointer,
         pdata: Array[Byte],
         pdata_len: Int
     ): Pointer
 
+    def space_get_once_non_durable_concurrent(
+        rspace: Pointer,
+        pdata: Array[Byte],
+        pdata_len: Int
+    ): Pointer
+
+    def space_get_once_durable_sequential(
+        rspace: Pointer,
+        pdata: Array[Byte],
+        pdata_len: Int
+    ): Pointer
+
+    def space_get_once_non_durable_sequential(
+        rspace: Pointer,
+        pdata: Array[Byte],
+        pdata_len: Int
+    ): Pointer
+
+    // Verb Set 2
+    def space_get_always_durable_concurrent(
+        rspace: Pointer,
+        pdata: Array[Byte],
+        pdata_len: Int
+    ): Pointer
+
+    def space_get_always_non_durable_concurrent(
+        rspace: Pointer,
+        pdata: Array[Byte],
+        pdata_len: Int
+    ): Pointer
+
+    def space_get_always_durable_sequential(
+        rspace: Pointer,
+        pdata: Array[Byte],
+        pdata_len: Int
+    ): Pointer
+
+    def space_get_always_non_durable_sequential(
+        rspace: Pointer,
+        pdata: Array[Byte],
+        pdata_len: Int
+    ): Pointer
+
+    // Verb Set 3
     def space_put_once_durable_concurrent(
+        rspace: Pointer,
+        cdata: Array[Byte],
+        cdata_len: Int
+    ): Pointer
+
+    def space_put_once_non_durable_concurrent(
+        rspace: Pointer,
+        cdata: Array[Byte],
+        cdata_len: Int
+    ): Pointer
+
+    def space_put_once_durable_sequential(
+        rspace: Pointer,
+        cdata: Array[Byte],
+        cdata_len: Int
+    ): Pointer
+
+    def space_put_once_non_durable_sequential(
+        rspace: Pointer,
+        cdata: Array[Byte],
+        cdata_len: Int
+    ): Pointer
+
+    // Verb Set 4
+    def space_put_always_durable_concurrent(
+        rspace: Pointer,
+        cdata: Array[Byte],
+        cdata_len: Int
+    ): Pointer
+
+    def space_put_always_non_durable_concurrent(
+        rspace: Pointer,
+        cdata: Array[Byte],
+        cdata_len: Int
+    ): Pointer
+
+    def space_put_always_durable_sequential(
+        rspace: Pointer,
+        cdata: Array[Byte],
+        cdata_len: Int
+    ): Pointer
+
+    def space_put_always_non_durable_sequential(
         rspace: Pointer,
         cdata: Array[Byte],
         cdata_len: Int

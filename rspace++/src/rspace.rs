@@ -5,6 +5,8 @@ use crate::memseq::MemSeqDB;
 use crate::rtypes::rtypes;
 use std::error::Error;
 
+// TODO: hardwire persist flag based on method call
+
 // See https://docs.google.com/document/d/1yWdvJwsq4Ft7elzKBM0dehh4RFoQ-vXt-1TAUTLLxMY/edit
 #[repr(C)]
 pub struct RSpace<D: prost::Message, K: prost::Message> {
