@@ -71,17 +71,6 @@ class RSpaceTest extends AnyFunSuite {
   def stateMatchCase(entry: Entry): String =
     entry.address.get.state
 
-  // def createSend(channel: String, data: Entry, matchCase: String, persistent: Boolean): Send =
-  //   Send(channel, Some(data), matchCase, persistent)
-
-  // def createReceive(
-  //     channels: Seq[String],
-  //     patterns: Seq[String],
-  //     continuation: String,
-  //     persistent: Boolean
-  // ): Receive =
-  //   Receive(channels.toList, patterns.toList, continuation, persistent)
-
   val spacePtr = lib.space_new();
   val setup    = Setup.apply();
 
@@ -160,7 +149,7 @@ class RSpaceTest extends AnyFunSuite {
     lib.space_clear(spacePtr);
   }
 
-  test("DiskConConsumePersist") {
+  test("DiskConcConsumePersist") {
     // Consume
     val receive =
       Receive(
@@ -172,10 +161,133 @@ class RSpaceTest extends AnyFunSuite {
     val receive_buf = receive.toByteArray;
     lib.space_put_always_durable_concurrent(spacePtr, receive_buf, receive_buf.length);
 
+    assert(!lib.is_empty(spacePtr));
+
     // Produce
     val send1     = Send("friends", Some(setup.alice), cityMatchCase(setup.alice), false);
     val send1_buf = send1.toByteArray;
     lib.space_get_once_durable_concurrent(spacePtr, send1_buf, send1_buf.length);
+
+    assert(!lib.is_empty(spacePtr));
+    lib.space_clear(spacePtr);
+  }
+
+  test("DiskConcConsumePersistExistingMatches") {
+    // Produce
+    val send1     = Send("friends", Some(setup.alice), cityMatchCase(setup.alice), false);
+    val send1_buf = send1.toByteArray;
+    lib.space_get_once_durable_concurrent(spacePtr, send1_buf, send1_buf.length);
+
+    // Produce
+    val send2     = Send("friends", Some(setup.bob), cityMatchCase(setup.alice), false);
+    val send2_buf = send2.toByteArray;
+    lib.space_get_once_durable_concurrent(spacePtr, send2_buf, send2_buf.length);
+
+    // Consume
+    val receive1 =
+      Receive(
+        Seq("friends"),
+        Seq(setup.cityPattern),
+        "I am the continuation, for now...",
+        true
+      );
+    val receive1_buf = receive1.toByteArray;
+    lib.space_put_always_durable_concurrent(spacePtr, receive1_buf, receive1_buf.length);
+
+    assert(!lib.is_empty(spacePtr));
+
+    val receive2 =
+      Receive(
+        Seq("friends"),
+        Seq(setup.cityPattern),
+        "I am the continuation, for now...",
+        true
+      );
+    val receive2_buf = receive2.toByteArray;
+    lib.space_put_always_durable_concurrent(spacePtr, receive2_buf, receive2_buf.length);
+
+    assert(lib.is_empty(spacePtr));
+
+    val receive3 =
+      Receive(
+        Seq("friends"),
+        Seq(setup.cityPattern),
+        "I am the continuation, for now...",
+        true
+      );
+    val receive3_buf = receive3.toByteArray;
+    lib.space_put_always_durable_concurrent(spacePtr, receive3_buf, receive3_buf.length);
+
+    assert(!lib.is_empty(spacePtr));
+
+    // Produce
+    val send3     = Send("friends", Some(setup.alice), cityMatchCase(setup.alice), false);
+    val send3_buf = send3.toByteArray;
+    lib.space_get_once_durable_concurrent(spacePtr, send3_buf, send3_buf.length);
+
+    assert(!lib.is_empty(spacePtr));
+    lib.space_clear(spacePtr);
+  }
+
+  test("DiskConcProducePersist") {
+    // Produce
+    val send     = Send("friends", Some(setup.alice), cityMatchCase(setup.alice), true);
+    val send_buf = send.toByteArray;
+    lib.space_get_always_durable_concurrent(spacePtr, send_buf, send_buf.length);
+
+    assert(!lib.is_empty(spacePtr));
+
+    // Consume
+    val receive =
+      Receive(
+        Seq("friends"),
+        Seq(setup.cityPattern),
+        "I am the continuation, for now...",
+        false
+      );
+    val receive_buf = receive.toByteArray;
+    lib.space_put_once_durable_concurrent(spacePtr, receive_buf, receive_buf.length);
+
+    assert(!lib.is_empty(spacePtr));
+    lib.space_clear(spacePtr);
+  }
+
+  test("DiskConcProducePersistExistingMatches") {
+    // Consume
+    val receive1 =
+      Receive(
+        Seq("friends"),
+        Seq(setup.cityPattern),
+        "I am the continuation, for now...",
+        false
+      );
+    val receive1_buf = receive1.toByteArray;
+    lib.space_put_once_durable_concurrent(spacePtr, receive1_buf, receive1_buf.length);
+
+    assert(!lib.is_empty(spacePtr));
+
+    // Produce
+    val send1     = Send("friends", Some(setup.alice), cityMatchCase(setup.alice), true);
+    val send1_buf = send1.toByteArray;
+    lib.space_get_always_durable_concurrent(spacePtr, send1_buf, send1_buf.length);
+
+    assert(lib.is_empty(spacePtr));
+
+    // Produce
+    val send2     = Send("friends", Some(setup.alice), cityMatchCase(setup.alice), true);
+    val send2_buf = send2.toByteArray;
+    lib.space_get_always_durable_concurrent(spacePtr, send2_buf, send2_buf.length);
+
+    // Consume
+    val receive2 =
+      Receive(
+        Seq("friends"),
+        Seq(setup.cityPattern),
+        "I am the continuation, for now...",
+        false
+      );
+    val receive2_buf = receive2.toByteArray;
+    lib.space_put_once_durable_concurrent(spacePtr, receive2_buf, receive2_buf.length);
 
     assert(!lib.is_empty(spacePtr));
     lib.space_clear(spacePtr);
