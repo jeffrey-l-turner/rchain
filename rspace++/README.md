@@ -39,7 +39,10 @@
 - Run specific test file sequentially: `cargo test --test my_test_file -- --test-threads=1` within `rspace++` directory.
 - `cargo test --test my_test_file -- --test-threads=1` tests all the functions in a single file
 
-## TODO
+## Backlog
 
-- Implement common syntax for all crate imports
-- Handle all files tagged with "TODO:"
+1. Get working correct return types from Rust functions in Scala
+2. Create convenient name schema for proto messages throught Rust, Scala and test code
+3. Refactor for loops marked with TODO: in memory databases 
+4. Rewrite Rust rspace unit tests to match current API
+5. Implement common syntax for all crate imports
