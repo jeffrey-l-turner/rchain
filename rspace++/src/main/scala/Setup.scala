@@ -1,6 +1,8 @@
+package rspacePlusPlus
+
 import firefly.rtypes.{Address, Entry, Name}
 
-case class Setup(
+final case class Setup(
     cityPattern: String,
     namePattern: String,
     statePattern: String,
