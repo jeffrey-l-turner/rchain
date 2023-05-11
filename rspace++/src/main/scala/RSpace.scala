@@ -1,10 +1,22 @@
 package rspacePlusPlus
 
 import com.sun.jna._
+import scala.beans.BeanProperty
 import java.nio.charset.StandardCharsets
 import java.nio.ByteBuffer
 
-import firefly.rtypes.{Address, Entry, Name, Receive, Send}
+import firefly.rtypes.{Address, Entry, Name, OptionResult, Receive, Send}
+
+// Problem here is JNA can't find decalared fields "x" and "y" bc uses reflection
+// Adding "MyStruct" as return type to any of 16 functions will throw error
+@SuppressWarnings(Array("org.wartremover.warts.Var"))
+@Structure.FieldOrder(Array("x", "y"))
+class MyStruct extends Structure {
+  @scala.native
+  val x: Int = 0
+  @scala.native
+  val y: Int = 0
+}
 
 object RustLibrary extends Library {
   val _ = System.setProperty("jna.library.path", "./rspace++/target/release/")
@@ -23,7 +35,7 @@ object RustLibrary extends Library {
         rspace: Pointer,
         pdata: Array[Byte],
         pdata_len: Int
-    ): Pointer
+    ): String
 
     def space_get_once_non_durable_concurrent(
         rspace: Pointer,
@@ -145,10 +157,9 @@ object RustLibrary extends Library {
     val send1     = Send("friends", Some(alice), "Lincoln");
     val send1_buf = send1.toByteArray;
     val res1      = lib.space_get_once_durable_concurrent(spacePtr, send1_buf, send1_buf.length);
-    println("\n", res1);
+    println(res1);
 
     lib.space_print(spacePtr, channel)
     lib.space_clear(spacePtr)
   }
-
 }
