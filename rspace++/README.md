@@ -43,6 +43,8 @@
 
 1. Get working correct return types from Rust functions in Scala
 2. Create convenient name schema for proto messages throught Rust, Scala and test code
-3. Refactor for loops marked with TODO: in memory databases 
-4. Rewrite Rust rspace unit tests to match current API
-5. Implement common syntax for all crate imports
+3. Optimize loops marked with TODO: in memory databases
+4. Handle continuation data type. Currently string. Might be pointer to function. See original code and tutorial 
+5. Revist core database code and reduce cloning? Utilize references? 
+6. Rewrite Rust rspace unit tests to match current API
+7. Implement common syntax for all crate imports
