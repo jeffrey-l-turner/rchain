@@ -7,7 +7,7 @@ pub mod rtypes;
 
 use prost::Message;
 use rspace::RSpace;
-use rtypes::rtypes::{OptionResult, Receive, Send};
+use rtypes::rtypes::{Receive, Send};
 use serde_json;
 use std::ffi::{c_char, CStr, CString};
 
@@ -42,21 +42,11 @@ pub extern "C" fn space_get_once_durable_concurrent(
             let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
             c_string.into_raw()
         } else {
-            let result_string = "";
-            let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
-            c_string.into_raw()
+            // let result_string = "";
+            // let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
+            // c_string.into_raw()
+            std::ptr::null()
         }
-
-        // let array = vec!["Hello", "World"];
-
-        // let ptrs: Vec<_> = array
-        //     .iter()
-        //     .map(|s| CString::new(*s).unwrap().into_raw())
-        //     .collect();
-
-        // let boxed_ptrs = ptrs.into_boxed_slice();
-
-        // Box::into_raw(boxed_ptrs) as *const *const c_char
 
         // &result as *const OptionResult // return type *const OptionResult for Rust. ?? for Scala
 
@@ -90,9 +80,7 @@ pub extern "C" fn space_get_once_non_durable_concurrent(
             let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
             c_string.into_raw()
         } else {
-            let result_string = "";
-            let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
-            c_string.into_raw()
+            std::ptr::null()
         }
     }
 }
@@ -115,9 +103,7 @@ pub extern "C" fn space_get_once_durable_sequential(
             let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
             c_string.into_raw()
         } else {
-            let result_string = "";
-            let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
-            c_string.into_raw()
+            std::ptr::null()
         }
     }
 }
@@ -140,9 +126,7 @@ pub extern "C" fn space_get_once_non_durable_sequential(
             let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
             c_string.into_raw()
         } else {
-            let result_string = "";
-            let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
-            c_string.into_raw()
+            std::ptr::null()
         }
     }
 }
@@ -166,9 +150,7 @@ pub extern "C" fn space_get_always_durable_concurrent(
             let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
             c_string.into_raw()
         } else {
-            let result_string = "";
-            let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
-            c_string.into_raw()
+            std::ptr::null()
         }
     }
 }
@@ -191,9 +173,7 @@ pub extern "C" fn space_get_always_non_durable_concurrent(
             let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
             c_string.into_raw()
         } else {
-            let result_string = "";
-            let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
-            c_string.into_raw()
+            std::ptr::null()
         }
     }
 }
@@ -216,9 +196,7 @@ pub extern "C" fn space_get_always_durable_sequential(
             let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
             c_string.into_raw()
         } else {
-            let result_string = "";
-            let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
-            c_string.into_raw()
+            std::ptr::null()
         }
     }
 }
@@ -241,9 +219,7 @@ pub extern "C" fn space_get_always_non_durable_sequential(
             let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
             c_string.into_raw()
         } else {
-            let result_string = "";
-            let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
-            c_string.into_raw()
+            std::ptr::null()
         }
     }
 }
@@ -254,36 +230,39 @@ pub extern "C" fn space_put_once_durable_concurrent(
     rspace: *mut Space,
     cdata_ptr: *const u8,
     cdata_len: usize,
-) -> *mut Option<Vec<OptionResult>> {
+) -> *const *const c_char {
     unsafe {
         let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
         let cdata = Receive::decode(cdata_buf).unwrap();
 
         let result_option = (*rspace).rspace.put_once_durable_concurrent(cdata);
 
-        // if result_option.is_some() {
-        //     let result = result_option.unwrap();
-        //     let result_string = serde_json::to_string(&result).unwrap();
-        //     // let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
-        //     // c_string.into_raw()
-        // } else {
-        //     let result_string = "";
-        //     let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
-        //     c_string.into_raw()
-        // }
+        if result_option.is_some() {
+            let results = result_option.unwrap();
+            let mut result_array: Vec<String> = vec![];
 
-        // let array = vec!["Hello", "World"];
+            for res in results {
+                let result_string = serde_json::to_string(&res).unwrap();
+                result_array.push(result_string);
+            }
 
-        // let ptrs: Vec<_> = array
-        //     .iter()
-        //     .map(|s| CString::new(*s).unwrap().into_raw())
-        //     .collect();
+            let mut ptrs: Vec<_> = result_array
+                .into_iter()
+                .map(|s| {
+                    CString::new(s)
+                        .expect("Failed to create CString")
+                        .into_raw()
+                })
+                .collect();
+            ptrs.push(std::ptr::null_mut());
+            let boxed_ptrs = ptrs.into_boxed_slice();
 
-        // let boxed_ptrs = ptrs.into_boxed_slice();
+            Box::into_raw(boxed_ptrs) as *const *const c_char // return type *const *const c_char for Rust. Array[String] for Scala
+        } else {
+            std::ptr::null()
+        }
 
-        // Box::into_raw(boxed_ptrs) as *const *const c_char
-
-        Box::into_raw(Box::new(result_option))
+        // Box::into_raw(Box::new(result_option)) return type *mut Option<Vec<OptionResult>> for Rust. ?? for Scala
     }
 }
 
@@ -292,14 +271,37 @@ pub extern "C" fn space_put_once_non_durable_concurrent(
     rspace: *mut Space,
     cdata_ptr: *const u8,
     cdata_len: usize,
-) -> *mut Option<Vec<OptionResult>> {
+) -> *const *const c_char {
     unsafe {
         let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
         let cdata = Receive::decode(cdata_buf).unwrap();
 
-        let result = (*rspace).rspace.put_once_non_durable_concurrent(cdata);
+        let result_option = (*rspace).rspace.put_once_non_durable_concurrent(cdata);
 
-        Box::into_raw(Box::new(result))
+        if result_option.is_some() {
+            let results = result_option.unwrap();
+            let mut result_array: Vec<String> = vec![];
+
+            for res in results {
+                let result_string = serde_json::to_string(&res).unwrap();
+                result_array.push(result_string);
+            }
+
+            let mut ptrs: Vec<_> = result_array
+                .into_iter()
+                .map(|s| {
+                    CString::new(s)
+                        .expect("Failed to create CString")
+                        .into_raw()
+                })
+                .collect();
+            ptrs.push(std::ptr::null_mut());
+            let boxed_ptrs = ptrs.into_boxed_slice();
+
+            Box::into_raw(boxed_ptrs) as *const *const c_char
+        } else {
+            std::ptr::null()
+        }
     }
 }
 
@@ -308,14 +310,37 @@ pub extern "C" fn space_put_once_durable_sequential(
     rspace: *mut Space,
     cdata_ptr: *const u8,
     cdata_len: usize,
-) -> *mut Option<Vec<OptionResult>> {
+) -> *const *const c_char {
     unsafe {
         let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
         let cdata = Receive::decode(cdata_buf).unwrap();
 
-        let result = (*rspace).rspace.put_once_durable_sequential(cdata);
+        let result_option = (*rspace).rspace.put_once_durable_sequential(cdata);
 
-        Box::into_raw(Box::new(result))
+        if result_option.is_some() {
+            let results = result_option.unwrap();
+            let mut result_array: Vec<String> = vec![];
+
+            for res in results {
+                let result_string = serde_json::to_string(&res).unwrap();
+                result_array.push(result_string);
+            }
+
+            let mut ptrs: Vec<_> = result_array
+                .into_iter()
+                .map(|s| {
+                    CString::new(s)
+                        .expect("Failed to create CString")
+                        .into_raw()
+                })
+                .collect();
+            ptrs.push(std::ptr::null_mut());
+            let boxed_ptrs = ptrs.into_boxed_slice();
+
+            Box::into_raw(boxed_ptrs) as *const *const c_char
+        } else {
+            std::ptr::null()
+        }
     }
 }
 
@@ -324,14 +349,37 @@ pub extern "C" fn space_put_once_non_durable_sequential(
     rspace: *mut Space,
     cdata_ptr: *const u8,
     cdata_len: usize,
-) -> *mut Option<Vec<OptionResult>> {
+) -> *const *const c_char {
     unsafe {
         let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
         let cdata = Receive::decode(cdata_buf).unwrap();
 
-        let result = (*rspace).rspace.put_once_non_durable_sequential(cdata);
+        let result_option = (*rspace).rspace.put_once_non_durable_sequential(cdata);
 
-        Box::into_raw(Box::new(result))
+        if result_option.is_some() {
+            let results = result_option.unwrap();
+            let mut result_array: Vec<String> = vec![];
+
+            for res in results {
+                let result_string = serde_json::to_string(&res).unwrap();
+                result_array.push(result_string);
+            }
+
+            let mut ptrs: Vec<_> = result_array
+                .into_iter()
+                .map(|s| {
+                    CString::new(s)
+                        .expect("Failed to create CString")
+                        .into_raw()
+                })
+                .collect();
+            ptrs.push(std::ptr::null_mut());
+            let boxed_ptrs = ptrs.into_boxed_slice();
+
+            Box::into_raw(boxed_ptrs) as *const *const c_char
+        } else {
+            std::ptr::null()
+        }
     }
 }
 
@@ -341,14 +389,37 @@ pub extern "C" fn space_put_always_durable_concurrent(
     rspace: *mut Space,
     cdata_ptr: *const u8,
     cdata_len: usize,
-) -> *mut Option<Vec<OptionResult>> {
+) -> *const *const c_char {
     unsafe {
         let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
         let cdata = Receive::decode(cdata_buf).unwrap();
 
-        let result = (*rspace).rspace.put_always_durable_concurrent(cdata);
+        let result_option = (*rspace).rspace.put_always_durable_concurrent(cdata);
 
-        Box::into_raw(Box::new(result))
+        if result_option.is_some() {
+            let results = result_option.unwrap();
+            let mut result_array: Vec<String> = vec![];
+
+            for res in results {
+                let result_string = serde_json::to_string(&res).unwrap();
+                result_array.push(result_string);
+            }
+
+            let mut ptrs: Vec<_> = result_array
+                .into_iter()
+                .map(|s| {
+                    CString::new(s)
+                        .expect("Failed to create CString")
+                        .into_raw()
+                })
+                .collect();
+            ptrs.push(std::ptr::null_mut());
+            let boxed_ptrs = ptrs.into_boxed_slice();
+
+            Box::into_raw(boxed_ptrs) as *const *const c_char
+        } else {
+            std::ptr::null()
+        }
     }
 }
 
@@ -357,14 +428,37 @@ pub extern "C" fn space_put_always_non_durable_concurrent(
     rspace: *mut Space,
     cdata_ptr: *const u8,
     cdata_len: usize,
-) -> *mut Option<Vec<OptionResult>> {
+) -> *const *const c_char {
     unsafe {
         let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
         let cdata = Receive::decode(cdata_buf).unwrap();
 
-        let result = (*rspace).rspace.put_always_non_durable_concurrent(cdata);
+        let result_option = (*rspace).rspace.put_always_non_durable_concurrent(cdata);
 
-        Box::into_raw(Box::new(result))
+        if result_option.is_some() {
+            let results = result_option.unwrap();
+            let mut result_array: Vec<String> = vec![];
+
+            for res in results {
+                let result_string = serde_json::to_string(&res).unwrap();
+                result_array.push(result_string);
+            }
+
+            let mut ptrs: Vec<_> = result_array
+                .into_iter()
+                .map(|s| {
+                    CString::new(s)
+                        .expect("Failed to create CString")
+                        .into_raw()
+                })
+                .collect();
+            ptrs.push(std::ptr::null_mut());
+            let boxed_ptrs = ptrs.into_boxed_slice();
+
+            Box::into_raw(boxed_ptrs) as *const *const c_char
+        } else {
+            std::ptr::null()
+        }
     }
 }
 
@@ -373,14 +467,37 @@ pub extern "C" fn space_put_always_durable_sequential(
     rspace: *mut Space,
     cdata_ptr: *const u8,
     cdata_len: usize,
-) -> *mut Option<Vec<OptionResult>> {
+) -> *const *const c_char {
     unsafe {
         let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
         let cdata = Receive::decode(cdata_buf).unwrap();
 
-        let result = (*rspace).rspace.put_always_durable_sequential(cdata);
+        let result_option = (*rspace).rspace.put_always_durable_sequential(cdata);
 
-        Box::into_raw(Box::new(result))
+        if result_option.is_some() {
+            let results = result_option.unwrap();
+            let mut result_array: Vec<String> = vec![];
+
+            for res in results {
+                let result_string = serde_json::to_string(&res).unwrap();
+                result_array.push(result_string);
+            }
+
+            let mut ptrs: Vec<_> = result_array
+                .into_iter()
+                .map(|s| {
+                    CString::new(s)
+                        .expect("Failed to create CString")
+                        .into_raw()
+                })
+                .collect();
+            ptrs.push(std::ptr::null_mut());
+            let boxed_ptrs = ptrs.into_boxed_slice();
+
+            Box::into_raw(boxed_ptrs) as *const *const c_char
+        } else {
+            std::ptr::null()
+        }
     }
 }
 
@@ -389,14 +506,37 @@ pub extern "C" fn space_put_always_non_durable_sequential(
     rspace: *mut Space,
     cdata_ptr: *const u8,
     cdata_len: usize,
-) -> *mut Option<Vec<OptionResult>> {
+) -> *const *const c_char {
     unsafe {
         let cdata_buf = std::slice::from_raw_parts(cdata_ptr, cdata_len);
         let cdata = Receive::decode(cdata_buf).unwrap();
 
-        let result = (*rspace).rspace.put_always_non_durable_sequential(cdata);
+        let result_option = (*rspace).rspace.put_always_non_durable_sequential(cdata);
 
-        Box::into_raw(Box::new(result))
+        if result_option.is_some() {
+            let results = result_option.unwrap();
+            let mut result_array: Vec<String> = vec![];
+
+            for res in results {
+                let result_string = serde_json::to_string(&res).unwrap();
+                result_array.push(result_string);
+            }
+
+            let mut ptrs: Vec<_> = result_array
+                .into_iter()
+                .map(|s| {
+                    CString::new(s)
+                        .expect("Failed to create CString")
+                        .into_raw()
+                })
+                .collect();
+            ptrs.push(std::ptr::null_mut());
+            let boxed_ptrs = ptrs.into_boxed_slice();
+
+            Box::into_raw(boxed_ptrs) as *const *const c_char
+        } else {
+            std::ptr::null()
+        }
     }
 }
 

@@ -85,50 +85,50 @@ object RustLibrary extends Library {
         rspace: Pointer,
         cdata: Array[Byte],
         cdata_len: Int
-    ): Pointer
+    ): Array[String]
 
     def space_put_once_non_durable_concurrent(
         rspace: Pointer,
         cdata: Array[Byte],
         cdata_len: Int
-    ): Pointer
+    ): Array[String]
 
     def space_put_once_durable_sequential(
         rspace: Pointer,
         cdata: Array[Byte],
         cdata_len: Int
-    ): Pointer
+    ): Array[String]
 
     def space_put_once_non_durable_sequential(
         rspace: Pointer,
         cdata: Array[Byte],
         cdata_len: Int
-    ): Pointer
+    ): Array[String]
 
     // Verb Set 4
     def space_put_always_durable_concurrent(
         rspace: Pointer,
         cdata: Array[Byte],
         cdata_len: Int
-    ): Pointer
+    ): Array[String]
 
     def space_put_always_non_durable_concurrent(
         rspace: Pointer,
         cdata: Array[Byte],
         cdata_len: Int
-    ): Pointer
+    ): Array[String]
 
     def space_put_always_durable_sequential(
         rspace: Pointer,
         cdata: Array[Byte],
         cdata_len: Int
-    ): Pointer
+    ): Array[String]
 
     def space_put_always_non_durable_sequential(
         rspace: Pointer,
         cdata: Array[Byte],
         cdata_len: Int
-    ): Pointer
+    ): Array[String]
   }
 
   val lib = Native.load("rspace_plus_plus", classOf[RustLib]).asInstanceOf[RustLib]
@@ -151,13 +151,14 @@ object RustLibrary extends Library {
     // Consume
     val rec1     = Receive(Seq("friends"), Seq(setup.cityPattern), "I am the continuation, for now...");
     val rec1_buf = rec1.toByteArray;
-    lib.space_put_once_durable_concurrent(spacePtr, rec1_buf, rec1_buf.length);
+    val cres     = lib.space_put_once_durable_concurrent(spacePtr, rec1_buf, rec1_buf.length);
+    println(cres)
 
     // Produce
     val send1     = Send("friends", Some(setup.alice), cityMatchCase(setup.alice));
     val send1_buf = send1.toByteArray;
-    val res1      = lib.space_get_once_durable_concurrent(spacePtr, send1_buf, send1_buf.length);
-    println(res1);
+    val pres      = lib.space_get_once_durable_concurrent(spacePtr, send1_buf, send1_buf.length);
+    println(pres);
 
     lib.space_print(spacePtr, channel)
     lib.space_clear(spacePtr)

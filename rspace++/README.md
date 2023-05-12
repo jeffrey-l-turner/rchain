@@ -42,13 +42,15 @@
 ## Backlog
 
 1. Create convenient name schema for proto messages throught Rust, Scala and test code
-2. Handle continuation data type. Currently string. Might be pointer to function. See original code and tutorial 
+2. Handle continuation data type. Currently string. See RhoTypes.proto. See original code and tutorial 
 3. Revist core database code and reduce cloning? Utilize references? 
-4. Add changelog. See `changelog` branch
-5. Rewrite Rust rspace unit tests to match current API
-6. Implement common syntax for all crate imports
+4. Refactor "Setup" code in Rust test files to be one shared file throughout
+5. Add changelog. See `changelog` branch
+6. Remove console logs throughout database code?
+7. Implement common syntax for all crate imports
 
 ## Completed
 
 - Optimize loops marked with TODO: in memory databases
 - Get working correct return types from Rust functions in Scala
+- Rewrite Rust rspace unit tests to match current API

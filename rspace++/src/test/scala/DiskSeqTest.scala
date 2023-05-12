@@ -27,13 +27,15 @@ class DiskSeqTest extends AnyFunSuite {
     val receive =
       Receive(Seq("friends"), Seq(setup.cityPattern), "I am the continuation, for now...");
     val receive_buf = receive.toByteArray;
-    lib.space_put_once_durable_sequential(spacePtr, receive_buf, receive_buf.length);
+    val cres        = lib.space_put_once_durable_sequential(spacePtr, receive_buf, receive_buf.length);
 
     // Produce
     val send     = Send("friends", Some(setup.alice), cityMatchCase(setup.alice));
     val send_buf = send.toByteArray;
-    lib.space_get_once_durable_sequential(spacePtr, send_buf, send_buf.length);
+    val pres     = lib.space_get_once_durable_sequential(spacePtr, send_buf, send_buf.length);
 
+    assert(cres == null)
+    assert(!pres.isEmpty())
     assert(lib.is_empty(spacePtr));
     lib.space_clear(spacePtr);
   }
@@ -43,13 +45,15 @@ class DiskSeqTest extends AnyFunSuite {
     val receive =
       Receive(Seq("friends"), Seq(setup.cityPattern), "I am the continuation, for now...");
     val receive_buf = receive.toByteArray;
-    lib.space_put_once_durable_sequential(spacePtr, receive_buf, receive_buf.length);
+    val cres        = lib.space_put_once_durable_sequential(spacePtr, receive_buf, receive_buf.length);
 
     // Produce
     val send     = Send("friends", Some(setup.carol), cityMatchCase(setup.carol));
     val send_buf = send.toByteArray;
-    lib.space_get_once_durable_sequential(spacePtr, send_buf, send_buf.length);
+    val pres     = lib.space_get_once_durable_sequential(spacePtr, send_buf, send_buf.length);
 
+    assert(cres == null)
+    assert(pres == null)
     assert(!lib.is_empty(spacePtr));
     lib.space_clear(spacePtr);
   }
@@ -58,14 +62,16 @@ class DiskSeqTest extends AnyFunSuite {
     // Produce
     val send     = Send("friends", Some(setup.bob), nameMatchCase(setup.bob));
     val send_buf = send.toByteArray;
-    lib.space_get_once_durable_sequential(spacePtr, send_buf, send_buf.length);
+    val pres     = lib.space_get_once_durable_sequential(spacePtr, send_buf, send_buf.length);
 
     // Consume
     val receive =
       Receive(Seq("friends"), Seq(setup.namePattern), "I am the continuation, for now...");
     val receive_buf = receive.toByteArray;
-    lib.space_put_once_durable_sequential(spacePtr, receive_buf, receive_buf.length);
+    val cres        = lib.space_put_once_durable_sequential(spacePtr, receive_buf, receive_buf.length);
 
+    assert(pres == null)
+    assert(!cres.isEmpty)
     assert(lib.is_empty(spacePtr));
     lib.space_clear(spacePtr);
   }
@@ -74,12 +80,12 @@ class DiskSeqTest extends AnyFunSuite {
     // Produce
     val send1     = Send("colleagues", Some(setup.dan), stateMatchCase(setup.dan));
     val send1_buf = send1.toByteArray;
-    lib.space_get_once_durable_sequential(spacePtr, send1_buf, send1_buf.length);
+    val pres1     = lib.space_get_once_durable_sequential(spacePtr, send1_buf, send1_buf.length);
 
     // Produce
     val send2     = Send("friends", Some(setup.erin), stateMatchCase(setup.erin));
     val send2_buf = send2.toByteArray;
-    lib.space_get_once_durable_sequential(spacePtr, send2_buf, send2_buf.length);
+    val pres2     = lib.space_get_once_durable_sequential(spacePtr, send2_buf, send2_buf.length);
 
     // Consume
     val receive =
@@ -89,8 +95,12 @@ class DiskSeqTest extends AnyFunSuite {
         "I am the continuation, for now..."
       );
     val receive_buf = receive.toByteArray;
-    lib.space_put_once_durable_sequential(spacePtr, receive_buf, receive_buf.length);
+    val cres        = lib.space_put_once_durable_sequential(spacePtr, receive_buf, receive_buf.length);
 
+    assert(pres1 == null)
+    assert(pres2 == null)
+    assert(!cres.isEmpty)
+    assert(cres.length == 2)
     assert(lib.is_empty(spacePtr));
     lib.space_clear(spacePtr);
   }
@@ -104,15 +114,17 @@ class DiskSeqTest extends AnyFunSuite {
         "I am the continuation, for now..."
       );
     val receive_buf = receive.toByteArray;
-    lib.space_put_always_durable_sequential(spacePtr, receive_buf, receive_buf.length);
+    val cres        = lib.space_put_always_durable_sequential(spacePtr, receive_buf, receive_buf.length);
 
+    assert(cres == null)
     assert(!lib.is_empty(spacePtr));
 
     // Produce
     val send1     = Send("friends", Some(setup.alice), cityMatchCase(setup.alice));
     val send1_buf = send1.toByteArray;
-    lib.space_get_once_durable_sequential(spacePtr, send1_buf, send1_buf.length);
+    val pres      = lib.space_get_once_durable_sequential(spacePtr, send1_buf, send1_buf.length);
 
+    assert(!pres.isEmpty())
     assert(!lib.is_empty(spacePtr));
     lib.space_clear(spacePtr);
   }
@@ -121,12 +133,16 @@ class DiskSeqTest extends AnyFunSuite {
     // Produce
     val send1     = Send("friends", Some(setup.alice), cityMatchCase(setup.alice));
     val send1_buf = send1.toByteArray;
-    lib.space_get_once_durable_sequential(spacePtr, send1_buf, send1_buf.length);
+    val pres1     = lib.space_get_once_durable_sequential(spacePtr, send1_buf, send1_buf.length);
+
+    assert(pres1 == null)
 
     // Produce
     val send2     = Send("friends", Some(setup.bob), cityMatchCase(setup.alice));
     val send2_buf = send2.toByteArray;
-    lib.space_get_once_durable_sequential(spacePtr, send2_buf, send2_buf.length);
+    val pres2     = lib.space_get_once_durable_sequential(spacePtr, send2_buf, send2_buf.length);
+
+    assert(pres2 == null)
 
     // Consume
     val receive1 =
@@ -136,8 +152,9 @@ class DiskSeqTest extends AnyFunSuite {
         "I am the continuation, for now..."
       );
     val receive1_buf = receive1.toByteArray;
-    lib.space_put_always_durable_sequential(spacePtr, receive1_buf, receive1_buf.length);
+    val cres1        = lib.space_put_always_durable_sequential(spacePtr, receive1_buf, receive1_buf.length);
 
+    assert(cres1.length == 1)
     assert(!lib.is_empty(spacePtr));
 
     val receive2 =
@@ -147,8 +164,9 @@ class DiskSeqTest extends AnyFunSuite {
         "I am the continuation, for now..."
       );
     val receive2_buf = receive2.toByteArray;
-    lib.space_put_always_durable_sequential(spacePtr, receive2_buf, receive2_buf.length);
+    val cres2        = lib.space_put_always_durable_sequential(spacePtr, receive2_buf, receive2_buf.length);
 
+    assert(cres2.length == 1)
     assert(lib.is_empty(spacePtr));
 
     val receive3 =
@@ -158,15 +176,17 @@ class DiskSeqTest extends AnyFunSuite {
         "I am the continuation, for now..."
       );
     val receive3_buf = receive3.toByteArray;
-    lib.space_put_always_durable_sequential(spacePtr, receive3_buf, receive3_buf.length);
+    val cres3        = lib.space_put_always_durable_sequential(spacePtr, receive3_buf, receive3_buf.length);
 
+    assert(cres3 == null)
     assert(!lib.is_empty(spacePtr));
 
     // Produce
     val send3     = Send("friends", Some(setup.alice), cityMatchCase(setup.alice));
     val send3_buf = send3.toByteArray;
-    lib.space_get_once_durable_sequential(spacePtr, send3_buf, send3_buf.length);
+    val pres3     = lib.space_get_once_durable_sequential(spacePtr, send3_buf, send3_buf.length);
 
+    assert(!pres3.isEmpty())
     assert(!lib.is_empty(spacePtr));
     lib.space_clear(spacePtr);
   }
@@ -175,8 +195,9 @@ class DiskSeqTest extends AnyFunSuite {
     // Produce
     val send     = Send("friends", Some(setup.alice), cityMatchCase(setup.alice));
     val send_buf = send.toByteArray;
-    lib.space_get_always_durable_sequential(spacePtr, send_buf, send_buf.length);
+    val pres     = lib.space_get_always_durable_sequential(spacePtr, send_buf, send_buf.length);
 
+    assert(pres == null)
     assert(!lib.is_empty(spacePtr));
 
     // Consume
@@ -187,8 +208,10 @@ class DiskSeqTest extends AnyFunSuite {
         "I am the continuation, for now..."
       );
     val receive_buf = receive.toByteArray;
-    lib.space_put_once_durable_sequential(spacePtr, receive_buf, receive_buf.length);
+    val cres        = lib.space_put_once_durable_sequential(spacePtr, receive_buf, receive_buf.length);
 
+    assert(!cres.isEmpty)
+    assert(cres.length == 1)
     assert(!lib.is_empty(spacePtr));
     lib.space_clear(spacePtr);
   }
@@ -202,21 +225,23 @@ class DiskSeqTest extends AnyFunSuite {
         "I am the continuation, for now..."
       );
     val receive1_buf = receive1.toByteArray;
-    lib.space_put_once_durable_sequential(spacePtr, receive1_buf, receive1_buf.length);
+    val cres1        = lib.space_put_once_durable_sequential(spacePtr, receive1_buf, receive1_buf.length);
 
+    assert(cres1 == null)
     assert(!lib.is_empty(spacePtr));
 
     // Produce
     val send1     = Send("friends", Some(setup.alice), cityMatchCase(setup.alice));
     val send1_buf = send1.toByteArray;
-    lib.space_get_always_durable_sequential(spacePtr, send1_buf, send1_buf.length);
+    val pres1     = lib.space_get_always_durable_sequential(spacePtr, send1_buf, send1_buf.length);
 
+    assert(!pres1.isEmpty())
     assert(lib.is_empty(spacePtr));
 
     // Produce
     val send2     = Send("friends", Some(setup.alice), cityMatchCase(setup.alice));
     val send2_buf = send2.toByteArray;
-    lib.space_get_always_durable_sequential(spacePtr, send2_buf, send2_buf.length);
+    val pres2     = lib.space_get_always_durable_sequential(spacePtr, send2_buf, send2_buf.length);
 
     // Consume
     val receive2 =
@@ -226,8 +251,10 @@ class DiskSeqTest extends AnyFunSuite {
         "I am the continuation, for now..."
       );
     val receive2_buf = receive2.toByteArray;
-    lib.space_put_once_durable_sequential(spacePtr, receive2_buf, receive2_buf.length);
+    val cres2        = lib.space_put_once_durable_sequential(spacePtr, receive2_buf, receive2_buf.length);
 
+    assert(pres2 == null)
+    assert(!cres2.isEmpty)
     assert(!lib.is_empty(spacePtr));
     lib.space_clear(spacePtr);
   }
