@@ -8,6 +8,7 @@ pub mod rtypes;
 use prost::Message;
 use rspace::RSpace;
 use rtypes::rtypes::{OptionResult, Receive, Send};
+use serde_json;
 use std::ffi::{c_char, CStr};
 
 #[repr(C)]
@@ -28,14 +29,35 @@ pub extern "C" fn space_get_once_durable_concurrent(
     rspace: *mut Space,
     pdata_ptr: *const u8,
     pdata_len: usize,
-) -> *mut Option<OptionResult> {
+) -> *const c_char {
     unsafe {
         let pdata_buf = std::slice::from_raw_parts(pdata_ptr, pdata_len);
         let pdata = Send::decode(pdata_buf).unwrap();
 
-        let result = (*rspace).rspace.get_once_durable_concurrent(pdata);
+        let result_option = (*rspace).rspace.get_once_durable_concurrent(pdata);
 
-        Box::into_raw(Box::new(result))
+        if result_option.is_some() {
+            let result = result_option.unwrap();
+            let result_string = serde_json::to_string(&result).unwrap();
+            let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
+            c_string.into_raw()
+        } else {
+            let result_string = "";
+            let c_string = std::ffi::CString::new(result_string).expect("Failed to create CString");
+            c_string.into_raw()
+        }
+
+        // &result as *const OptionResult // return type *const OptionResult for Rust. ?? for Scala
+
+        // Box::into_raw(Box::new(result)) // return type *mut Option<OptionResult> for Rust. ?? for Scala
+
+        // 40 as *const i32 // return type *const i32 for Rust. Int for Scala
+
+        // let hello_string = "Hello from Rust!".to_string();
+        // let c_string = std::ffi::CString::new(hello_string).expect("Failed to create CString");
+        // c_string.into_raw() // return type *const c_char for Rust. String for Scala
+
+        // hello_string.as_ptr() as *const u8 // return type *const u8 for Rust. Pointer, Unit, or Long for Scala
     }
 }
 

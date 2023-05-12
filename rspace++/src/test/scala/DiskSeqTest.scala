@@ -1,5 +1,5 @@
 import org.scalatest.funsuite.AnyFunSuite
-import rspacePlusPlus.RustLibrary
+import rspacePlusPlus.{RustLibrary, Setup}
 import firefly.rtypes.{Address, Entry, Name, Receive, Send}
 import com.sun.jna._
 import java.io.File
