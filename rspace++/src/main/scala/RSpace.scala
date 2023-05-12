@@ -41,44 +41,44 @@ object RustLibrary extends Library {
         rspace: Pointer,
         pdata: Array[Byte],
         pdata_len: Int
-    ): Pointer
+    ): String
 
     def space_get_once_durable_sequential(
         rspace: Pointer,
         pdata: Array[Byte],
         pdata_len: Int
-    ): Pointer
+    ): String
 
     def space_get_once_non_durable_sequential(
         rspace: Pointer,
         pdata: Array[Byte],
         pdata_len: Int
-    ): Pointer
+    ): String
 
     // Verb Set 2
     def space_get_always_durable_concurrent(
         rspace: Pointer,
         pdata: Array[Byte],
         pdata_len: Int
-    ): Pointer
+    ): String
 
     def space_get_always_non_durable_concurrent(
         rspace: Pointer,
         pdata: Array[Byte],
         pdata_len: Int
-    ): Pointer
+    ): String
 
     def space_get_always_durable_sequential(
         rspace: Pointer,
         pdata: Array[Byte],
         pdata_len: Int
-    ): Pointer
+    ): String
 
     def space_get_always_non_durable_sequential(
         rspace: Pointer,
         pdata: Array[Byte],
         pdata_len: Int
-    ): Pointer
+    ): String
 
     // Verb Set 3
     def space_put_once_durable_concurrent(
