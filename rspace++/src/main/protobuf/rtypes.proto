@@ -48,7 +48,6 @@
 	string chan = 1;
 	Entry data = 2;
 	string match_case = 3;
-	bool persistent = 4;
 }
 
 /** 
@@ -59,5 +58,4 @@ message Receive {
 	repeated string channels = 1;
 	repeated string patterns = 2;
 	string continuation = 3;
-	bool persistent = 4;
 }

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::rtypes::rtypes;
 use heed::types::*;
 use heed::{Database, Env, EnvOpenOptions};
@@ -39,7 +41,11 @@ impl<
         })
     }
 
-    pub fn consume(&self, receive: rtypes::Receive) -> Option<Vec<rtypes::OptionResult>> {
+    pub fn consume(
+        &self,
+        receive: rtypes::Receive,
+        persistent: bool,
+    ) -> Option<Vec<rtypes::OptionResult>> {
         if receive.channels.len() == receive.patterns.len() {
             let mut results: Vec<rtypes::OptionResult> = vec![];
             let rtxn = self.env.read_txn().unwrap();
@@ -82,7 +88,7 @@ impl<
                     let mut consume_data = rtypes::ConsumeData::default();
                     consume_data.pattern = receive.patterns[i].clone();
                     consume_data.continuation = receive.continuation.clone();
-                    consume_data.persistent = receive.persistent;
+                    consume_data.persistent = persistent;
 
                     println!("\nNo matching data for {:?}", receive);
 
@@ -111,7 +117,7 @@ impl<
         }
     }
 
-    pub fn produce(&self, send: rtypes::Send) -> Option<rtypes::OptionResult> {
+    pub fn produce(&self, send: rtypes::Send, persistent: bool) -> Option<rtypes::OptionResult> {
         let rtxn = self.env.read_txn().unwrap();
 
         let continuation_prefix = format!("channel-{}-continuation", send.chan);
@@ -145,7 +151,7 @@ impl<
         let mut produce_data = rtypes::ProduceData::default();
         produce_data.data = send.data.clone();
         produce_data.match_case = send.match_case.clone();
-        produce_data.persistent = send.persistent;
+        produce_data.persistent = persistent;
 
         println!("\nNo matching continuation for {:?}", send);
 

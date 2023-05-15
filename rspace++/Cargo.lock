@@ -484,6 +484,7 @@ dependencies = [
  "prost",
  "prost-build",
  "serde",
+ "serde_json",
  "test-env-helpers",
 ]
 

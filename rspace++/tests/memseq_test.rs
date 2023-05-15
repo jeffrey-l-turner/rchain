@@ -8,6 +8,8 @@ mod tests {
         city_pattern: String,
         name_pattern: String,
         state_pattern: String,
+        email_pattern: String,
+        phone_pattern: String,
         alice: Entry,
         bob: Entry,
         carol: Entry,
@@ -109,6 +111,8 @@ mod tests {
                 city_pattern: String::from("Crystal Lake"),
                 name_pattern: String::from("Lahblah"),
                 state_pattern: String::from("Idaho"),
+                email_pattern: String::from("deejwalters@sdf.lonestar.org"),
+                phone_pattern: String::from("333-555-1212"),
                 alice,
                 bob,
                 carol,
@@ -130,12 +134,11 @@ mod tests {
         entry.address.unwrap().state
     }
 
-    fn create_send(_channel: String, _data: Entry, _match_case: String, _persistent: bool) -> Send {
+    fn create_send(_channel: String, _data: Entry, _match_case: String) -> Send {
         let mut send = Send::default();
         send.chan = _channel;
         send.data = Some(_data);
         send.match_case = _match_case;
-        send.persistent = _persistent;
         send
     }
 
@@ -143,13 +146,11 @@ mod tests {
         _channels: Vec<String>,
         _patterns: Vec<String>,
         _continutation: String,
-        _persistent: bool,
     ) -> Receive {
         let mut receive = Receive::default();
         receive.channels = _channels;
         receive.patterns = _patterns;
         receive.continuation = _continutation;
-        receive.persistent = _persistent;
         receive
     }
 
@@ -162,17 +163,15 @@ mod tests {
             vec![String::from("friends")],
             vec![setup.city_pattern],
             String::from("I am the continuation, for now..."),
-            false,
         );
-        let cres = memseq.consume(receive);
+        let cres = memseq.consume(receive, false);
 
         let send = create_send(
             String::from("friends"),
             setup.alice.clone(),
             city_match_case(setup.alice),
-            false,
         );
-        let pres = memseq.produce(send);
+        let pres = memseq.produce(send, false);
 
         assert!(cres.is_none());
         assert!(pres.is_some());
@@ -190,17 +189,15 @@ mod tests {
             vec![String::from("friends")],
             vec![setup.city_pattern],
             String::from("I am the continuation, for now..."),
-            false,
         );
-        let cres = memseq.consume(receive);
+        let cres = memseq.consume(receive, false);
 
         let send = create_send(
             String::from("friends"),
             setup.carol.clone(),
             city_match_case(setup.carol),
-            false,
         );
-        let pres = memseq.produce(send);
+        let pres = memseq.produce(send, false);
 
         assert!(cres.is_none());
         assert!(pres.is_none());
@@ -218,17 +215,15 @@ mod tests {
             String::from("friends"),
             setup.bob.clone(),
             name_match_case(setup.bob),
-            false,
         );
-        let pres = memseq.produce(send);
+        let pres = memseq.produce(send, false);
 
         let receive = create_receive(
             vec![String::from("friends")],
             vec![setup.name_pattern],
             String::from("I am the continuation, for now..."),
-            false,
         );
-        let cres = memseq.consume(receive);
+        let cres = memseq.consume(receive, false);
 
         assert!(pres.is_none());
         assert!(cres.is_some());
@@ -246,25 +241,22 @@ mod tests {
             String::from("colleagues"),
             setup.dan.clone(),
             state_match_case(setup.dan),
-            false,
         );
-        let pres1 = memseq.produce(send1);
+        let pres1 = memseq.produce(send1, false);
 
         let send2 = create_send(
             String::from("friends"),
             setup.erin.clone(),
             state_match_case(setup.erin),
-            false,
         );
-        let pres2 = memseq.produce(send2);
+        let pres2 = memseq.produce(send2, false);
 
         let receive = create_receive(
             vec![String::from("friends"), String::from("colleagues")],
             vec![setup.state_pattern.clone(), setup.state_pattern],
             String::from("I am the continuation, for now..."),
-            false,
         );
-        let cres = memseq.consume(receive);
+        let cres = memseq.consume(receive, false);
 
         assert!(pres1.is_none());
         assert!(pres2.is_none());
@@ -284,9 +276,8 @@ mod tests {
             vec![String::from("friends")],
             vec![setup.city_pattern],
             String::from("I am the continuation, for now..."),
-            true,
         );
-        let cres = memseq.consume(receive);
+        let cres = memseq.consume(receive, true);
 
         assert!(cres.is_none());
         assert!(!memseq.is_empty());
@@ -295,9 +286,8 @@ mod tests {
             String::from("friends"),
             setup.alice.clone(),
             city_match_case(setup.alice),
-            false,
         );
-        let pres = memseq.produce(send);
+        let pres = memseq.produce(send, false);
 
         assert!(pres.is_some());
         assert!(!memseq.is_empty());
@@ -314,25 +304,22 @@ mod tests {
             String::from("friends"),
             setup.alice.clone(),
             city_match_case(setup.alice.clone()),
-            false,
         );
-        let _pres1 = memseq.produce(send1);
+        let _pres1 = memseq.produce(send1, false);
 
         let send2 = create_send(
             String::from("friends"),
             setup.bob.clone(),
             city_match_case(setup.bob),
-            false,
         );
-        let _pres2 = memseq.produce(send2);
+        let _pres2 = memseq.produce(send2, false);
 
         let receive1 = create_receive(
             vec![String::from("friends")],
             vec![setup.city_pattern.clone()],
             String::from("I am the continuation, for now..."),
-            true,
         );
-        let cres1 = memseq.consume(receive1);
+        let cres1 = memseq.consume(receive1, true);
 
         assert_eq!(cres1.unwrap().len(), 1);
         assert!(!memseq.is_empty());
@@ -341,9 +328,8 @@ mod tests {
             vec![String::from("friends")],
             vec![setup.city_pattern.clone()],
             String::from("I am the continuation, for now..."),
-            true,
         );
-        let cres2 = memseq.consume(receive2);
+        let cres2 = memseq.consume(receive2, true);
 
         assert_eq!(cres2.unwrap().len(), 1);
         assert!(memseq.is_empty());
@@ -352,9 +338,8 @@ mod tests {
             vec![String::from("friends")],
             vec![setup.city_pattern],
             String::from("I am the continuation, for now..."),
-            true,
         );
-        let cres3 = memseq.consume(receive3);
+        let cres3 = memseq.consume(receive3, true);
 
         assert!(cres3.is_none());
         assert!(!memseq.is_empty());
@@ -363,9 +348,8 @@ mod tests {
             String::from("friends"),
             setup.alice.clone(),
             city_match_case(setup.alice),
-            false,
         );
-        let pres3 = memseq.produce(send3);
+        let pres3 = memseq.produce(send3, false);
 
         assert!(pres3.is_some());
         assert!(!memseq.is_empty());
@@ -382,9 +366,8 @@ mod tests {
             String::from("friends"),
             setup.alice.clone(),
             city_match_case(setup.alice),
-            true,
         );
-        let pres = memseq.produce(send);
+        let pres = memseq.produce(send, true);
 
         assert!(pres.is_none());
         assert!(!memseq.is_empty());
@@ -393,9 +376,8 @@ mod tests {
             vec![String::from("friends")],
             vec![setup.city_pattern],
             String::from("I am the continuation, for now..."),
-            false,
         );
-        let cres = memseq.consume(receive);
+        let cres = memseq.consume(receive, false);
 
         assert!(cres.is_some());
         assert_eq!(cres.unwrap().len(), 1);
@@ -413,9 +395,8 @@ mod tests {
             vec![String::from("friends")],
             vec![setup.city_pattern.clone()],
             String::from("I am the continuation, for now..."),
-            false,
         );
-        let cres1 = memseq.consume(receive1);
+        let cres1 = memseq.consume(receive1, false);
 
         assert!(cres1.is_none());
         assert!(!memseq.is_empty());
@@ -424,9 +405,8 @@ mod tests {
             String::from("friends"),
             setup.alice.clone(),
             city_match_case(setup.alice.clone()),
-            true,
         );
-        let pres1 = memseq.produce(send1);
+        let pres1 = memseq.produce(send1, true);
 
         assert!(pres1.is_some());
         assert!((memseq.is_empty()));
@@ -435,17 +415,15 @@ mod tests {
             String::from("friends"),
             setup.alice.clone(),
             city_match_case(setup.alice),
-            true,
         );
-        let pres2 = memseq.produce(send2);
+        let pres2 = memseq.produce(send2, true);
 
         let receive2 = create_receive(
             vec![String::from("friends")],
             vec![setup.city_pattern],
             String::from("I am the continuation, for now..."),
-            false,
         );
-        let _cres2 = memseq.consume(receive2);
+        let _cres2 = memseq.consume(receive2, false);
 
         assert!(pres2.is_none());
         assert!(!memseq.is_empty());

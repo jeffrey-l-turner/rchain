@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::rtypes::rtypes;
 use dashmap::DashMap;
 use prost::Message;
@@ -27,23 +29,27 @@ impl<
         })
     }
 
-    pub fn consume(&self, receive: rtypes::Receive) -> Option<Vec<rtypes::OptionResult>> {
+    pub fn consume(
+        &self,
+        receive: rtypes::Receive,
+        persistent: bool,
+    ) -> Option<Vec<rtypes::OptionResult>> {
         if receive.channels.len() == receive.patterns.len() {
             let mut results: Vec<rtypes::OptionResult> = vec![];
-            let mut stopper = false;
+            let mut should_break = false;
 
             for i in 0..receive.channels.len() {
                 let data_prefix = format!("channel-{}-data", receive.channels[i]);
+                let mut key_to_delete:String = String::from("");
 
-                self.db.retain(|key, value| {
-                    println!("memconc consume retain keyval {:?}", key);
-                    if key.starts_with(&data_prefix) && !stopper {
-                        println!("memconc consume match keyval {:?}", key);
-                        let pdata = rtypes::ProduceData::decode(value.as_slice()).unwrap();
-
+                for ele in self.db.iter()  {
+                    println!("memseq consume Key: {:?}", ele.key());
+                    if ele.key().starts_with(&data_prefix) {
+                        println!("memseq consume has prefix: {:?}", ele.key());
+                        let pdata = rtypes::ProduceData::decode(ele.value().as_slice()).unwrap();
                         // TODO: Implement better pattern/match schema
                         if receive.patterns[i] == pdata.match_case {
-                            stopper = true;
+                            println!("memseq consume pattern match: {:?}", pdata.match_case);
 
                             let mut option_result = rtypes::OptionResult::default();
                             option_result.continuation = receive.continuation.clone();
@@ -51,19 +57,20 @@ impl<
 
                             results.push(option_result);
 
+                            should_break = true;
                             if !pdata.persistent {
-                                false
-                            } else {
-                                true
+                                key_to_delete = ele.key().to_owned();
                             }
-                        } else {
-                            true
                         }
-                    } else {
-                        true
                     }
-                });
-                stopper = false;
+                    if should_break {
+                        break;
+                    }
+                }
+                if key_to_delete != "" {
+                    println!("key_to_delete: {:?}", key_to_delete);
+                    self.db.remove(&key_to_delete);
+                }
             }
 
             if results.len() > 0 {
@@ -73,7 +80,7 @@ impl<
                     let mut consume_data = rtypes::ConsumeData::default();
                     consume_data.pattern = receive.patterns[i].clone();
                     consume_data.continuation = receive.continuation.clone();
-                    consume_data.persistent = receive.persistent;
+                    consume_data.persistent = persistent;
 
                     println!("\nNo matching data for {:?}", receive);
 
@@ -99,41 +106,47 @@ impl<
         }
     }
 
-    pub fn produce(&self, send: rtypes::Send) -> Option<rtypes::OptionResult> {
+    pub fn produce(&self, send: rtypes::Send, persistent: bool) -> Option<rtypes::OptionResult> {
         let continuation_prefix = format!("channel-{}-continuation", send.chan);
         let mut result = None;
-        let mut stopper = false;
-
-        //TODO: make this more efficient...
-        //right now it loops through whole db and doesnt stop after first match
-
-        self.db.retain(|key, value| {
-            println!("memconc produce retain keyval {:?}", key);
-            if key.starts_with(&continuation_prefix) && !stopper {
-                println!("memconc produce match keyval {:?}", key);
-                let cdata = rtypes::ConsumeData::decode(value.as_slice()).unwrap();
-
+        let mut key_to_delete:String = String::from("");
+        let mut should_break = false;
+        for ele in self.db.iter()  {
+            println!("memseq produce Key: {:?}", ele.key());
+            if ele.key().starts_with(&continuation_prefix) {
+                let cdata = rtypes::ConsumeData::decode(ele.value().as_slice()).unwrap();
+                println!("memseq produce has prefix: {:?}", ele.key());
                 // TODO: Implement better pattern/match schema
                 if cdata.pattern == send.match_case {
-                    stopper = true;
+                    println!("memseq produce pattern match {:?}", cdata.pattern);
 
                     let mut option_result = rtypes::OptionResult::default();
                     option_result.continuation = cdata.continuation.clone();
                     option_result.data = send.data.clone();
 
                     result = Some(option_result);
+                    should_break = true;
                     if !cdata.persistent {
-                        false
-                    } else {
-                        true
+                        key_to_delete = ele.key().to_owned();
                     }
-                } else {
-                    true
                 }
-            } else {
-                true
             }
-        });
+            if should_break {
+                break;
+            }
+        }
+
+        if key_to_delete != "" {
+            println!("key_to_delete: {:?}", key_to_delete);
+            self.db.remove(&key_to_delete);
+        }
+
+        // printout check
+        // self.db.retain(|key, value| {
+        //     println!("retain keyval {:?}", key);
+        //     return true;
+        // });
+
 
         if result.is_some() {
             return result;
@@ -141,7 +154,7 @@ impl<
             let mut produce_data = rtypes::ProduceData::default();
             produce_data.data = send.data.clone();
             produce_data.match_case = send.match_case.clone();
-            produce_data.persistent = send.persistent;
+            produce_data.persistent = persistent;
 
             println!("\nNo matching continuation for {:?}", send);
 

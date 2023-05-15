@@ -39,6 +39,18 @@
 - Run specific test file sequentially: `cargo test --test my_test_file -- --test-threads=1` within `rspace++` directory.
 - `cargo test --test my_test_file -- --test-threads=1` tests all the functions in a single file
 
-## TODO
+## Backlog
 
-- Implement common syntax for all crate imports
+1. Create convenient name schema for proto messages throught Rust, Scala and test code
+2. Handle continuation data type. Currently string. See RhoTypes.proto. See original code and tutorial 
+3. Revist core database code and reduce cloning? Utilize references? 
+4. Refactor "Setup" code in Rust test files to be one shared file throughout
+5. Add changelog. See `changelog` branch
+6. Remove console logs throughout database code?
+7. Implement common syntax for all crate imports
+
+## Completed
+
+- Optimize loops marked with TODO: in memory databases
+- Get working correct return types from Rust functions in Scala
+- Rewrite Rust rspace unit tests to match current API
