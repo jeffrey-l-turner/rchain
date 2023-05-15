@@ -1,198 +1,282 @@
-use crate::diskconc::DiskConcDB;
-use crate::diskseq::DiskSeqDB;
-use crate::memconc::MemConcDB;
-use crate::memseq::MemSeqDB;
-use crate::rtypes::rtypes;
+use heed::{types::*, Env};
+use heed::{Database, EnvOpenOptions};
+use serde::ser::SerializeStruct;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
+use std::fs;
+use std::hash::{Hash, Hasher};
+use std::marker::PhantomData;
+use std::path::Path;
 
-// See https://docs.google.com/document/d/1yWdvJwsq4Ft7elzKBM0dehh4RFoQ-vXt-1TAUTLLxMY/edit
-#[repr(C)]
-pub struct RSpace<D: prost::Message, K: prost::Message> {
-    diskseq: DiskSeqDB<D, K>,
-    diskconc: DiskConcDB<D, K>,
-    memseq: MemSeqDB<D, K>,
-    memconc: MemConcDB<D, K>,
+pub struct OptionResult<D, K> {
+    pub continuation: K,
+    pub data: D,
+}
+
+type Pattern<D> = fn(D) -> bool;
+
+#[derive(Debug, Hash, Clone, Copy)]
+pub struct KData<Pattern, K> {
+    pattern: Pattern,
+    continuation: K,
+    persist: bool,
+}
+
+impl<T, F> Serialize for KData<Pattern<T>, F>
+where
+    F: Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("KData", 3)?;
+        // Serialize the pattern field as a string representation of the function pointer.
+        let pattern_string = format!("{:p}", self.pattern);
+        state.serialize_field("pattern", &pattern_string)?;
+        state.serialize_field("continuation", &self.continuation)?;
+        state.serialize_field("persist", &self.persist)?;
+        state.end()
+    }
+}
+
+impl<'de, T, F> Deserialize<'de> for KData<Pattern<T>, F>
+where
+    F: Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct KDataHelper<F> {
+            pattern: String,
+            continuation: F,
+            persist: bool,
+        }
+
+        let helper = KDataHelper::<F>::deserialize(deserializer)?;
+        let pattern_ptr = usize::from_str_radix(&helper.pattern[2..], 16)
+            .map_err(|err| serde::de::Error::custom(format!("Invalid pattern: {}", err)))?;
+        let persist = helper.persist;
+
+        Ok(KData {
+            pattern: unsafe { std::mem::transmute(pattern_ptr) },
+            continuation: helper.continuation,
+            persist,
+        })
+    }
+}
+
+/*
+See RSpace.scala and Tuplespace.scala in rspace/
+*/
+pub struct RSpace<D, K> {
+    env: Env,
+    db: Database<Str, SerdeBincode<Vec<u8>>>,
+    phantom: PhantomData<(D, K)>,
 }
 
 impl<
-        D: Clone + std::hash::Hash + std::fmt::Debug + std::default::Default + prost::Message,
-        K: Clone + std::hash::Hash + std::fmt::Debug + std::default::Default + prost::Message,
+        D: Clone
+            + std::hash::Hash
+            + std::fmt::Debug
+            + serde::Serialize
+            + for<'a> serde::Deserialize<'a>,
+        K: Clone
+            + std::hash::Hash
+            + std::fmt::Debug
+            + serde::Serialize
+            + for<'a> serde::Deserialize<'a>
+            + 'static,
     > RSpace<D, K>
 {
     pub fn create() -> Result<RSpace<D, K>, Box<dyn Error>> {
-        let ds = DiskSeqDB::create().unwrap();
-        let dc = DiskConcDB::create().unwrap();
-        let ms = MemSeqDB::create().unwrap();
-        let mc = MemConcDB::create().unwrap();
+        fs::create_dir_all(Path::new("target").join("rspace"))?;
+        let env = EnvOpenOptions::new().open(Path::new("target").join("rspace"))?;
+
+        // open the default unamed database
+        let db = env.create_database(None)?;
 
         Ok(RSpace {
-            diskseq: ds,
-            diskconc: dc,
-            memseq: ms,
-            memconc: mc,
+            env,
+            db,
+            phantom: PhantomData,
         })
     }
 
-    // Verb Set 1
-    pub fn get_once_durable_concurrent(&self, pdata: rtypes::Send) -> Option<rtypes::OptionResult> {
-        return self.diskconc.produce(pdata, false);
-    }
-
-    pub fn get_once_non_durable_concurrent(
+    pub fn consume(
         &self,
-        pdata: rtypes::Send,
-    ) -> Option<rtypes::OptionResult> {
-        return self.memconc.produce(pdata, false);
+        channels: Vec<&str>,
+        patterns: Vec<Pattern<D>>,
+        continuation: K,
+        persist: bool,
+    ) -> Option<Vec<OptionResult<D, K>>> {
+        if channels.len() == patterns.len() {
+            let mut results: Vec<OptionResult<D, K>> = vec![];
+            let rtxn = self.env.read_txn().unwrap();
+
+            for i in 0..channels.len() {
+                let data_prefix = format!("channel-{}-data", channels[i]);
+                let mut iter_data = self.db.prefix_iter(&rtxn, &data_prefix).unwrap();
+                let mut iter_data_option = iter_data.next().transpose().unwrap();
+
+                while iter_data_option.is_some() {
+                    let iter_data_unwrap = iter_data_option.unwrap();
+                    let data_bytes = iter_data_unwrap.1;
+                    let data: D = bincode::deserialize::<D>(&data_bytes).unwrap();
+
+                    if patterns[i](data.clone()) {
+                        let mut wtxn = self.env.write_txn().unwrap();
+                        let _ = self.db.delete(&mut wtxn, iter_data_unwrap.0);
+                        wtxn.commit().unwrap();
+
+                        results.push(OptionResult {
+                            continuation: continuation.clone(),
+                            data,
+                        });
+                        break;
+                    }
+                    iter_data_option = iter_data.next().transpose().unwrap();
+                }
+                drop(iter_data);
+            }
+            rtxn.commit().unwrap();
+
+            if results.len() > 0 {
+                return Some(results);
+            } else {
+                for i in 0..channels.len() {
+                    let k_data = KData {
+                        pattern: patterns[i],
+                        continuation: continuation.clone(),
+                        persist,
+                    };
+
+                    println!("\nNo matching data for {:?}", k_data);
+
+                    let k_data_bytes = bincode::serialize(&k_data).unwrap();
+
+                    // opening a write transaction
+                    let mut wtxn = self.env.write_txn().unwrap();
+
+                    let kdata_hash = self.calculate_hash(&k_data);
+                    let key = format!("channel-{}-continuation-{}", &channels[i], &kdata_hash);
+
+                    let _ = self.db.put(&mut wtxn, &key, &k_data_bytes);
+                    wtxn.commit().unwrap();
+                }
+
+                None
+            }
+        } else {
+            println!("channel and pattern vectors are not equal length!");
+            None
+        }
     }
 
-    pub fn get_once_durable_sequential(&self, pdata: rtypes::Send) -> Option<rtypes::OptionResult> {
-        return self.diskseq.produce(pdata, false);
+    pub fn produce(&self, channel: &str, entry: D, persist: bool) -> Option<OptionResult<D, K>> {
+        let rtxn = self.env.read_txn().unwrap();
+
+        let continuation_prefix = format!("channel-{}-continuation", channel);
+        let mut iter_continuation = self.db.prefix_iter(&rtxn, &continuation_prefix).unwrap();
+        let mut iter_continuation_option = iter_continuation.next().transpose().unwrap();
+
+        while iter_continuation_option.is_some() {
+            let iter_data = iter_continuation_option.unwrap();
+            let k_data_bytes = iter_data.1;
+            let k_data: KData<Pattern<D>, K> =
+                bincode::deserialize::<KData<Pattern<D>, K>>(&k_data_bytes).unwrap();
+            let pattern = k_data.pattern;
+
+            if pattern(entry.clone()) {
+                if !k_data.persist {
+                    let mut wtxn = self.env.write_txn().unwrap();
+                    let _ = self.db.delete(&mut wtxn, iter_data.0);
+                    wtxn.commit().unwrap();
+                }
+
+                return Some(OptionResult {
+                    continuation: k_data.continuation,
+                    data: entry.clone(),
+                });
+            }
+            iter_continuation_option = iter_continuation.next().transpose().unwrap();
+        }
+        drop(iter_continuation);
+        rtxn.commit().unwrap();
+
+        println!("\nNo matching continuation for {:?}", entry.clone());
+
+        let mut wtxn = self.env.write_txn().unwrap();
+
+        let data_hash = self.calculate_hash(&entry);
+        let key = format!("channel-{}-data-{}", &channel, &data_hash);
+        let data_bytes = bincode::serialize(&entry).unwrap();
+
+        let _ = self.db.put(&mut wtxn, &key, &data_bytes);
+        wtxn.commit().unwrap();
+
+        None
     }
 
-    pub fn get_once_non_durable_sequential(
-        &self,
-        pdata: rtypes::Send,
-    ) -> Option<rtypes::OptionResult> {
-        return self.memseq.produce(pdata, false);
-    }
+    pub fn print_channel(&self, channel: &str) -> Result<(), Box<dyn Error>> {
+        let rtxn = self.env.read_txn()?;
 
-    // Verb Set 2
-    pub fn get_always_durable_concurrent(
-        &self,
-        pdata: rtypes::Send,
-    ) -> Option<rtypes::OptionResult> {
-        return self.diskconc.produce(pdata, true);
-    }
+        let continuation_prefix = format!("channel-{}-continuation", channel);
+        let mut iter_continuation = self.db.prefix_iter(&rtxn, &continuation_prefix)?;
 
-    pub fn get_always_non_durable_concurrent(
-        &self,
-        pdata: rtypes::Send,
-    ) -> Option<rtypes::OptionResult> {
-        return self.memconc.produce(pdata, true);
-    }
+        let data_prefix = format!("channel-{}-data", channel);
+        let mut iter_data = self.db.prefix_iter(&rtxn, &data_prefix)?;
 
-    pub fn get_always_durable_sequential(
-        &self,
-        pdata: rtypes::Send,
-    ) -> Option<rtypes::OptionResult> {
-        return self.diskseq.produce(pdata, true);
-    }
+        if !self.db.is_empty(&rtxn)? {
+            println!("\nCurrent channel state for \"{}\":", channel);
 
-    pub fn get_always_non_durable_sequential(
-        &self,
-        pdata: rtypes::Send,
-    ) -> Option<rtypes::OptionResult> {
-        return self.memseq.produce(pdata, true);
-    }
+            let mut iter_continuation_option = iter_continuation.next().transpose()?;
+            while iter_continuation_option.is_some() {
+                let k_data_bytes = &iter_continuation_option.as_ref().unwrap().1;
+                let key = iter_continuation_option.as_ref().unwrap().0;
+                let k_data = bincode::deserialize::<KData<Pattern<D>, K>>(&k_data_bytes).unwrap();
+                println!("KEY: {:?} VALUE: {:?}", key, k_data);
+                iter_continuation_option = iter_continuation.next().transpose()?;
+            }
 
-    // Verb Set 3
-    pub fn put_once_durable_concurrent(
-        &self,
-        cdata: rtypes::Receive,
-    ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.diskconc.consume(cdata, false);
-    }
+            let mut iter_data_option = iter_data.next().transpose()?;
+            while iter_data_option.is_some() {
+                let data_bytes = &iter_data_option.as_ref().unwrap().1;
+                let key = iter_data_option.as_ref().unwrap().0;
+                let data = bincode::deserialize::<D>(&data_bytes).unwrap();
+                println!("KEY: {:?} VALUE: {:?}", key, data);
+                iter_data_option = iter_data.next().transpose()?;
+            }
+        } else {
+            println!("\nDatabase is empty")
+        }
 
-    pub fn put_once_non_durable_concurrent(
-        &self,
-        cdata: rtypes::Receive,
-    ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.memconc.consume(cdata, false);
-    }
+        drop(iter_continuation);
+        drop(iter_data);
+        rtxn.commit()?;
 
-    pub fn put_once_durable_sequential(
-        &self,
-        cdata: rtypes::Receive,
-    ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.diskseq.consume(cdata, false);
-    }
-
-    pub fn put_once_non_durable_sequential(
-        &self,
-        cdata: rtypes::Receive,
-    ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.memseq.consume(cdata, false);
-    }
-
-    // Verb Set 4
-    pub fn put_always_durable_concurrent(
-        &self,
-        cdata: rtypes::Receive,
-    ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.diskconc.consume(cdata, true);
-    }
-
-    pub fn put_always_non_durable_concurrent(
-        &self,
-        cdata: rtypes::Receive,
-    ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.memconc.consume(cdata, true);
-    }
-
-    pub fn put_always_durable_sequential(
-        &self,
-        cdata: rtypes::Receive,
-    ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.diskseq.consume(cdata, true);
-    }
-
-    pub fn put_always_non_durable_sequential(
-        &self,
-        cdata: rtypes::Receive,
-    ) -> Option<Vec<rtypes::OptionResult>> {
-        return self.memseq.consume(cdata, true);
-    }
-
-    pub fn print_data(&self, channel: &str) -> () {
-        let _ = self.memseq.print_channel(channel);
-        //let _ = self.memconc.print_channel(channel);
-        // let _ = self.diskseq.print_channel(channel);
-        // let _ = self.diskconc.print_channel(channel);
-    }
-
-    // TODO: Remove the need to pass in channel. Should be able to print entire store
-    pub fn print_store(&self, channel: &str) -> () {
-        println!("\n*** IN-MEMORY SEQUENTIAL ***");
-        let _ = self.memseq.print_channel(channel);
-
-        println!("\n*** IN-MEMORY CONCURRENT ***");
-        let _ = self.memconc.print_channel(channel);
-
-        println!("\n*** ON-DISK SEQUENTIAL ***");
-        let _ = self.diskseq.print_channel(channel);
-
-        println!("\n*** ON-DISK CONCURRENT ***");
-        let _ = self.diskconc.print_channel(channel);
+        Ok(())
     }
 
     pub fn is_empty(&self) -> bool {
-        self.memseq.is_empty()
-            && self.memconc.is_empty()
-            && self.diskseq.is_empty()
-            && self.diskconc.is_empty()
+        let rtxn = self.env.read_txn().unwrap();
+        return self.db.is_empty(&rtxn).unwrap();
     }
 
-    pub fn is_memseq_empty(&self) -> bool {
-        let memseq_is_empty = self.memseq.is_empty();
-        return memseq_is_empty;
-    }
-    pub fn is_memconc_empty(&self) -> bool {
-        let memconc_is_empty = self.memconc.is_empty();
-        return memconc_is_empty;
-    }
-    pub fn is_diskseq_empty(&self) -> bool {
-        let diskseq_is_empty = self.diskseq.is_empty();
-        return diskseq_is_empty;
-    }
-    pub fn is_diskconc_empty(&self) -> bool {
-        let diskconc_is_empty = self.diskconc.is_empty();
-        return diskconc_is_empty;
+    pub fn clear(&self) -> Result<(), Box<dyn Error>> {
+        let mut wtxn = self.env.write_txn()?;
+        let _ = self.db.clear(&mut wtxn)?;
+        wtxn.commit()?;
+
+        Ok(())
     }
 
-    pub fn clear_store(&self) -> () {
-        let _ = self.memseq.clear();
-        let _ = self.memconc.clear();
-        let _ = self.diskseq.clear();
-        let _ = self.diskconc.clear();
+    fn calculate_hash<T: Hash>(&self, t: &T) -> u64 {
+        let mut s = DefaultHasher::new();
+        t.hash(&mut s);
+        s.finish()
     }
 }
