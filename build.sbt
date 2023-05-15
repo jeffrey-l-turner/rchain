@@ -107,11 +107,13 @@ release := {
   val currentVersion = version.value
 
   log.info("Creating new release...")
-  if (Seq("sbt", "rspace-bench").! == 0) {
+  if (Seq("sbt", "benchmark").! == 0) {
+    import scala.sys.process._
     log.info("Benchmark tests passed.")
 
     log.info(s"Tagging new release (v$currentVersion)...")
-    if (Seq("git", "tag", s"v$currentVersion").! == 0) {
+    val shortCommit = "git rev-parse --short HEAD".!!.trim
+    if (Seq("git", "tag", s"v$currentVersion-$shortCommit)").! == 0) {
       log.info(s"New release (v$currentVersion) successfully tagged.")
     } else {
       log.error(s"Failed to tag new release (v$currentVersion).")
@@ -604,6 +606,7 @@ lazy val rchain = (project in file("."))
     rholang,
     rholangCLI,
     rspace,
+    rspaceBench,
     rspacePlusPlus,
     shared
   )
