@@ -100,13 +100,13 @@ lazy val coverageSettings = Seq(
 )
 
 // changlog update and git tag
-lazy val changelog = taskKey[Unit]("Run benchmark, tag new release, and update changelog")
+lazy val release = taskKey[Unit]("Run benchmark, tag new release, and update changelog")
 
-changelog := {
+release := {
   val log = streams.value.log
   val currentVersion = version.value
 
-  log.info("Running benchmark tests...")
+  log.info("Creating new release...")
   if (Seq("sbt", "rspace-bench").! == 0) {
     log.info("Benchmark tests passed.")
 
@@ -139,6 +139,20 @@ changelog := {
     throw new IllegalStateException("Benchmark tests failed")
   }
 }
+
+lazy val benchmark = taskKey[Unit]("Run benchmark, and update changelog")
+
+benchmark := {
+  val log = streams.value.log
+  val currentVersion = version.value
+
+  log.info("Running benchmark tests...")
+
+  if (Seq("sbt", "rspacePlusPlus/test").! == 0) {
+    log.info("calling tests...")
+  }
+}
+
 lazy val compilerSettings = CompilerSettings.options ++ Seq(
   crossScalaVersions := Seq(scalaVersion.value)
 )
@@ -590,7 +604,6 @@ lazy val rchain = (project in file("."))
     rholang,
     rholangCLI,
     rspace,
-    rspaceBench,
     rspacePlusPlus,
     shared
   )
