@@ -107,7 +107,7 @@ changelog := {
   val currentVersion = version.value
 
   log.info("Running benchmark tests...")
-  if (Seq("sbt", "benchmark:test").! == 0) {
+  if (Seq("sbt", "rspace-bench").! == 0) {
     log.info("Benchmark tests passed.")
 
     log.info(s"Tagging new release (v$currentVersion)...")
